@@ -1,0 +1,29 @@
+﻿Analyzing frontend...                                           
+
+  error - Undefined name 'AppRoutes' - lib\controllers\auth_controller.dart:76:21 - undefined_identifier
+  error - Undefined name 'AppRoutes' - lib\controllers\auth_controller.dart:80:17 - undefined_identifier
+  error - Undefined name 'AppRoutes' - lib\controllers\auth_controller.dart:84:17 - undefined_identifier
+warning - Unused import: '../routes/app_pages.dart' - lib\controllers\onboarding_controller.dart:5:8 - unused_import
+   info - Parameter 'key' could be a super parameter - lib\views\login_view.dart:6:9 - use_super_parameters
+   info - Parameter 'key' could be a super parameter - lib\views\register_view.dart:6:9 - use_super_parameters
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\views\register_view.dart:74:19 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\settings_view.dart:57:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\settings_view.dart:78:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\settings_view.dart:292:39 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\views\splash_view.dart:6:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\featured_property_card.dart:18:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\featured_property_card.dart:46:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\featured_property_card.dart:47:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\header_widget.dart:47:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\header_widget.dart:66:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\map_preview_widget.dart:75:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\map_preview_widget.dart:79:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\nearby_property_card.dart:19:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\notification_item.dart:45:32 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\widgets\onboarding_item.dart:7:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\search_bar_widget.dart:57:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\search_bar_widget.dart:109:39 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\widgets\search_bar_widget.dart:120:37 - unnecessary_underscores
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\widgets\settings_tile.dart:46:9 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\settings_tile.dart:78:34 - deprecated_member_use
+
