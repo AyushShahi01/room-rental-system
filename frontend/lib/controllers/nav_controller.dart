@@ -6,4 +6,8 @@ class NavController extends GetxController {
   void onItemTapped(int index) {
     selectedIndex.value = index;
   }
+
+  void changeTab(int index) {
+    selectedIndex.value = index;
+  }
 }

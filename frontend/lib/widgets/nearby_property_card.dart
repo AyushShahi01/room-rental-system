@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../models/property_model.dart';
+import '../models/room_model.dart';
+import '../controllers/room_controller.dart';
+import '../routes/app_routes.dart';
 
 class NearbyPropertyCard extends StatelessWidget {
   final PropertyModel property;
@@ -8,7 +12,28 @@ class NearbyPropertyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: () {
+        final RoomController roomCtrl = Get.find<RoomController>();
+        roomCtrl.selectRoom(RoomModel(
+          id: property.id,
+          title: property.title,
+          price: property.price.toDouble(),
+          location: property.location,
+          imageUrl: property.imageUrl,
+          isAvailable: property.status == 'AVAILABLE',
+          description: "Stunning property located perfectly in ${property.location}. It comes with ${property.bedrooms} bedrooms and ${property.bathrooms} bathrooms. Perfect for people looking for an affordable, cozy place.",
+          ownerName: "Verified Owner",
+          ownerPhone: "9800000000",
+          amenities: [
+            if (property.hasWifi) 'WiFi',
+            '${property.bedrooms} Bed',
+            '${property.bathrooms} Bath',
+          ]
+        ));
+        Get.toNamed(AppRoutes.roomDetail);
+      },
+      child: Container(
       width: 160,
       margin: const EdgeInsets.only(right: 16),
       decoration: BoxDecoration(
@@ -72,6 +97,7 @@ class NearbyPropertyCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+   );
   }
 }

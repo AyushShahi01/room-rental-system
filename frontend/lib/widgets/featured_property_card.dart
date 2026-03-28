@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../models/property_model.dart';
+import '../models/room_model.dart';
+import '../controllers/room_controller.dart';
+import '../routes/app_routes.dart';
 
 class FeaturedPropertyCard extends StatelessWidget {
   final PropertyModel property;
@@ -8,7 +12,28 @@ class FeaturedPropertyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: () {
+        final RoomController roomCtrl = Get.find<RoomController>();
+        roomCtrl.selectRoom(RoomModel(
+          id: property.id,
+          title: property.title,
+          price: property.price.toDouble(),
+          location: property.location,
+          imageUrl: property.imageUrl,
+          isAvailable: property.status == 'AVAILABLE',
+          description: "Stunning property located perfectly in ${property.location}. It comes with ${property.bedrooms} bedrooms and ${property.bathrooms} bathrooms. Perfect for people looking for an affordable, cozy place.",
+          ownerName: "Verified Owner",
+          ownerPhone: "9800000000",
+          amenities: [
+            if (property.hasWifi) 'WiFi',
+            '${property.bedrooms} Bed',
+            '${property.bathrooms} Bath',
+          ]
+        ));
+        Get.toNamed(AppRoutes.roomDetail);
+      },
+      child: Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -28,7 +53,9 @@ class FeaturedPropertyCard extends StatelessWidget {
           Stack(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
                 child: Image.network(
                   property.imageUrl,
                   height: 180,
@@ -40,7 +67,10 @@ class FeaturedPropertyCard extends StatelessWidget {
                 top: 12,
                 left: 12,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: property.status == 'AVAILABLE'
                         ? Colors.green.withValues(alpha: 0.9)
@@ -66,7 +96,11 @@ class FeaturedPropertyCard extends StatelessWidget {
                     color: Colors.white,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.favorite_border, size: 20, color: Colors.grey),
+                  child: const Icon(
+                    Icons.favorite_border,
+                    size: 20,
+                    color: Colors.grey,
+                  ),
                 ),
               ),
             ],
@@ -109,7 +143,10 @@ class FeaturedPropertyCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       property.location,
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),
@@ -120,8 +157,14 @@ class FeaturedPropertyCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildDetailIcon(Icons.bed_outlined, '${property.bedrooms} Bed'),
-                    _buildDetailIcon(Icons.bathtub_outlined, '${property.bathrooms} Bath'),
+                    _buildDetailIcon(
+                      Icons.bed_outlined,
+                      '${property.bedrooms} Bed',
+                    ),
+                    _buildDetailIcon(
+                      Icons.bathtub_outlined,
+                      '${property.bathrooms} Bath',
+                    ),
                     _buildDetailIcon(
                       property.hasWifi ? Icons.wifi : Icons.wifi_off,
                       property.hasWifi ? 'WiFi' : 'No WiFi',
@@ -133,7 +176,8 @@ class FeaturedPropertyCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+   );
   }
 
   Widget _buildDetailIcon(IconData icon, String label) {

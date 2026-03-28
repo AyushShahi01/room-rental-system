@@ -55,14 +55,14 @@ class HomeView extends StatelessWidget {
                   icon: const Icon(Icons.settings_outlined,
                       color: Colors.black87),
                   tooltip: 'Settings',
-                  onPressed: () => Get.toNamed(AppRoutes.settings),
+                  onPressed: () => Get.offNamed(AppRoutes.settings),
                 ),
               // Notification bell — always visible on other tabs
               IconButton(
                 icon: const Icon(Icons.notifications_outlined,
                     color: Colors.black87),
                 tooltip: 'Notifications',
-                onPressed: () => Get.toNamed(AppRoutes.notifications),
+                onPressed: () => Get.offNamed(AppRoutes.notifications),
               ),
             ],
           );

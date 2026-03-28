@@ -7,4 +7,13 @@ class AppRoutes {
   static String settings = "/settings";
   static String notifications = "/notifications";
   static String profile = "/profile";
+  static String forgotPassword = "/forgot-password";
+  static String verifyOtp = "/verify-otp";
+  static String resetPassword = "/reset-password";
+  
+  // Tenant Flow Routes
+  static String roomDetail = "/room-detail";
+  static String booking = "/booking";
+  static String payment = "/payment";
+  static String maintenance = "/maintenance";
 }

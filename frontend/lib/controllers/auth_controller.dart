@@ -2,27 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../routes/app_routes.dart';
 
-
 class AuthController extends GetxController {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final phoneController = TextEditingController();
   final addressController = TextEditingController();
+  final otpController = TextEditingController();
+  final newPasswordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
   final RxString userName = 'Guest'.obs;
   final RxString userEmail = ''.obs;
+  final RxString userPhone = ''.obs;
+  final RxString userAddress = ''.obs;
   final RxString selectedRole = 'Tenant'.obs;
 
   final RxBool isLoginPasswordVisible = false.obs;
   final RxBool isRegisterPasswordVisible = false.obs;
-
-  // Mock users list for Admin view
-  final RxList<Map<String, String>> mockUsers = <Map<String, String>>[
-    {'name': 'Alice Smith', 'email': 'alice@example.com', 'role': 'Tenant'},
-    {'name': 'Bob Johnson', 'email': 'bob@example.com', 'role': 'Tenant'},
-    {'name': 'Admin User', 'email': 'admin@system.com', 'role': 'Admin'},
-  ].obs;
+  final RxBool isNewPasswordVisible = false.obs;
+  final RxBool isConfirmPasswordVisible = false.obs;
 
   @override
   void onClose() {
@@ -31,38 +30,45 @@ class AuthController extends GetxController {
     passwordController.dispose();
     phoneController.dispose();
     addressController.dispose();
+    otpController.dispose();
+    newPasswordController.dispose();
+    confirmPasswordController.dispose();
     super.onClose();
   }
 
   void login() {
     if (emailController.text.isNotEmpty) {
       userEmail.value = emailController.text;
-      if (userName.value == 'Guest') {
-        userName.value = emailController.text.split('@').first;
-      }
-      // Assuming Admin if login email contains 'admin'
+
+      // Auto-generate username from email
+      userName.value = emailController.text.split('@').first;
+
+      // Simple role detection (can improve later)
       if (emailController.text.toLowerCase().contains('admin')) {
-        selectedRole.value = 'Admin';
+        selectedRole.value = 'Landlord';
+      } else {
+        selectedRole.value = 'Tenant';
       }
+
+      navToHome();
+    } else {
+      Get.snackbar('Error', 'Please enter email');
     }
-    navToHome();
   }
 
   void register() {
-    if (nameController.text.isNotEmpty && emailController.text.isNotEmpty) {
+    if (nameController.text.isNotEmpty &&
+        emailController.text.isNotEmpty &&
+        passwordController.text.isNotEmpty) {
       userName.value = nameController.text;
       userEmail.value = emailController.text;
-      
-      // Add the newly registered user to the mock users list
-      mockUsers.add({
-        'name': nameController.text,
-        'email': emailController.text,
-        'role': selectedRole.value,
-        if (selectedRole.value == 'Tenant') 'phone': phoneController.text,
-        if (selectedRole.value == 'Tenant') 'address': addressController.text,
-      });
+      userPhone.value = phoneController.text;
+      userAddress.value = addressController.text;
+
+      navToHome();
+    } else {
+      Get.snackbar('Error', 'Please fill all required fields');
     }
-    navToHome();
   }
 
   void toggleLoginPasswordVisibility() {
@@ -73,16 +79,53 @@ class AuthController extends GetxController {
     isRegisterPasswordVisible.value = !isRegisterPasswordVisible.value;
   }
 
+  void toggleNewPasswordVisibility() {
+    isNewPasswordVisible.value = !isNewPasswordVisible.value;
+  }
+
+  void toggleConfirmPasswordVisibility() {
+    isConfirmPasswordVisible.value = !isConfirmPasswordVisible.value;
+  }
+
   void navToHome() {
-    Get.offAllNamed(AppRoutes.home);
+    Get.offNamed(AppRoutes.home);
   }
 
   void goToLogin() {
-    Get.toNamed(AppRoutes.login);
+    Get.offNamed(AppRoutes.login);
   }
 
   void goToRegister() {
-    Get.toNamed(AppRoutes.register);
+    Get.offNamed(AppRoutes.register);
+  }
+
+  void goToForgotPassword() {
+    Get.offNamed(AppRoutes.forgotPassword);
+  }
+
+  void sendOtp() {
+    if (emailController.text.isNotEmpty || phoneController.text.isNotEmpty) {
+      Get.offNamed(AppRoutes.verifyOtp);
+    } else {
+      Get.snackbar('Error', 'Please enter email or phone number');
+    }
+  }
+
+  void verifyOtp() {
+    if (otpController.text.isNotEmpty) {
+      Get.offNamed(AppRoutes.resetPassword);
+    } else {
+      Get.snackbar('Error', 'Please enter OTP');
+    }
+  }
+
+  void resetPassword() {
+    if (newPasswordController.text.isNotEmpty &&
+        newPasswordController.text == confirmPasswordController.text) {
+      Get.snackbar('Success', 'Your password changed');
+      Get.offNamed(AppRoutes.login);
+    } else {
+      Get.snackbar('Error', 'Passwords do not match or are empty');
+    }
   }
 }
-

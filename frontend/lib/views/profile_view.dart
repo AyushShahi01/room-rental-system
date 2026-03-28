@@ -2,355 +2,129 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 
-
 class ProfileView extends StatelessWidget {
-  /// Set to true when navigated as a standalone route (e.g. from Settings).
-  /// Wraps content in a full Scaffold with an AppBar.
   final bool showAppBar;
 
   const ProfileView({super.key, this.showAppBar = false});
 
   @override
   Widget build(BuildContext context) {
-    final AuthController authController = Get.find<AuthController>();
+    final auth = Get.find<AuthController>();
 
-    // The core scrollable content (shared between both modes)
-    final content = SafeArea(
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-
-            // ─── Header Banner ────────────────────────────────────────────
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
-                ),
+    Widget body = SingleChildScrollView(
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 40),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.blue, Colors.lightBlueAccent],
               ),
-              padding: const EdgeInsets.fromLTRB(24, 32, 24, 40),
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+            ),
+            child: Column(
+              children: [
+                const CircleAvatar(
+                  radius: 40,
+                  child: Icon(Icons.person, size: 40),
+                ),
+                const SizedBox(height: 10),
+
+                Obx(
+                  () => Text(
+                    auth.userName.value,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+                Obx(() => Text(auth.userEmail.value)),
+
+                const SizedBox(height: 10),
+
+                Obx(() => Chip(label: Text(auth.selectedRole.value))),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+          Obx(() {
+            final role = auth.selectedRole.value;
+
+            if (role == 'Admin') {
+              return const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'Admin Panel (connect backend later)',
+                  style: TextStyle(fontSize: 16),
+                ),
+              );
+            }
+            return Padding(
+              padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  const CircleAvatar(
-                    radius: 48,
-                    backgroundColor: Colors.white24,
-                    child: Icon(Icons.person, size: 56, color: Colors.white),
+                  ListTile(
+                    leading: const Icon(Icons.person),
+                    title: const Text('Name'),
+                    subtitle: Text(auth.userName.value),
                   ),
-                  const SizedBox(height: 16),
-                  Obx(() => Text(
-                        authController.userName.value,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      )),
-                  const SizedBox(height: 4),
-                  Obx(() => Text(
-                        authController.userEmail.value,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white70,
-                        ),
-                      )),
-                  const SizedBox(height: 12),
-                  Obx(() => Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white24,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              authController.selectedRole.value == 'Admin'
-                                  ? Icons.admin_panel_settings
-                                  : Icons.person_pin,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              authController.selectedRole.value,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )),
+                  ListTile(
+                    leading: const Icon(Icons.email),
+                    title: const Text('Email'),
+                    subtitle: Text(auth.userEmail.value),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.badge),
+                    title: const Text('Role'),
+                    subtitle: Text(role),
+                  ),
+                  if (auth.userPhone.value.isNotEmpty)
+                    ListTile(
+                      leading: const Icon(Icons.phone),
+                      title: const Text('Phone'),
+                      subtitle: Text(auth.userPhone.value),
+                    ),
+                  if (auth.userAddress.value.isNotEmpty)
+                    ListTile(
+                      leading: const Icon(Icons.location_on),
+                      title: const Text('Address'),
+                      subtitle: Text(auth.userAddress.value),
+                    ),
                 ],
               ),
-            ),
+            );
+          }),
 
-            const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
-            // ─── Details Section ──────────────────────────────────────────
-            Obx(() {
-              final role = authController.selectedRole.value;
-
-              if (role == 'Admin') {
-                // Admin sees a list of all users
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.only(left: 4, bottom: 12),
-                        child: Text(
-                          'All Registered Users',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      Obx(() => ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: authController.mockUsers.length,
-                            itemBuilder: (context, index) {
-                              final user = authController.mockUsers[index];
-                              final userRole = user['role'] ?? 'Tenant';
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                elevation: 2,
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  leading: CircleAvatar(
-                                    backgroundColor: userRole == 'Admin'
-                                        ? Colors.deepPurple.shade100
-                                        : Colors.blue.shade100,
-                                    child: Icon(
-                                      userRole == 'Admin'
-                                          ? Icons.admin_panel_settings
-                                          : Icons.person,
-                                      color: userRole == 'Admin'
-                                          ? Colors.deepPurple
-                                          : Colors.blueAccent,
-                                    ),
-                                  ),
-                                  title: Text(
-                                    user['name'] ?? '',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(user['email'] ?? ''),
-                                      if (user['phone'] != null &&
-                                          user['phone']!.isNotEmpty)
-                                        Text('📞 ${user['phone']}'),
-                                      if (user['address'] != null &&
-                                          user['address']!.isNotEmpty)
-                                        Text('🏠 ${user['address']}'),
-                                    ],
-                                  ),
-                                  trailing: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: userRole == 'Admin'
-                                          ? Colors.deepPurple.shade50
-                                          : Colors.blue.shade50,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: userRole == 'Admin'
-                                            ? Colors.deepPurple.shade200
-                                            : Colors.blue.shade200,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      userRole,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: userRole == 'Admin'
-                                            ? Colors.deepPurple
-                                            : Colors.blueAccent,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          )),
-                    ],
-                  ),
-                );
-              } else {
-                // Tenant sees their own details
-                final users = authController.mockUsers;
-                final currentUserData = users.lastWhere(
-                  (u) => u['email'] == authController.userEmail.value,
-                  orElse: () => {},
-                );
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.only(left: 4, bottom: 12),
-                        child: Text(
-                          'Your Details',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 2,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            children: [
-                              _detailRow(
-                                Icons.person,
-                                'Full Name',
-                                authController.userName.value,
-                              ),
-                              const Divider(height: 24),
-                              _detailRow(
-                                Icons.email,
-                                'Email',
-                                authController.userEmail.value,
-                              ),
-                              if (currentUserData['phone'] != null &&
-                                  currentUserData['phone']!.isNotEmpty) ...[
-                                const Divider(height: 24),
-                                _detailRow(
-                                  Icons.phone,
-                                  'Phone',
-                                  currentUserData['phone']!,
-                                ),
-                              ],
-                              if (currentUserData['address'] != null &&
-                                  currentUserData['address']!.isNotEmpty) ...[
-                                const Divider(height: 24),
-                                _detailRow(
-                                  Icons.home,
-                                  'Address',
-                                  currentUserData['address']!,
-                                ),
-                              ],
-                              const Divider(height: 24),
-                              _detailRow(
-                                Icons.badge,
-                                'Role',
-                                'Tenant',
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-            }),
-
-            const SizedBox(height: 24),
-
-            // ─── Logout ───────────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ElevatedButton.icon(
-                onPressed: authController.goToLogin,
-                icon: const Icon(Icons.logout),
-                label: const Text('Logout'),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(52),
-                  backgroundColor: Colors.redAccent,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
+          // 🔷 Logout
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: ElevatedButton(
+              onPressed: auth.goToLogin,
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+                backgroundColor: Colors.red,
               ),
+              child: const Text('Logout'),
             ),
+          ),
 
-            const SizedBox(height: 32),
-          ],
-        ),
+          const SizedBox(height: 20),
+        ],
       ),
     );
 
-    // Return a full Scaffold when navigated standalone (e.g. from Settings).
-    if (showAppBar) {
-      return Scaffold(
-        backgroundColor: const Color(0xFFF5F7FA),
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
-            onPressed: () => Get.back(),
-          ),
-          title: const Text(
-            'Profile',
-            style: TextStyle(
-              color: Colors.black87,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          centerTitle: true,
-        ),
-        body: content,
-      );
-    }
-
-    return content;
-  }
-
-  Widget _detailRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: Colors.blueAccent),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-            ),
-            Text(
-              value.isEmpty ? '—' : value,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-      ],
-    );
+    // Optional AppBar
+    return showAppBar
+        ? Scaffold(
+            appBar: AppBar(title: const Text('Profile')),
+            body: body,
+          )
+        : body;
   }
 }

@@ -30,11 +30,11 @@ class SettingsController extends GetxController {
   }
 
   /// Navigate to the Notifications page.
-  void goToNotifications() => Get.toNamed(AppRoutes.notifications);
+  void goToNotifications() => Get.offNamed(AppRoutes.notifications);
 
   /// Navigate to the Profile page (edit profile).
-  void goToProfile() => Get.toNamed(AppRoutes.profile);
+  void goToProfile() => Get.offNamed(AppRoutes.profile);
 
   /// Logout – delegate to AuthController via route.
-  void logout() => Get.offAllNamed(AppRoutes.login);
+  void logout() => Get.offNamed(AppRoutes.login);
 }

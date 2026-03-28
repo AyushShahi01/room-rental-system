@@ -8,7 +8,6 @@ class OnboardingView extends GetView<OnboardingController> {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize the controller
     final controller = Get.put(OnboardingController());
 
     return Scaffold(

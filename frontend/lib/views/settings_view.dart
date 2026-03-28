@@ -38,7 +38,7 @@ class SettingsView extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.notifications_outlined, color: Colors.black87),
             tooltip: 'Notifications',
-            onPressed: () => Get.toNamed(AppRoutes.notifications),
+            onPressed: () => Get.offNamed(AppRoutes.notifications),
           ),
         ],
       ),
@@ -112,7 +112,7 @@ class SettingsView extends StatelessWidget {
                   ),
                   // Edit button
                   OutlinedButton(
-                    onPressed: () => Get.toNamed(AppRoutes.profile),
+                    onPressed: () => Get.offNamed(AppRoutes.profile),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.blueAccent,
                       side: const BorderSide(color: Colors.blueAccent),
