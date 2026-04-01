@@ -3,15 +3,18 @@ import 'package:get/get.dart';
 import '../controllers/maintenance_controller.dart';
 
 class MaintenanceRequestView extends StatelessWidget {
-  const MaintenanceRequestView({Key? key}) : super(key: key);
+  final bool hideAppBar;
+  const MaintenanceRequestView({super.key, this.hideAppBar = false});
 
   @override
   Widget build(BuildContext context) {
     final MaintenanceController ctrl = Get.find<MaintenanceController>();
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: hideAppBar ? null : AppBar(
         title: const Text('Maintenance Request'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

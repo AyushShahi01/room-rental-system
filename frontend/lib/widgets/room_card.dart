@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../models/room_model.dart';
-import '../../controllers/room_controller.dart';
-import '../../routes/app_routes.dart';
+import '../models/room_model.dart';
+import '../controllers/room_controller.dart';
+import '../routes/app_routes.dart';
 
 class RoomCard extends StatelessWidget {
   final RoomModel room;

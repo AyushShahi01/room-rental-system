@@ -21,12 +21,12 @@ class SettingsController extends GetxController {
   void togglePushNotifications() =>
       pushNotifications.value = !pushNotifications.value;
 
-  void toggleEmailMarketing() =>
-      emailMarketing.value = !emailMarketing.value;
+  void toggleEmailMarketing() => emailMarketing.value = !emailMarketing.value;
 
   void toggleProfileVisibility() {
-    profileVisibility.value =
-        profileVisibility.value == 'Public' ? 'Private' : 'Public';
+    profileVisibility.value = profileVisibility.value == 'Public'
+        ? 'Private'
+        : 'Public';
   }
 
   /// Navigate to the Notifications page.

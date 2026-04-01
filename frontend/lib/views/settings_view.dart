@@ -33,14 +33,6 @@ class SettingsView extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        actions: [
-          // Notification icon in AppBar
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.black87),
-            tooltip: 'Notifications',
-            onPressed: () => Get.offNamed(AppRoutes.notifications),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -112,7 +104,7 @@ class SettingsView extends StatelessWidget {
                   ),
                   // Edit button
                   OutlinedButton(
-                    onPressed: () => Get.offNamed(AppRoutes.profile),
+                    onPressed: () => Get.toNamed(AppRoutes.editProfile),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.blueAccent,
                       side: const BorderSide(color: Colors.blueAccent),
@@ -131,6 +123,42 @@ class SettingsView extends StatelessWidget {
             ),
 
             const SizedBox(height: 24),
+
+            // ─── PERSONAL INFO (Edit per row) ─────────────────────────────
+            Obx(() => _SectionCard(
+                  title: 'PERSONAL INFO',
+                  children: [
+                    _InfoRow(
+                      icon: Icons.person_outline,
+                      title: 'Name',
+                      value: authCtrl.userName.value,
+                      onEdit: () => Get.toNamed(AppRoutes.editProfile),
+                    ),
+                    const _Divider(),
+                    _InfoRow(
+                      icon: Icons.email_outlined,
+                      title: 'Email',
+                      value: authCtrl.userEmail.value,
+                      onEdit: () => Get.toNamed(AppRoutes.editProfile),
+                    ),
+                    const _Divider(),
+                    _InfoRow(
+                      icon: Icons.phone_outlined,
+                      title: 'Phone',
+                      value: authCtrl.userPhone.value.isNotEmpty ? authCtrl.userPhone.value : 'N/A',
+                      onEdit: () => Get.toNamed(AppRoutes.editProfile),
+                    ),
+                    const _Divider(),
+                    _InfoRow(
+                      icon: Icons.location_on_outlined,
+                      title: 'Address',
+                      value: authCtrl.userAddress.value.isNotEmpty ? authCtrl.userAddress.value : 'N/A',
+                      onEdit: () => Get.toNamed(AppRoutes.editProfile),
+                    ),
+                  ],
+                )),
+
+            const SizedBox(height: 16),
 
             // ─── ACCOUNT & SECURITY ────────────────────────────────────────
             _SectionCard(
@@ -174,54 +202,8 @@ class SettingsView extends StatelessWidget {
                       value: settingsCtrl.emailMarketing.value,
                       onToggle: (_) => settingsCtrl.toggleEmailMarketing(),
                     ),
-                    const _Divider(),
-                    SettingsTile(
-                      icon: Icons.visibility_outlined,
-                      iconColor: Colors.orange,
-                      title: 'Profile Visibility',
-                      trailingLabel: settingsCtrl.profileVisibility.value,
-                      onTap: settingsCtrl.toggleProfileVisibility,
-                    ),
-                    const _Divider(),
-                    SettingsTile(
-                      icon: Icons.language_outlined,
-                      iconColor: Colors.green,
-                      title: 'Language',
-                      trailingLabel: settingsCtrl.language.value,
-                      onTap: () {},
-                    ),
                   ],
                 )),
-
-            const SizedBox(height: 16),
-
-            // ─── SUPPORT & LEGAL ───────────────────────────────────────────
-            _SectionCard(
-              title: 'SUPPORT & LEGAL',
-              children: [
-                SettingsTile(
-                  icon: Icons.help_outline,
-                  iconColor: Colors.blueGrey,
-                  title: 'Help Center',
-                  onTap: () {},
-                ),
-                const _Divider(),
-                SettingsTile(
-                  icon: Icons.headset_mic_outlined,
-                  iconColor: Colors.cyan,
-                  title: 'Contact Us',
-                  onTap: () {},
-                ),
-                const _Divider(),
-                SettingsTile(
-                  icon: Icons.info_outline,
-                  iconColor: Colors.amber,
-                  title: 'About Smart Room',
-                  subtitle: 'Version 1.0.0',
-                  onTap: () {},
-                ),
-              ],
-            ),
 
             const SizedBox(height: 28),
 
@@ -255,6 +237,48 @@ class SettingsView extends StatelessWidget {
 }
 
 // ─── Private helper widgets ─────────────────────────────────────────────────
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String value;
+  final VoidCallback onEdit;
+
+  const _InfoRow({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.onEdit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.blueAccent, size: 24),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                const SizedBox(height: 2),
+                Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, color: Colors.blueAccent, size: 20),
+            onPressed: onEdit,
+            tooltip: 'Edit $title',
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 /// Section wrapper card with header label.
 class _SectionCard extends StatelessWidget {
@@ -311,7 +335,7 @@ class _Divider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Divider(
       height: 1,
-      indent: 70,
+      indent: 56, // Adjusted for the new icon padding
       endIndent: 16,
       color: Colors.grey.shade100,
     );

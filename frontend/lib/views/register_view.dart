@@ -27,11 +27,7 @@ class RegisterView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 40,
-              color: isSelected ? Colors.blue : Colors.grey,
-            ),
+            Icon(icon, size: 40, color: isSelected ? Colors.blue : Colors.grey),
             const SizedBox(height: 12),
             Text(
               title,
@@ -58,7 +54,6 @@ class RegisterView extends StatelessWidget {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text(
@@ -66,25 +61,33 @@ class RegisterView extends StatelessWidget {
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
+
                 const SizedBox(height: 30),
-                Obx(() => Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildRoleCard(
-                          title: 'Tenant',
-                          icon: Icons.person_outline,
-                          isSelected: controller.selectedRole.value == 'Tenant',
-                          onTap: () => controller.selectedRole.value = 'Tenant',
-                        ),
-                        _buildRoleCard(
-                          title: 'Landlord',
-                          icon: Icons.business,
-                          isSelected: controller.selectedRole.value == 'Landlord',
-                          onTap: () => controller.selectedRole.value = 'Landlord',
-                        ),
-                      ],
-                    )),
+
+                /// ROLE SELECTION
+                Obx(
+                  () => Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildRoleCard(
+                        title: 'Tenant',
+                        icon: Icons.person_outline,
+                        isSelected: controller.selectedRole.value == 'Tenant',
+                        onTap: () => controller.selectedRole.value = 'Tenant',
+                      ),
+                      _buildRoleCard(
+                        title: 'Landlord',
+                        icon: Icons.business,
+                        isSelected: controller.selectedRole.value == 'Landlord',
+                        onTap: () => controller.selectedRole.value = 'Landlord',
+                      ),
+                    ],
+                  ),
+                ),
+
                 const SizedBox(height: 30),
+
+                /// NAME
                 TextField(
                   controller: controller.nameController,
                   decoration: InputDecoration(
@@ -95,7 +98,10 @@ class RegisterView extends StatelessWidget {
                     prefixIcon: const Icon(Icons.person),
                   ),
                 ),
+
                 const SizedBox(height: 16),
+
+                /// EMAIL
                 TextField(
                   controller: controller.emailController,
                   decoration: InputDecoration(
@@ -107,10 +113,14 @@ class RegisterView extends StatelessWidget {
                   ),
                   keyboardType: TextInputType.emailAddress,
                 ),
+
                 const SizedBox(height: 16),
+
+                /// PASSWORD
                 Obx(
                   () => TextField(
                     controller: controller.passwordController,
+                    obscureText: !controller.isRegisterPasswordVisible.value,
                     decoration: InputDecoration(
                       labelText: 'Password',
                       border: OutlineInputBorder(
@@ -126,44 +136,41 @@ class RegisterView extends StatelessWidget {
                         onPressed: controller.toggleRegisterPasswordVisibility,
                       ),
                     ),
-                    obscureText: !controller.isRegisterPasswordVisible.value,
                   ),
                 ),
+
                 const SizedBox(height: 16),
-                // Removed Dropdown
-                Obx(() {
-                  if (controller.selectedRole.value == 'Tenant') {
-                    return Column(
-                      children: [
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: controller.phoneController,
-                          decoration: InputDecoration(
-                            labelText: 'Phone Number',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            prefixIcon: const Icon(Icons.phone),
-                          ),
-                          keyboardType: TextInputType.phone,
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: controller.addressController,
-                          decoration: InputDecoration(
-                            labelText: 'Address',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            prefixIcon: const Icon(Icons.home),
-                          ),
-                        ),
-                      ],
-                    );
-                  }
-                  return const SizedBox.shrink();
-                }),
+
+                /// PHONE (NOW FOR BOTH ROLES ✅)
+                TextField(
+                  controller: controller.phoneController,
+                  decoration: InputDecoration(
+                    labelText: 'Phone Number',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: const Icon(Icons.phone),
+                  ),
+                  keyboardType: TextInputType.phone,
+                ),
+
+                const SizedBox(height: 16),
+
+                /// ADDRESS (NOW FOR BOTH ROLES ✅)
+                TextField(
+                  controller: controller.addressController,
+                  decoration: InputDecoration(
+                    labelText: 'Address',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: const Icon(Icons.home),
+                  ),
+                ),
+
                 const SizedBox(height: 30),
+
+                /// REGISTER BUTTON
                 ElevatedButton(
                   onPressed: controller.register,
                   style: ElevatedButton.styleFrom(
@@ -176,7 +183,10 @@ class RegisterView extends StatelessWidget {
                   ),
                   child: const Text('Register', style: TextStyle(fontSize: 18)),
                 ),
+
                 const SizedBox(height: 20),
+
+                /// LOGIN NAVIGATION
                 TextButton(
                   onPressed: controller.goToLogin,
                   child: const Text('Already have an account? Login'),

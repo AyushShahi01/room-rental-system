@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
-      getPages: AppPages.pages,
+      getPages: AppPages.routes,
       initialBinding: ControllerBindings(),
       home: SplashView(),
     );

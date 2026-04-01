@@ -1,4 +1,5 @@
 import 'room_model.dart';
+import 'package:get/get.dart';
 
 class BookingModel {
   final String id;
@@ -6,7 +7,14 @@ class BookingModel {
   final String moveInDate;
   final String duration;
   final String note;
-  final String status;
+  
+  // Added user fields for landlord manage request
+  final String userName;
+  final String userPhone;
+  final String userAddress;
+  
+  // Make status observable so UI updates instantly when approved/rejected
+  final RxString status;
 
   BookingModel({
     this.id = '',
@@ -14,6 +22,9 @@ class BookingModel {
     this.moveInDate = '',
     this.duration = '',
     this.note = '',
-    this.status = '',
-  });
+    this.userName = 'Unknown User',
+    this.userPhone = 'N/A',
+    this.userAddress = 'N/A',
+    String status = 'Pending',
+  }) : status = status.obs;
 }

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../routes/app_routes.dart';
 
 class AuthController extends GetxController {
+  // Controllers
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -12,12 +13,16 @@ class AuthController extends GetxController {
   final newPasswordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
+  // User Data
   final RxString userName = 'Guest'.obs;
   final RxString userEmail = ''.obs;
   final RxString userPhone = ''.obs;
   final RxString userAddress = ''.obs;
+
+  // Role (Default Tenant)
   final RxString selectedRole = 'Tenant'.obs;
 
+  // Password Visibility
   final RxBool isLoginPasswordVisible = false.obs;
   final RxBool isRegisterPasswordVisible = false.obs;
   final RxBool isNewPasswordVisible = false.obs;
@@ -36,41 +41,67 @@ class AuthController extends GetxController {
     super.onClose();
   }
 
+  // ================= LOGIN =================
   void login() {
-    if (emailController.text.isNotEmpty) {
-      userEmail.value = emailController.text;
-
-      // Auto-generate username from email
-      userName.value = emailController.text.split('@').first;
-
-      // Simple role detection (can improve later)
-      if (emailController.text.toLowerCase().contains('admin')) {
-        selectedRole.value = 'Landlord';
-      } else {
-        selectedRole.value = 'Tenant';
-      }
-
-      navToHome();
-    } else {
-      Get.snackbar('Error', 'Please enter email');
+    if (emailController.text.trim().isEmpty ||
+        passwordController.text.trim().isEmpty) {
+      Get.snackbar('Error', 'Please enter email and password');
+      return;
     }
+
+    // Save user data
+    userEmail.value = emailController.text.trim();
+    userName.value = emailController.text.split('@').first;
+
+    // IMPORTANT: Do NOT change role here
+    // Role comes from UI selection
+
+    navToHome();
   }
 
+  // ================= REGISTER =================
   void register() {
-    if (nameController.text.isNotEmpty &&
-        emailController.text.isNotEmpty &&
-        passwordController.text.isNotEmpty) {
-      userName.value = nameController.text;
-      userEmail.value = emailController.text;
-      userPhone.value = phoneController.text;
-      userAddress.value = addressController.text;
+    if (nameController.text.trim().isEmpty ||
+        emailController.text.trim().isEmpty ||
+        passwordController.text.trim().isEmpty ||
+        phoneController.text.trim().isEmpty ||
+        addressController.text.trim().isEmpty) {
+      Get.snackbar('Error', 'Please fill all fields');
+      return;
+    }
 
-      navToHome();
+    // Save user data
+    userName.value = nameController.text.trim();
+    userEmail.value = emailController.text.trim();
+    userPhone.value = phoneController.text.trim();
+    userAddress.value = addressController.text.trim();
+
+    // Navigate based on selected role
+    navToHome();
+  }
+
+  // ================= NAVIGATION =================
+  void navToHome() {
+    if (selectedRole.value == 'Landlord') {
+      Get.offNamed(AppRoutes.landlordDashboard);
     } else {
-      Get.snackbar('Error', 'Please fill all required fields');
+      Get.offNamed(AppRoutes.home);
     }
   }
 
+  void goToLogin() {
+    Get.offNamed(AppRoutes.login);
+  }
+
+  void goToRegister() {
+    Get.offNamed(AppRoutes.register);
+  }
+
+  void goToForgotPassword() {
+    Get.offNamed(AppRoutes.forgotPassword);
+  }
+
+  // ================= PASSWORD VISIBILITY =================
   void toggleLoginPasswordVisibility() {
     isLoginPasswordVisible.value = !isLoginPasswordVisible.value;
   }
@@ -87,45 +118,39 @@ class AuthController extends GetxController {
     isConfirmPasswordVisible.value = !isConfirmPasswordVisible.value;
   }
 
-  void navToHome() {
-    Get.offNamed(AppRoutes.home);
-  }
-
-  void goToLogin() {
-    Get.offNamed(AppRoutes.login);
-  }
-
-  void goToRegister() {
-    Get.offNamed(AppRoutes.register);
-  }
-
-  void goToForgotPassword() {
-    Get.offNamed(AppRoutes.forgotPassword);
-  }
-
+  // ================= OTP =================
   void sendOtp() {
-    if (emailController.text.isNotEmpty || phoneController.text.isNotEmpty) {
-      Get.offNamed(AppRoutes.verifyOtp);
-    } else {
-      Get.snackbar('Error', 'Please enter email or phone number');
+    if (emailController.text.trim().isEmpty &&
+        phoneController.text.trim().isEmpty) {
+      Get.snackbar('Error', 'Enter email or phone number');
+      return;
     }
+
+    Get.offNamed(AppRoutes.verifyOtp);
   }
 
   void verifyOtp() {
-    if (otpController.text.isNotEmpty) {
-      Get.offNamed(AppRoutes.resetPassword);
-    } else {
+    if (otpController.text.trim().isEmpty) {
       Get.snackbar('Error', 'Please enter OTP');
+      return;
     }
+
+    Get.offNamed(AppRoutes.resetPassword);
   }
 
   void resetPassword() {
-    if (newPasswordController.text.isNotEmpty &&
-        newPasswordController.text == confirmPasswordController.text) {
-      Get.snackbar('Success', 'Your password changed');
-      Get.offNamed(AppRoutes.login);
-    } else {
-      Get.snackbar('Error', 'Passwords do not match or are empty');
+    if (newPasswordController.text.trim().isEmpty ||
+        confirmPasswordController.text.trim().isEmpty) {
+      Get.snackbar('Error', 'Fields cannot be empty');
+      return;
     }
+
+    if (newPasswordController.text != confirmPasswordController.text) {
+      Get.snackbar('Error', 'Passwords do not match');
+      return;
+    }
+
+    Get.snackbar('Success', 'Password changed successfully');
+    Get.offNamed(AppRoutes.login);
   }
 }

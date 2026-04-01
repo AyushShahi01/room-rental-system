@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:room_rental_system/routes/app_routes.dart';
 
+
 class SplashController extends GetxController {
   @override
   void onInit() {
@@ -11,6 +12,6 @@ class SplashController extends GetxController {
   void _navigateToNext() async {
     // Simulate loading
     await Future.delayed(const Duration(seconds: 2));
-    Get.offNamed(AppRoutes.onboarding);
+    Get.offAllNamed(AppRoutes.onboarding);
   }
 }

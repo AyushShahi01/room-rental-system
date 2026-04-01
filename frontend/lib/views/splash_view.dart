@@ -16,11 +16,7 @@ class SplashView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: const [
-            Icon(
-              Icons.home_work,
-              size: 100,
-              color: Colors.white,
-            ),
+            Icon(Icons.home_work, size: 100, color: Colors.white),
             SizedBox(height: 20),
             Text(
               'Room Rental System',

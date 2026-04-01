@@ -80,43 +80,43 @@ class LoginView extends StatelessWidget {
                   child: const Text('Login', style: TextStyle(fontSize: 18)),
                 ),
                 const SizedBox(height: 20),
-                const Row(
-                  children: [
-                    Expanded(child: Divider()),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('Or Login with'),
-                    ),
-                    Expanded(child: Divider()),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    // Google Button
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: Image.network(
-                        'https://upload.wikimedia.org/wikipedia/commons/0/09/IOS_Google_icon.png',
-                        height: 24,
-                        width: 24,
-                      ),
-                      label: const Text('Google'),
-                    ),
+                // const Row(
+                //   children: [
+                //     Expanded(child: Divider()),
+                //     Padding(
+                //       padding: EdgeInsets.symmetric(horizontal: 16),
+                //       child: Text('Or Login with'),
+                //     ),
+                //     Expanded(child: Divider()),
+                //   ],
+                // ),
+                // const SizedBox(height: 20),
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                //   children: [
+                //     // Google Button
+                //     OutlinedButton.icon(
+                //       onPressed: () {},
+                //       icon: Image.network(
+                //         'https://upload.wikimedia.org/wikipedia/commons/0/09/IOS_Google_icon.png',
+                //         height: 24,
+                //         width: 24,
+                //       ),
+                //       label: const Text('Google'),
+                //     ),
 
-                    // Facebook Button
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: Image.network(
-                        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHADJwBLf31qlBi0GXAU9PpGTon79EhyD-sQ&s',
-                        height: 24,
-                        width: 24,
-                      ),
-                      label: const Text('Facebook'),
-                    ),
-                  ],
-                ),
+                //     // Facebook Button
+                //     OutlinedButton.icon(
+                //       onPressed: () {},
+                //       icon: Image.network(
+                //         'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHADJwBLf31qlBi0GXAU9PpGTon79EhyD-sQ&s',
+                //         height: 24,
+                //         width: 24,
+                //       ),
+                //       label: const Text('Facebook'),
+                //     ),
+                //   ],
+                // ),
                 const SizedBox(height: 20),
                 TextButton(
                   onPressed: controller.goToRegister,

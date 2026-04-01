@@ -36,7 +36,7 @@ class HeaderWidget extends StatelessWidget {
         Row(
           children: [
             GestureDetector(
-              onTap: () => Get.offNamed(AppRoutes.settings),
+              onTap: () => Get.toNamed(AppRoutes.settings),
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -58,7 +58,7 @@ class HeaderWidget extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             GestureDetector(
-              onTap: () => Get.offNamed(AppRoutes.notifications),
+              onTap: () => Get.toNamed(AppRoutes.notifications),
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
