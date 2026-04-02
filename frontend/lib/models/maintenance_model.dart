@@ -1,17 +1,21 @@
+import 'package:get/get.dart';
+
 class MaintenanceModel {
   final String id;
   final String title;
-  final String category;
   final String description;
-  final String status;
-  final String? photoUrl;
+  final String category;
+  final String tenantName;
+  final String roomTitle;
+  final RxString status; // 'Pending' or 'Resolved'
 
   MaintenanceModel({
-    this.id = '',
-    this.title = '',
-    this.category = '',
-    this.description = '',
-    this.status = '',
-    this.photoUrl,
-  });
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.category,
+    this.tenantName = "Unknown Tenant",
+    this.roomTitle = "Unknown Room",
+    String status = "Pending",
+  }) : status = status.obs;
 }

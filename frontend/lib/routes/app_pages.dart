@@ -5,25 +5,26 @@ import '../views/splash_view.dart';
 import '../views/onboarding_view.dart';
 import '../views/register_view.dart';
 import '../views/login_view.dart';
-import '../views/dashboard_screen.dart';
 import '../views/settings_view.dart';
 import '../views/notifications_view.dart';
-import '../views/profile_view.dart';
 import '../views/forgot_password_view.dart';
 import '../views/verify_otp_view.dart';
 import '../views/reset_password_view.dart';
 import '../views/edit_profile_view.dart';
 
 // Tenant Flow Views
+import '../views/tenant/tenant_dashboard.dart';
+import '../views/tenant/profile_view.dart';
+import '../views/tenant/maintenance_request_view.dart';
+
 import '../views/room_detail_screen.dart';
 import '../views/booking_request_view.dart';
 import '../views/payment_view.dart';
-import '../views/maintenance_request_view.dart';
 
 // Landlord Flow Views
-import '../views/landlord/landlord_dashboard_screen.dart';
+import '../views/landlord/landlord_dashboard.dart';
 
-// Tenant Flow Bindings
+// Bindings
 import '../bindings/room_binding.dart';
 import '../bindings/booking_binding.dart';
 import '../bindings/payment_binding.dart';
@@ -35,7 +36,7 @@ class AppPages {
     GetPage(name: AppRoutes.onboarding, page: () => OnboardingView()),
     GetPage(name: AppRoutes.register, page: () => RegisterView()),
     GetPage(name: AppRoutes.login, page: () => LoginView()),
-    GetPage(name: AppRoutes.home, page: () => const DashboardScreen()),
+    GetPage(name: AppRoutes.home, page: () => const TenantDashboardScreen()),
     GetPage(name: AppRoutes.settings, page: () => const SettingsView()),
     GetPage(name: AppRoutes.notifications, page: () => const NotificationsView()),
     GetPage(name: AppRoutes.profile, page: () => const ProfileView(showAppBar: true)),
@@ -62,7 +63,7 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.maintenance, 
-      page: () => const MaintenanceRequestView(),
+      page: () => const MaintenanceRequestView(hideAppBar: false),
       binding: MaintenanceBinding(),
     ),
 
