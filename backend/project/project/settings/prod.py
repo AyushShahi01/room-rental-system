@@ -12,19 +12,11 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 # ─── Secret Key (MUST be set in environment) ───────────────────────────────────
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
-# ─── Database (MySQL) ───────────────────────────────────────────────────────────
+# ─── Database (SQLite) ───────────────────────────────────────────────────────────
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_NAME', 'room_rental_db'),
-        'USER': os.environ.get('DB_USER', 'root'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
-        'PORT': os.environ.get('DB_PORT', '3306'),
-        'CONN_MAX_AGE': 600,  # Keep connections alive for 10 minutes
-        'OPTIONS': {
-            'connect_timeout': 10,
-        },
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.environ.get('DB_NAME', BASE_DIR / 'db.sqlite3'),
     }
 }
 
