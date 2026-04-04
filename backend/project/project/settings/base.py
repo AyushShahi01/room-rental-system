@@ -18,6 +18,14 @@ SECRET_KEY = os.environ.get(
 
 # ─── Application Definition ────────────────────────────────────────────────────
 INSTALLED_APPS = [
+    'notifications',
+    'messaging',
+    'maintenance',
+    'agreements',
+    'payments',
+    'bookings',
+    'rooms',
+    'drf_spectacular',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -32,11 +40,11 @@ INSTALLED_APPS = [
     'corsheaders',
 
     # Local apps
-    'accounts',
+    'users',
 ]
 
 # ─── Custom User Model ─────────────────────────────────────────────────────────
-AUTH_USER_MODEL = 'accounts.User'
+AUTH_USER_MODEL = 'users.CustomUser'
 
 # ─── Middleware ─────────────────────────────────────────────────────────────────
 MIDDLEWARE = [
@@ -142,3 +150,15 @@ SIMPLE_JWT = {
 
 # ─── OTP Configuration ─────────────────────────────────────────────────────────
 OTP_EXPIRY_MINUTES = int(os.environ.get('OTP_EXPIRY_MINUTES', 10))
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Smart Room Renting API',
+    'DESCRIPTION': 'REST API Endpoints for Smart Room Renting System',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}

@@ -8,11 +8,15 @@ from .base import *  # noqa: F401,F403
 DEBUG = True
 ALLOWED_HOSTS = ['*']
 
-# ─── Database (SQLite for quick local dev) ──────────────────────────────────────
+# ─── Database (MySQL for local dev) ─────────────────────────────────────────────
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'room_rental_db',
+        'USER': 'root',
+        'PASSWORD': '',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
     }
 }
 

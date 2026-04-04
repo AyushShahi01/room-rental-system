@@ -1,10 +1,8 @@
 from django.db import models
-class Payments(models.Model):
-    paymentId = models.CharField(max_length=100, primary_key=True, auto_created=True)
-    bookingId = models.CharField(max_length=100, foreign_key=True)
-    amount = models.IntegerField()
-    paymentDate = models.DateTimeField(auto_now_add=True)
-    paymentStatus = models.CharField(max_length=100)
-    paymentMethod = models.CharField(max_length=100)
-    transactionId = models.CharField(max_length=100)
-# Create your models here.
+from django.conf import settings
+from bookings.models import Booking
+
+class Payment(models.Model):
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=50, default='pending')

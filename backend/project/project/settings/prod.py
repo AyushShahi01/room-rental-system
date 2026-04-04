@@ -12,15 +12,15 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 # ─── Secret Key (MUST be set in environment) ───────────────────────────────────
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
-# ─── Database (PostgreSQL) ──────────────────────────────────────────────────────
+# ─── Database (MySQL) ───────────────────────────────────────────────────────────
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'project_db'),
-        'USER': os.environ.get('DB_USER', 'postgres'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('DB_NAME', 'room_rental_db'),
+        'USER': os.environ.get('DB_USER', 'root'),
         'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
         'CONN_MAX_AGE': 600,  # Keep connections alive for 10 minutes
         'OPTIONS': {
             'connect_timeout': 10,

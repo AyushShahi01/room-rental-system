@@ -1,14 +1,9 @@
 from django.db import models
+from django.conf import settings
 
-class Rooms(models.Model):
-    roomId = models.CharField(max_length=100, primary_key=True, auto_created=True)
-    landloardId = models.CharField(max_length=100, foreign_key=True)
-    description = moedls.Charfield(max_length=255, null=True)
-    location = models.CharField(max_length=100)
-    rentPrice = models.IntegerField()
-    isAvailable = models.BooleanField(default=True)
-    photoUrl = models.CharField(max_length=255)
-    amenities = models.CharField(max_length=255)
-    createdAt = models.DateTimeField(auto_now_add=True)
-    
-# Create your models here.
+class Room(models.Model):
+    landlord = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    is_available = models.BooleanField(default=True)

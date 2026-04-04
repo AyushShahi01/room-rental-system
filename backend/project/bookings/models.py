@@ -1,12 +1,8 @@
 from django.db import models
+from django.conf import settings
+from rooms.models import Room
 
-class Bookings(models.Model):
-    bookingId = models.CharField(max_length=100, primary_key=True, auto_created=True)
-    roomId = models.CharField(max_length=100, foreign_key=True)
-    userId = models.CharField(max_length=100, foreign_key=True)
-    startDate = models.DateField()
-    endDate = models.DateField()
-    totalPrice = models.IntegerField()
-    status = models.CharField(max_length=100)
-    createdAt = models.DateTimeField(auto_now_add=True)
-# Create your models here.
+class Booking(models.Model):
+    tenant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    status = models.CharField(max_length=50, default='pending')

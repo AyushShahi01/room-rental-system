@@ -1,10 +1,7 @@
 from django.db import models
+from django.conf import settings
 
-class Notifications(models.Model):
-    notificationId = models.CharField(max_length=100, primary_key=True, auto_created=True)
-    userId = models.CharField(max_length=100, foreign_key=True)
-    type = models.CharField(max_length=100)
-    message = models.CharField(max_length=255)
-    isRead = models.BooleanField(default=False)
-    createdAt = models.DateTimeField(auto_now_add=True)
-# Create your models here.
+class Notification(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    content = models.TextField()
+    is_read = models.BooleanField(default=False)
