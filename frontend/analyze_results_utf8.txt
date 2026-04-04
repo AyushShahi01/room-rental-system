@@ -1,0 +1,62 @@
+﻿Analyzing frontend...                                           
+
+  error - Undefined name 'AppRoutes' - lib\controllers\auth_controller.dart:76:21 - undefined_identifier
+  error - Undefined name 'AppRoutes' - lib\controllers\auth_controller.dart:80:17 - undefined_identifier
+  error - Undefined name 'AppRoutes' - lib\controllers\auth_controller.dart:84:17 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:room_rental_system/routes/app_routes.dart' - lib\controllers\onboarding_controller.dart:3:8 - uri_does_not_exist
+  error - Undefined name 'AppRoutes' - lib\controllers\onboarding_controller.dart:64:21 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:room_rental_system/routes/app_routes.dart' - lib\controllers\settings_controller.dart:2:8 - uri_does_not_exist
+  error - Undefined name 'AppRoutes' - lib\controllers\settings_controller.dart:33:43 - undefined_identifier
+  error - Undefined name 'AppRoutes' - lib\controllers\settings_controller.dart:36:37 - undefined_identifier
+  error - Undefined name 'AppRoutes' - lib\controllers\settings_controller.dart:39:36 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:room_rental_system/routes/app_routes.dart' - lib\controllers\splash_controller.dart:2:8 - uri_does_not_exist
+  error - Undefined name 'AppRoutes' - lib\controllers\splash_controller.dart:15:21 - undefined_identifier
+  error - The method 'ControllerBindings' isn't defined for the type 'MyApp' - lib\main.dart:19:23 - undefined_method
+  error - The method 'SplashView' isn't defined for the type 'MyApp' - lib\main.dart:20:13 - undefined_method
+  error - Target of URI doesn't exist: 'package:room_rental_system/routes/app_routes.dart' - lib\routes\app_pages.dart:2:8 - uri_does_not_exist
+  error - Undefined name 'AppRoutes' - lib\routes\app_pages.dart:15:19 - undefined_identifier
+  error - Undefined name 'AppRoutes' - lib\routes\app_pages.dart:16:19 - undefined_identifier
+  error - Undefined name 'AppRoutes' - lib\routes\app_pages.dart:17:19 - undefined_identifier
+  error - Undefined name 'AppRoutes' - lib\routes\app_pages.dart:18:19 - undefined_identifier
+  error - Undefined name 'AppRoutes' - lib\routes\app_pages.dart:19:19 - undefined_identifier
+  error - Undefined name 'AppRoutes' - lib\routes\app_pages.dart:20:19 - undefined_identifier
+  error - Undefined name 'AppRoutes' - lib\routes\app_pages.dart:21:19 - undefined_identifier
+  error - Undefined name 'AppRoutes' - lib\routes\app_pages.dart:22:19 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:room_rental_system/controllers/nav_controller.dart' - lib\views\home_view.dart:3:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:room_rental_system/routes/app_routes.dart' - lib\views\home_view.dart:4:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:room_rental_system/views/booking_view.dart' - lib\views\home_view.dart:5:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:room_rental_system/views/explore_view.dart' - lib\views\home_view.dart:6:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:room_rental_system/views/home_content_view.dart' - lib\views\home_view.dart:7:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:room_rental_system/views/message_view.dart' - lib\views\home_view.dart:8:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:room_rental_system/views/profile_view.dart' - lib\views\home_view.dart:9:8 - uri_does_not_exist
+  error - The method 'NavController' isn't defined for the type 'HomeView' - lib\views\home_view.dart:19:35 - undefined_method
+  error - The name 'HomeContentView' isn't a class - lib\views\home_view.dart:22:13 - creation_with_non_type
+  error - The name 'ExploreView' isn't a class - lib\views\home_view.dart:23:13 - creation_with_non_type
+  error - The name 'BookingView' isn't a class - lib\views\home_view.dart:24:13 - creation_with_non_type
+  error - The name 'MessageView' isn't a class - lib\views\home_view.dart:25:13 - creation_with_non_type
+  error - The name 'ProfileView' isn't a class - lib\views\home_view.dart:26:13 - creation_with_non_type
+  error - Undefined name 'AppRoutes' - lib\views\home_view.dart:58:48 - undefined_identifier
+  error - Undefined name 'AppRoutes' - lib\views\home_view.dart:65:46 - undefined_identifier
+   info - Parameter 'key' could be a super parameter - lib\views\login_view.dart:6:9 - use_super_parameters
+   info - Parameter 'key' could be a super parameter - lib\views\register_view.dart:6:9 - use_super_parameters
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\views\register_view.dart:74:19 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\settings_view.dart:57:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\settings_view.dart:78:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\settings_view.dart:292:39 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\views\splash_view.dart:6:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\featured_property_card.dart:18:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\featured_property_card.dart:46:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\featured_property_card.dart:47:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\header_widget.dart:47:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\header_widget.dart:66:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\map_preview_widget.dart:75:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\map_preview_widget.dart:79:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\nearby_property_card.dart:19:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\notification_item.dart:45:32 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\widgets\onboarding_item.dart:7:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\search_bar_widget.dart:57:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\search_bar_widget.dart:109:39 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\widgets\search_bar_widget.dart:120:37 - unnecessary_underscores
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\widgets\settings_tile.dart:46:9 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\settings_tile.dart:78:34 - deprecated_member_use
+
