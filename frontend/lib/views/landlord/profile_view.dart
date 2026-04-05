@@ -14,7 +14,7 @@ class ProfileView extends StatelessWidget {
     String safe(String value) => value.isNotEmpty ? value : "N/A";
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FC),
+      backgroundColor: Colors.white,
       appBar: showAppBar
           ? AppBar(
               title: const Text(
@@ -90,7 +90,7 @@ class ProfileView extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.teal.withOpacity(0.1),
+                          color: Colors.blue,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -180,29 +180,32 @@ class ProfileView extends StatelessWidget {
     Color textColor = const Color(0xFF1E293B),
     bool isLast = false,
   }) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-      leading: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.1),
-          shape: BoxShape.circle,
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: iconColor, size: 22),
         ),
-        child: Icon(icon, color: iconColor, size: 22),
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: textColor,
-          fontSize: 16,
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: textColor,
+            fontSize: 16,
+          ),
         ),
+        trailing: isLast
+            ? null
+            : const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+        onTap: onTap,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
-      trailing: isLast
-          ? null
-          : const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-      onTap: onTap,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     );
   }
 

@@ -18,7 +18,6 @@
         "gap",
         "get",
         "get_storage",
-        "google_sign_in",
         "image_picker",
         "latlong2"
       ],
@@ -50,17 +49,6 @@
         "stream_channel",
         "test_api",
         "vector_math"
-      ]
-    },
-    {
-      "name": "google_sign_in",
-      "version": "7.2.0",
-      "dependencies": [
-        "flutter",
-        "google_sign_in_android",
-        "google_sign_in_ios",
-        "google_sign_in_platform_interface",
-        "google_sign_in_web"
       ]
     },
     {
@@ -278,42 +266,6 @@
         "stream_channel",
         "string_scanner",
         "term_glyph"
-      ]
-    },
-    {
-      "name": "google_sign_in_web",
-      "version": "1.1.3",
-      "dependencies": [
-        "flutter",
-        "flutter_web_plugins",
-        "google_identity_services_web",
-        "google_sign_in_platform_interface",
-        "http",
-        "web"
-      ]
-    },
-    {
-      "name": "google_sign_in_platform_interface",
-      "version": "3.1.0",
-      "dependencies": [
-        "flutter",
-        "plugin_platform_interface"
-      ]
-    },
-    {
-      "name": "google_sign_in_ios",
-      "version": "6.3.0",
-      "dependencies": [
-        "flutter",
-        "google_sign_in_platform_interface"
-      ]
-    },
-    {
-      "name": "google_sign_in_android",
-      "version": "7.2.10",
-      "dependencies": [
-        "flutter",
-        "google_sign_in_platform_interface"
       ]
     },
     {
@@ -610,28 +562,6 @@
       ]
     },
     {
-      "name": "google_identity_services_web",
-      "version": "0.3.3+1",
-      "dependencies": [
-        "meta",
-        "web"
-      ]
-    },
-    {
-      "name": "flutter_web_plugins",
-      "version": "0.0.0",
-      "dependencies": [
-        "flutter"
-      ]
-    },
-    {
-      "name": "plugin_platform_interface",
-      "version": "2.1.8",
-      "dependencies": [
-        "meta"
-      ]
-    },
-    {
       "name": "file_selector_windows",
       "version": "0.9.3+5",
       "dependencies": [
@@ -648,6 +578,13 @@
         "flutter",
         "http",
         "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "plugin_platform_interface",
+      "version": "2.1.8",
+      "dependencies": [
+        "meta"
       ]
     },
     {
@@ -673,6 +610,13 @@
       "dependencies": [
         "cross_file",
         "file_selector_platform_interface",
+        "flutter"
+      ]
+    },
+    {
+      "name": "flutter_web_plugins",
+      "version": "0.0.0",
+      "dependencies": [
         "flutter"
       ]
     },

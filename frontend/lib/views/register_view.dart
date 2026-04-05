@@ -69,14 +69,14 @@ class RegisterView extends StatelessWidget {
                       _buildRoleCard(
                         title: 'Tenant',
                         icon: Icons.person_outline,
-                        isSelected: controller.selectedRole.value == 'Tenant',
-                        onTap: () => controller.selectedRole.value = 'Tenant',
+                        isSelected: controller.selectedRole.value == 'tenant',
+                        onTap: () => controller.selectedRole.value = 'tenant',
                       ),
                       _buildRoleCard(
                         title: 'Landlord',
                         icon: Icons.business,
-                        isSelected: controller.selectedRole.value == 'Landlord',
-                        onTap: () => controller.selectedRole.value = 'Landlord',
+                        isSelected: controller.selectedRole.value == 'landlord',
+                        onTap: () => controller.selectedRole.value = 'landlord',
                       ),
                     ],
                   ),
@@ -126,41 +126,75 @@ class RegisterView extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: controller.phoneController,
-                  decoration: InputDecoration(
-                    labelText: 'Phone Number',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: const Icon(Icons.phone),
-                  ),
-                  keyboardType: TextInputType.phone,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: controller.addressController,
-                  decoration: InputDecoration(
-                    labelText: 'Address',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: const Icon(Icons.home),
+                Obx(
+                  () => Column(
+                    children: [
+                      if (controller.selectedRole.value == 'landlord') ...[
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: controller.provinceController,
+                          decoration: InputDecoration(
+                            labelText: 'Province',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            prefixIcon: const Icon(Icons.map),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: controller.districtController,
+                          decoration: InputDecoration(
+                            labelText: 'District',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            prefixIcon: const Icon(Icons.location_city),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: controller.cityController,
+                          decoration: InputDecoration(
+                            labelText: 'City',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            prefixIcon: const Icon(Icons.location_on),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: controller.wardController,
+                          decoration: InputDecoration(
+                            labelText: 'Ward',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            prefixIcon: const Icon(Icons.numbers),
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 const SizedBox(height: 30),
-                ElevatedButton(
-                  onPressed: controller.register,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.blueAccent,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                Obx(
+                  () => ElevatedButton(
+                    onPressed: controller.isLoading.value ? null : controller.register,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: Colors.blueAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
+                    child: controller.isLoading.value
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text('Register', style: TextStyle(fontSize: 18)),
                   ),
-                  child: const Text('Register', style: TextStyle(fontSize: 18)),
                 ),
                 const SizedBox(height: 20),
                 TextButton(

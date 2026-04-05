@@ -26,6 +26,17 @@ class LoginView extends StatelessWidget {
                 ),
                 const SizedBox(height: 30),
                 TextField(
+                  controller: controller.loginUsernameController,
+                  decoration: InputDecoration(
+                    labelText: 'Username',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: const Icon(Icons.person),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
                   controller: controller.emailController,
                   decoration: InputDecoration(
                     labelText: 'Email',
@@ -67,17 +78,21 @@ class LoginView extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: controller.login,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.blueAccent,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                Obx(
+                  () => ElevatedButton(
+                    onPressed: controller.isLoading.value ? null : controller.login,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: Colors.blueAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
+                    child: controller.isLoading.value
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text('Login', style: TextStyle(fontSize: 18)),
                   ),
-                  child: const Text('Login', style: TextStyle(fontSize: 18)),
                 ),
                 const SizedBox(height: 20),
 

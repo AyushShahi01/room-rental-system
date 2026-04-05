@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
+import '../routes/app_routes.dart';
 
 class VerifyOtpView extends StatelessWidget {
   const VerifyOtpView({super.key});
@@ -11,7 +12,13 @@ class VerifyOtpView extends StatelessWidget {
     final controller = Get.find<AuthController>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Verify OTP')),
+      appBar: AppBar(
+        title: const Text('Verify OTP'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Get.offAllNamed(AppRoutes.login),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(

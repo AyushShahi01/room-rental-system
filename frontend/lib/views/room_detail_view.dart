@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:room_rental_system/controllers/property_controller.dart';
@@ -24,12 +25,40 @@ class RoomDetailView extends StatelessWidget {
             children: [
               Stack(
                 children: [
-                  Image.network(
-                    room.imageUrl ?? '',
-                    height: 300,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
+                  (room.localImagePath != null &&
+                          room.localImagePath!.isNotEmpty)
+                      ? Image.file(
+                          File(room.localImagePath!),
+                          height: 300,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                height: 300,
+                                color: Colors.grey.shade300,
+                                child: const Icon(
+                                  Icons.image_not_supported,
+                                  size: 50,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                        )
+                      : Image.network(
+                          room.imageUrl ?? '',
+                          height: 300,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                height: 300,
+                                color: Colors.grey.shade300,
+                                child: const Icon(
+                                  Icons.home,
+                                  size: 80,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                        ),
                   Positioned(
                     top: 40,
                     left: 16,

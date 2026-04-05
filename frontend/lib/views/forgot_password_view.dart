@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:room_rental_system/controllers/auth_controller.dart';
+import 'package:room_rental_system/routes/app_routes.dart';
 
 class ForgotPasswordView extends StatelessWidget {
   const ForgotPasswordView({super.key});
@@ -10,7 +11,13 @@ class ForgotPasswordView extends StatelessWidget {
     final controller = Get.find<AuthController>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Forgot Password')),
+      appBar: AppBar(
+        title: const Text('Forgot Password'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Get.offAllNamed(AppRoutes.login),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(

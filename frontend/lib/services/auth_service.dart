@@ -3,31 +3,21 @@ import 'package:room_rental_system/utils/dio_connection.dart';
 import 'package:room_rental_system/controllers/storage_controller.dart';
 
 class AuthService {
-  static Future<Response> register(
-    String email,
-    String fullName,
-    String phone,
-    String role,
-    String password,
-    String confirmPassword,
-  ) async {
+  static Future<Response> register(Map<String, dynamic> data) async {
     return await DioConnection.dio.post(
       "register/",
-      data: {
-        "email": email,
-        "full_name": fullName,
-        "phone": phone,
-        "role": role,
-        "password": password,
-        "password_confirm": confirmPassword,
-      },
+      data: data,
     );
   }
 
-  static Future<Response> login(String email, String password) async {
+  static Future<Response> login(String username, String email, String password) async {
     return await DioConnection.dio.post(
       "login/",
-      data: {"email": email, "password": password},
+      data: {
+        "username": username,
+        "email": email,
+        "password": password
+      },
     );
   }
 

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -82,12 +83,17 @@ class AddPropertyView extends StatelessWidget {
                       ),
                       borderRadius: BorderRadius.circular(12),
                       image: ctrl.pickedImagePath.value.isNotEmpty
-                          ? DecorationImage(
-                              image: FileImage(
-                                File(ctrl.pickedImagePath.value),
-                              ),
-                              fit: BoxFit.cover,
-                            )
+                          ? (kIsWeb
+                              ? DecorationImage(
+                                  image: NetworkImage(ctrl.pickedImagePath.value),
+                                  fit: BoxFit.cover,
+                                )
+                              : DecorationImage(
+                                  image: FileImage(
+                                    File(ctrl.pickedImagePath.value),
+                                  ),
+                                  fit: BoxFit.cover,
+                                ))
                           : null,
                     ),
                     child: ctrl.pickedImagePath.value.isEmpty

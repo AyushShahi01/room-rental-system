@@ -1,6 +1,7 @@
 const List<String> nepalPlaces = [
   'Kathmandu',
   'Pokhara',
+  'Kavre',
   'Lalitpur',
   'Bhaktapur',
   'Biratnagar',

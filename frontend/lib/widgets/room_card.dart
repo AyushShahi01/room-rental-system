@@ -1,8 +1,11 @@
+
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../models/property_model.dart';
-import '../controllers/property_controller.dart';
-import '../routes/app_routes.dart';
+import 'package:room_rental_system/models/property_model.dart';
+import 'package:room_rental_system/controllers/property_controller.dart';
+import 'package:room_rental_system/routes/app_routes.dart';
 
 class RoomCard extends StatelessWidget {
   final PropertyModel room;
@@ -38,12 +41,53 @@ class RoomCard extends StatelessWidget {
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(12),
               ),
-              child: Image.network(
-                room.imageUrl ?? '',
-                height: 150,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
+              child: (room.localImagePath != null && room.localImagePath!.isNotEmpty)
+                  ? (kIsWeb
+                      ? Image.network(
+                          room.localImagePath!,
+                          height: 150,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            height: 150,
+                            color: Colors.grey[300],
+                            child: const Icon(
+                              Icons.image_not_supported,
+                              size: 50,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        )
+                      : Image.file(
+                          File(room.localImagePath!),
+                          height: 150,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            height: 150,
+                            color: Colors.grey[300],
+                            child: const Icon(
+                              Icons.image_not_supported,
+                              size: 50,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ))
+                  : Image.network(
+                      room.imageUrl ?? '',
+                      height: 150,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        height: 150,
+                        color: Colors.grey[300],
+                        child: const Icon(
+                          Icons.home,
+                          size: 50,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
             ),
             Padding(
               padding: const EdgeInsets.all(12),
