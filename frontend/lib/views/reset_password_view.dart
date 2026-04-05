@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/auth_controller.dart';
+import 'package:room_rental_system/controllers/auth_controller.dart';
 
 class ResetPasswordView extends StatelessWidget {
   const ResetPasswordView({super.key});
@@ -86,7 +86,10 @@ class ResetPasswordView extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('Reset Password', style: TextStyle(fontSize: 18)),
+                  child: const Text(
+                    'Reset Password',
+                    style: TextStyle(fontSize: 18),
+                  ),
                 ),
               ],
             ),

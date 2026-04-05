@@ -1,33 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/room_controller.dart';
-import '../controllers/booking_controller.dart';
-import '../controllers/dashboard_controller.dart';
+import 'package:room_rental_system/controllers/property_controller.dart';
+import 'package:room_rental_system/controllers/booking_controller.dart';
+import 'package:room_rental_system/controllers/dashboard_controller.dart';
 
 class RoomDetailScreen extends StatelessWidget {
   const RoomDetailScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Grab required controllers
-    final RoomController roomCtrl = Get.find<RoomController>();
+    final PropertyController propertyCtrl = Get.find<PropertyController>();
     final BookingController bookingCtrl = Get.find<BookingController>();
     final DashboardController dashboardCtrl = Get.find<DashboardController>();
 
     return Scaffold(
       body: Obx(() {
-        final room = roomCtrl.selectedRoom.value;
+        final room = propertyCtrl.selectedProperty.value;
         if (room == null) return const Center(child: Text("No room selected"));
 
         return SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 2. Large top image with Back & Favorite buttons
               Stack(
                 children: [
                   Image.network(
-                    room.imageUrl,
+                    room.imageUrl ?? '',
                     height: 300,
                     width: double.infinity,
                     fit: BoxFit.cover,
@@ -67,7 +65,6 @@ class RoomDetailScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 3. Room title and price
                     Text(
                       room.title,
                       style: const TextStyle(
@@ -86,7 +83,6 @@ class RoomDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
 
-                    // 4. Location text
                     Row(
                       children: [
                         const Icon(
@@ -106,7 +102,6 @@ class RoomDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
 
-                    // 5. Amenities row
                     const Text(
                       'Amenities',
                       style: TextStyle(
@@ -115,31 +110,8 @@ class RoomDetailScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: room.amenities.map((amenity) {
-                        return Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.check_circle_outline,
-                                color: Colors.blue,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(amenity, style: const TextStyle(fontSize: 12)),
-                          ],
-                        );
-                      }).toList(),
-                    ),
                     const SizedBox(height: 16),
 
-                    // 6. Description section
                     const Text(
                       'Description',
                       style: TextStyle(
@@ -149,7 +121,7 @@ class RoomDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      room.description,
+                      "Beautiful property located in ${room.location} with ${room.bedrooms} bedrooms and ${room.bathrooms} bathrooms.",
                       style: TextStyle(
                         fontSize: 15,
                         color: Colors.grey.shade800,
@@ -157,7 +129,6 @@ class RoomDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
 
-                    // 7. Map placeholder
                     const Text(
                       'Location',
                       style: TextStyle(
@@ -185,7 +156,6 @@ class RoomDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
 
-                    // 8. Owner info
                     const Text(
                       'Owner',
                       style: TextStyle(
@@ -209,17 +179,10 @@ class RoomDetailScreen extends StatelessWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              room.ownerName,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
+                            const Text(
                               "Verified Owner",
                               style: TextStyle(
-                                color: Colors.green.shade600,
+                                color: Colors.green,
                                 fontSize: 12,
                               ),
                             ),
@@ -244,7 +207,6 @@ class RoomDetailScreen extends StatelessWidget {
         );
       }),
 
-      // Bottom Button
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: const BoxDecoration(
@@ -268,9 +230,8 @@ class RoomDetailScreen extends StatelessWidget {
               ),
             ),
             onPressed: () {
-              final room = roomCtrl.selectedRoom.value;
+              final room = propertyCtrl.selectedProperty.value;
               if (room != null) {
-                // Generate booking and add to controller
                 bookingCtrl.addBooking(room);
                 Get.snackbar(
                   "Success",
@@ -279,11 +240,8 @@ class RoomDetailScreen extends StatelessWidget {
                   colorText: Colors.white,
                 );
 
-                // Navigate back then switch tab
-                Get.back(); // Pop Room Detail
-                dashboardCtrl.changeTab(
-                  2,
-                ); // Switch Bottom Nav to Booking tab (index 2)
+                Get.back();
+                dashboardCtrl.changeTab(2);
               }
             },
             child: const Text(

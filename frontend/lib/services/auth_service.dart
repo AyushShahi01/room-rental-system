@@ -1,88 +1,104 @@
-// import 'package:dio/dio.dart';
-// import 'package:room_rental_system/controllers/storage_controller.dart';
-// import 'package:room_rental_system/utils/dio_connection.dart';
+import 'package:dio/dio.dart';
+import 'package:room_rental_system/utils/dio_connection.dart';
+import 'package:room_rental_system/controllers/storage_controller.dart';
 
-// class AuthService {
+class AuthService {
+  static Future<Response> register(
+    String email,
+    String fullName,
+    String phone,
+    String role,
+    String password,
+    String confirmPassword,
+  ) async {
+    return await DioConnection.dio.post(
+      "register/",
+      data: {
+        "email": email,
+        "full_name": fullName,
+        "phone": phone,
+        "role": role,
+        "password": password,
+        "password_confirm": confirmPassword,
+      },
+    );
+  }
 
+  static Future<Response> login(String email, String password) async {
+    return await DioConnection.dio.post(
+      "login/",
+      data: {"email": email, "password": password},
+    );
+  }
 
-//   static Future<Response> login(String email, String password) async {
-//     return await DioConnection.dio.post(
-//       "login",
-//       queryParameters: {
-//         "email": email,
-//         "password": password,
-//       },
-//     );
-//   }
+  static Future<Response> logout(String refreshToken) async {
+    var token = StorageController().getToken();
+    DioConnection.dio.options.headers['Authorization'] = "Bearer $token";
+    return await DioConnection.dio.post(
+      "logout/",
+      data: {"refresh": refreshToken},
+    );
+  }
 
+  static Future<Response> refreshToken(String refreshToken) async {
+    return await DioConnection.dio.post(
+      "refresh/",
+      data: {"refresh": refreshToken},
+    );
+  }
 
-//   static Future<Response> register(
-//     String name,
-//     String email,
-//     String phone, // ✅ renamed
-//     String password,
-//     String countryCode,
-//   ) async {
-//     return await DioConnection.dio.post(
-//       "register",
-//       queryParameters: {
-//         "name": name,
-//         "email": email,
-//         "phone": phone, // ✅ FIXED (was whatsapp)
-//         "password": password,
-//         "country_code": countryCode,
-//       },
-//     );
-//   }
+  static Future<Response> fetchProfile() async {
+    var token = StorageController().getToken();
+    DioConnection.dio.options.headers['Authorization'] = "Bearer $token";
+    return await DioConnection.dio.get("me/");
+  }
 
+  static Future<Response> verifyEmail(String email, String otpCode) async {
+    return await DioConnection.dio.post(
+      "verify-email/",
+      data: {"email": email, "otp_code": otpCode},
+    );
+  }
 
-//   static Future<Response> fetchProfile() async {
-//     var token = StorageController().getToken();
+  static Future<Response> resendVerification(String email) async {
+    return await DioConnection.dio.post(
+      "resend-verification/",
+      data: {"email": email},
+    );
+  }
 
-//     return await DioConnection.dio.get(
-//       "profile",
-//       options: Options(
-//         headers: {
-//           "Authorization": "Bearer $token",
-//         },
-//       ),
-//     );
-//   }
+  static Future<Response> forgotPassword(String email) async {
+    return await DioConnection.dio.post(
+      "forgot-password/",
+      data: {"email": email},
+    );
+  }
 
+  static Future<Response> resetPassword(
+    String email,
+    String otpCode,
+    String newPassword,
+  ) async {
+    return await DioConnection.dio.post(
+      "reset-password/",
+      data: {"email": email, "otp_code": otpCode, "new_password": newPassword},
+    );
+  }
 
-//   static Future<Response> forgotPassword(String email) async {
-//     return await DioConnection.dio.post(
-//       "forgot-password",
-//       queryParameters: {
-//         "email": email,
-//       },
-//     );
-//   }
-
-
-//   static Future<Response> verifyOtp(String email, String otp) async {
-//     return await DioConnection.dio.post(
-//       "verify-otp",
-//       queryParameters: {
-//         "email": email,
-//         "otp": otp,
-//       },
-//     );
-//   }
-
-//   // ✅ RESET PASSWORD
-//   static Future<Response> resetPassword(
-//     String email,
-//     String password,
-//     String confirmPassword,
-//   ) async {
-//     return await DioConnection.dio.post(
-//       "reset-password",
-//       queryParameters: {
-//         "email": email,
-//         "password": password,
-//         "password_confirmation": confirmPassword,
-//       },
-//     );
-//   }
-// }
+  static Future<Response> changePassword(
+    String oldPassword,
+    String newPassword,
+    String newPasswordConfirm,
+  ) async {
+    var token = StorageController().getToken();
+    DioConnection.dio.options.headers['Authorization'] = "Bearer $token";
+    return await DioConnection.dio.post(
+      "change-password/",
+      data: {
+        "old_password": oldPassword,
+        "new_password": newPassword,
+        "new_password_confirm": newPasswordConfirm,
+      },
+    );
+  }
+}

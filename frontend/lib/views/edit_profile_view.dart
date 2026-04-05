@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/auth_controller.dart';
+import 'package:room_rental_system/controllers/auth_controller.dart';
 
 class EditProfileView extends StatelessWidget {
   const EditProfileView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Get existing auth controller
     final AuthController authCtrl = Get.find<AuthController>();
 
-    // Local controllers initialized with current values
     final nameCtrl = TextEditingController(text: authCtrl.userName.value);
     final emailCtrl = TextEditingController(text: authCtrl.userEmail.value);
     final phoneCtrl = TextEditingController(text: authCtrl.userPhone.value);
@@ -28,7 +26,6 @@ class EditProfileView extends StatelessWidget {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            // Profile Avatar
             Center(
               child: Stack(
                 children: [
@@ -40,7 +37,11 @@ class EditProfileView extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.blueAccent, width: 2),
                     ),
-                    child: const Icon(Icons.person, size: 50, color: Colors.blueAccent),
+                    child: const Icon(
+                      Icons.person,
+                      size: 50,
+                      color: Colors.blueAccent,
+                    ),
                   ),
                   Positioned(
                     bottom: 0,
@@ -51,23 +52,25 @@ class EditProfileView extends StatelessWidget {
                         color: Colors.blueAccent,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 32),
-            
-            // Name Field
+
             _buildTextField(
               label: 'Full Name',
               icon: Icons.person_outline,
               controller: nameCtrl,
             ),
             const SizedBox(height: 20),
-            
-            // Email Field
+
             _buildTextField(
               label: 'Email Address',
               icon: Icons.email_outlined,
@@ -75,8 +78,7 @@ class EditProfileView extends StatelessWidget {
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 20),
-            
-            // Phone Field
+
             _buildTextField(
               label: 'Phone Number',
               icon: Icons.phone_outlined,
@@ -84,29 +86,26 @@ class EditProfileView extends StatelessWidget {
               keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: 20),
-            
-            // Address Field
+
             _buildTextField(
               label: 'Address',
               icon: Icons.location_on_outlined,
               controller: addressCtrl,
             ),
-            
+
             const SizedBox(height: 48),
-            
-            // Save Button
+
             SizedBox(
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
                 onPressed: () {
-                  // Save updated data directly into AuthController's reactive variables
                   authCtrl.userName.value = nameCtrl.text;
                   authCtrl.userEmail.value = emailCtrl.text;
                   authCtrl.userPhone.value = phoneCtrl.text;
                   authCtrl.userAddress.value = addressCtrl.text;
-                  
-                  Get.back(); // Go back to the previous screen
+
+                  Get.back();
                   Get.snackbar(
                     'Success',
                     'Profile updated successfully',
@@ -124,7 +123,14 @@ class EditProfileView extends StatelessWidget {
                   elevation: 5,
                   shadowColor: Colors.blueAccent.withOpacity(0.4),
                 ),
-                child: const Text('Save Changes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                child: const Text(
+                  'Save Changes',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ],

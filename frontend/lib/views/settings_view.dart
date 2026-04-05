@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/auth_controller.dart';
-import '../controllers/settings_controller.dart';
-import '../routes/app_routes.dart';
-import '../widgets/settings_tile.dart';
+import 'package:room_rental_system/controllers/auth_controller.dart';
 
-/// Settings page — accessible from the Profile tab's settings icon.
+import 'package:room_rental_system/controllers/settings_controller.dart';
+import 'package:room_rental_system/routes/app_routes.dart';
+import 'package:room_rental_system/widgets/settings_tile.dart';
+
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Lazily find/create controllers
     final SettingsController settingsCtrl = Get.find<SettingsController>();
     final AuthController authCtrl = Get.find<AuthController>();
 
@@ -37,7 +36,6 @@ class SettingsView extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // ─── User Profile Card ─────────────────────────────────────────
             Container(
               margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
               padding: const EdgeInsets.all(16),
@@ -54,7 +52,6 @@ class SettingsView extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  // Avatar
                   Container(
                     width: 60,
                     height: 60,
@@ -73,36 +70,40 @@ class SettingsView extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.person, size: 34, color: Colors.white),
+                    child: const Icon(
+                      Icons.person,
+                      size: 34,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(width: 16),
-                  // Name & email
                   Expanded(
-                    child: Obx(() => Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              authCtrl.userName.value,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
+                    child: Obx(
+                      () => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            authCtrl.userName.value,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
                             ),
-                            const SizedBox(height: 3),
-                            Text(
-                              authCtrl.userEmail.value.isEmpty
-                                  ? 'No email set'
-                                  : authCtrl.userEmail.value,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey.shade600,
-                              ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            authCtrl.userEmail.value.isEmpty
+                                ? 'No email set'
+                                : authCtrl.userEmail.value,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
                             ),
-                          ],
-                        )),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  // Edit button
                   OutlinedButton(
                     onPressed: () => Get.toNamed(AppRoutes.editProfile),
                     style: OutlinedButton.styleFrom(
@@ -112,9 +113,13 @@ class SettingsView extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 6),
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
                       textStyle: const TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w600),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     child: const Text('Edit'),
                   ),
@@ -124,43 +129,47 @@ class SettingsView extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // ─── PERSONAL INFO (Edit per row) ─────────────────────────────
-            Obx(() => _SectionCard(
-                  title: 'PERSONAL INFO',
-                  children: [
-                    _InfoRow(
-                      icon: Icons.person_outline,
-                      title: 'Name',
-                      value: authCtrl.userName.value,
-                      onEdit: () => Get.toNamed(AppRoutes.editProfile),
-                    ),
-                    const _Divider(),
-                    _InfoRow(
-                      icon: Icons.email_outlined,
-                      title: 'Email',
-                      value: authCtrl.userEmail.value,
-                      onEdit: () => Get.toNamed(AppRoutes.editProfile),
-                    ),
-                    const _Divider(),
-                    _InfoRow(
-                      icon: Icons.phone_outlined,
-                      title: 'Phone',
-                      value: authCtrl.userPhone.value.isNotEmpty ? authCtrl.userPhone.value : 'N/A',
-                      onEdit: () => Get.toNamed(AppRoutes.editProfile),
-                    ),
-                    const _Divider(),
-                    _InfoRow(
-                      icon: Icons.location_on_outlined,
-                      title: 'Address',
-                      value: authCtrl.userAddress.value.isNotEmpty ? authCtrl.userAddress.value : 'N/A',
-                      onEdit: () => Get.toNamed(AppRoutes.editProfile),
-                    ),
-                  ],
-                )),
+            Obx(
+              () => _SectionCard(
+                title: 'PERSONAL INFO',
+                children: [
+                  _InfoRow(
+                    icon: Icons.person_outline,
+                    title: 'Name',
+                    value: authCtrl.userName.value,
+                    onEdit: () => Get.toNamed(AppRoutes.editProfile),
+                  ),
+                  const _Divider(),
+                  _InfoRow(
+                    icon: Icons.email_outlined,
+                    title: 'Email',
+                    value: authCtrl.userEmail.value,
+                    onEdit: () => Get.toNamed(AppRoutes.editProfile),
+                  ),
+                  const _Divider(),
+                  _InfoRow(
+                    icon: Icons.phone_outlined,
+                    title: 'Phone',
+                    value: authCtrl.userPhone.value.isNotEmpty
+                        ? authCtrl.userPhone.value
+                        : 'N/A',
+                    onEdit: () => Get.toNamed(AppRoutes.editProfile),
+                  ),
+                  const _Divider(),
+                  _InfoRow(
+                    icon: Icons.location_on_outlined,
+                    title: 'Address',
+                    value: authCtrl.userAddress.value.isNotEmpty
+                        ? authCtrl.userAddress.value
+                        : 'N/A',
+                    onEdit: () => Get.toNamed(AppRoutes.editProfile),
+                  ),
+                ],
+              ),
+            ),
 
             const SizedBox(height: 16),
 
-            // ─── ACCOUNT & SECURITY ────────────────────────────────────────
             _SectionCard(
               title: 'ACCOUNT & SECURITY',
               children: [
@@ -168,7 +177,7 @@ class SettingsView extends StatelessWidget {
                   icon: Icons.lock_outline,
                   iconColor: Colors.indigo,
                   title: 'Change Password',
-                  onTap: () {}, // Future implementation
+                  onTap: () {},
                 ),
                 const _Divider(),
                 SettingsTile(
@@ -183,31 +192,31 @@ class SettingsView extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // ─── PREFERENCES ──────────────────────────────────────────────
-            Obx(() => _SectionCard(
-                  title: 'PREFERENCES',
-                  children: [
-                    SettingsTile(
-                      icon: Icons.notifications_active_outlined,
-                      iconColor: Colors.blueAccent,
-                      title: 'Push Notifications',
-                      value: settingsCtrl.pushNotifications.value,
-                      onToggle: (_) => settingsCtrl.togglePushNotifications(),
-                    ),
-                    const _Divider(),
-                    SettingsTile(
-                      icon: Icons.mark_email_unread_outlined,
-                      iconColor: Colors.teal,
-                      title: 'Email Marketing',
-                      value: settingsCtrl.emailMarketing.value,
-                      onToggle: (_) => settingsCtrl.toggleEmailMarketing(),
-                    ),
-                  ],
-                )),
+            Obx(
+              () => _SectionCard(
+                title: 'PREFERENCES',
+                children: [
+                  SettingsTile(
+                    icon: Icons.notifications_active_outlined,
+                    iconColor: Colors.blueAccent,
+                    title: 'Push Notifications',
+                    value: settingsCtrl.pushNotifications.value,
+                    onToggle: (_) => settingsCtrl.togglePushNotifications(),
+                  ),
+                  const _Divider(),
+                  SettingsTile(
+                    icon: Icons.mark_email_unread_outlined,
+                    iconColor: Colors.teal,
+                    title: 'Email Marketing',
+                    value: settingsCtrl.emailMarketing.value,
+                    onToggle: (_) => settingsCtrl.toggleEmailMarketing(),
+                  ),
+                ],
+              ),
+            ),
 
             const SizedBox(height: 28),
 
-            // ─── Logout Button ─────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: ElevatedButton.icon(
@@ -223,7 +232,9 @@ class SettingsView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                   ),
                   textStyle: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -235,8 +246,6 @@ class SettingsView extends StatelessWidget {
     );
   }
 }
-
-// ─── Private helper widgets ─────────────────────────────────────────────────
 
 class _InfoRow extends StatelessWidget {
   final IconData icon;
@@ -263,14 +272,27 @@ class _InfoRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
                 const SizedBox(height: 2),
-                Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.edit_outlined, color: Colors.blueAccent, size: 20),
+            icon: const Icon(
+              Icons.edit_outlined,
+              color: Colors.blueAccent,
+              size: 20,
+            ),
             onPressed: onEdit,
             tooltip: 'Edit $title',
           ),
@@ -280,7 +302,6 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-/// Section wrapper card with header label.
 class _SectionCard extends StatelessWidget {
   final String title;
   final List<Widget> children;
@@ -294,7 +315,6 @@ class _SectionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section header
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
@@ -327,7 +347,6 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-/// Thin divider between tiles inside a card.
 class _Divider extends StatelessWidget {
   const _Divider();
 
@@ -335,7 +354,7 @@ class _Divider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Divider(
       height: 1,
-      indent: 56, // Adjusted for the new icon padding
+      indent: 56,
       endIndent: 16,
       color: Colors.grey.shade100,
     );

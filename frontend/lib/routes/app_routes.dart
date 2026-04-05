@@ -12,12 +12,10 @@ class AppRoutes {
   static String resetPassword = "/reset-password";
   static String editProfile = "/edit-profile";
 
-  // Tenant Flow Routes
   static String roomDetail = "/room-detail";
   static String booking = "/booking";
   static String payment = "/payment";
   static String maintenance = "/maintenance";
 
-  // Landlord Flow Routes
   static String landlordDashboard = "/landlord-dashboard";
 }

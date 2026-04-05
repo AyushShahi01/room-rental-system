@@ -1,43 +1,54 @@
 import 'package:get/get.dart';
 import '../models/booking_model.dart';
-import '../models/room_model.dart';
-import 'auth_controller.dart'; // Import auth controller to fetch user data
+import '../models/property_model.dart';
+import 'auth_controller.dart';
 
 class BookingController extends GetxController {
-  // Reactive list of bookings (mocking a database)
   var bookings = <BookingModel>[].obs;
 
-  void addBooking(RoomModel room) {
-    // Get user info from AuthController
+  void addBooking(PropertyModel property) {
     final authCtrl = Get.find<AuthController>();
 
     final newBooking = BookingModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      room: room,
-      moveInDate: '2024-01-01', // Dummy data
-      duration: '6 Months', // Dummy data
+      propertyId: property.id,
+      propertyTitle: property.title,
+      price: property.price,
+      moveInDate: '2024-01-01',
+      duration: '6 Months',
       userName: authCtrl.userName.value,
-      userPhone: authCtrl.userPhone.value.isNotEmpty ? authCtrl.userPhone.value : 'N/A',
-      userAddress: authCtrl.userAddress.value.isNotEmpty ? authCtrl.userAddress.value : 'N/A',
+      userPhone: authCtrl.userPhone.value.isNotEmpty
+          ? authCtrl.userPhone.value
+          : 'N/A',
+      userAddress: authCtrl.userAddress.value.isNotEmpty
+          ? authCtrl.userAddress.value
+          : 'N/A',
       status: 'Pending',
+      isPaid: false,
     );
     bookings.add(newBooking);
+    Get.snackbar("Success", "Booking request sent successfully");
   }
 
-  // Method for Landlord to approve
   void approveRequest(String id) {
     final index = bookings.indexWhere((req) => req.id == id);
     if (index != -1) {
       bookings[index].status.value = 'Approved';
-      // force update if needed, but Rx properties inside models are reactive
     }
   }
 
-  // Method for Landlord to reject
   void rejectRequest(String id) {
     final index = bookings.indexWhere((req) => req.id == id);
     if (index != -1) {
       bookings[index].status.value = 'Rejected';
+    }
+  }
+
+  void submitPayment(String id) {
+    final index = bookings.indexWhere((req) => req.id == id);
+    if (index != -1) {
+      bookings[index].isPaid.value = true;
+      bookings.refresh();
     }
   }
 }

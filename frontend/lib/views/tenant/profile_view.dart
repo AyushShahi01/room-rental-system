@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/auth_controller.dart';
-import '../../routes/app_routes.dart';
+import 'package:room_rental_system/controllers/auth_controller.dart';
+import 'package:room_rental_system/routes/app_routes.dart';
 
 class ProfileView extends StatelessWidget {
   final bool showAppBar;
@@ -14,10 +14,16 @@ class ProfileView extends StatelessWidget {
     String safe(String value) => value.isNotEmpty ? value : "N/A";
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FC), // Clean, modern background
+      backgroundColor: const Color(0xFFF4F7FC),
       appBar: showAppBar
           ? AppBar(
-              title: const Text('My Profile', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+              title: const Text(
+                'My Profile',
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               backgroundColor: Colors.transparent,
               elevation: 0,
               centerTitle: true,
@@ -30,7 +36,6 @@ class ProfileView extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
           child: Column(
             children: [
-              // Profile Header Card
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(24.0),
@@ -50,46 +55,72 @@ class ProfileView extends StatelessWidget {
                     const CircleAvatar(
                       radius: 50,
                       backgroundColor: Color(0xFFE3F2FD),
-                      child: Icon(Icons.person, size: 50, color: Colors.blueAccent),
+                      child: Icon(
+                        Icons.person,
+                        size: 50,
+                        color: Colors.blueAccent,
+                      ),
                     ),
                     const SizedBox(height: 16),
-                    Obx(() => Text(
-                      safe(auth.userName.value),
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
-                    )),
+                    Obx(
+                      () => Text(
+                        safe(auth.userName.value),
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Obx(() => Text(
-                      safe(auth.userEmail.value),
-                      style: TextStyle(fontSize: 15, color: Colors.blueGrey.shade400),
-                    )),
+                    Obx(
+                      () => Text(
+                        safe(auth.userEmail.value),
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.blueGrey.shade400,
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 12),
-                    Obx(() => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.blueAccent.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
+                    Obx(
+                      () => Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blueAccent.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          auth.selectedRole.value.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.blueAccent,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
                       ),
-                      child: Text(
-                        auth.selectedRole.value.toUpperCase(),
-                        style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                    )),
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 30),
 
-              // Options List Header
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   "Settings & Preferences",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.blueGrey.shade800),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.blueGrey.shade800,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Settings Options List
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -161,13 +192,17 @@ class ProfileView extends StatelessWidget {
       ),
       title: Text(
         title,
-        style: TextStyle(fontWeight: FontWeight.w600, color: textColor, fontSize: 16),
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: textColor,
+          fontSize: 16,
+        ),
       ),
-      trailing: isLast ? null : const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+      trailing: isLast
+          ? null
+          : const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
       onTap: onTap,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     );
   }
 

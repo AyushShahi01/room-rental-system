@@ -24,14 +24,22 @@ class CustomerDetailsView extends StatelessWidget {
               child: Icon(Icons.person, size: 50, color: Colors.white),
             ),
             const SizedBox(height: 16),
-            const Text("Ram Bahadur", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const Text("Tenant Candidate", style: TextStyle(fontSize: 16, color: Colors.grey)),
+            const Text(
+              "Ram Bahadur",
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const Text(
+              "Tenant Candidate",
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
             const SizedBox(height: 24),
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 5)],
+                boxShadow: const [
+                  BoxShadow(color: Colors.black12, blurRadius: 5),
+                ],
               ),
               child: const Column(
                 children: [
@@ -63,7 +71,12 @@ class CustomerDetailsView extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: () {
                       Get.back();
-                      Get.snackbar("Rejected", "Booking request rejected", backgroundColor: Colors.red, colorText: Colors.white);
+                      Get.snackbar(
+                        "Rejected",
+                        "Booking request rejected",
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                      );
                     },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.red,
@@ -78,18 +91,26 @@ class CustomerDetailsView extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () {
                       Get.back();
-                      Get.snackbar("Approved", "Booking request approved", backgroundColor: Colors.green, colorText: Colors.white);
+                      Get.snackbar(
+                        "Approved",
+                        "Booking request approved",
+                        backgroundColor: Colors.green,
+                        colorText: Colors.white,
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.teal,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: const Text("Approve", style: TextStyle(fontSize: 16)),
+                    child: const Text(
+                      "Approve",
+                      style: TextStyle(fontSize: 16),
+                    ),
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),

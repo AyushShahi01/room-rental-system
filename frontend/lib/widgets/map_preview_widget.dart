@@ -5,7 +5,6 @@ import 'package:latlong2/latlong.dart';
 class MapPreviewWidget extends StatelessWidget {
   const MapPreviewWidget({super.key});
 
-  // Key locations in Nepal
   static const List<Map<String, dynamic>> _nepalLocations = [
     {'name': 'Kathmandu', 'lat': 27.7172, 'lng': 85.3240},
     {'name': 'Pokhara', 'lat': 28.2096, 'lng': 83.9856},
@@ -22,10 +21,9 @@ class MapPreviewWidget extends StatelessWidget {
         height: 200,
         child: Stack(
           children: [
-            // ── Interactive OpenStreetMap of Nepal ──────────────────
             FlutterMap(
               options: const MapOptions(
-                initialCenter: LatLng(28.1, 84.0), // Center of Nepal
+                initialCenter: LatLng(28.1, 84.0),
                 initialZoom: 6.5,
                 interactionOptions: InteractionOptions(
                   flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
@@ -33,8 +31,7 @@ class MapPreviewWidget extends StatelessWidget {
               ),
               children: [
                 TileLayer(
-                  urlTemplate:
-                      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'com.roomrental.app',
                 ),
                 MarkerLayer(
@@ -64,13 +61,14 @@ class MapPreviewWidget extends StatelessWidget {
               ],
             ),
 
-            // ── Overlay label ──────────────────────────────────────
             Positioned(
               bottom: 12,
               left: 12,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.88),
                   borderRadius: BorderRadius.circular(20),
@@ -78,7 +76,7 @@ class MapPreviewWidget extends StatelessWidget {
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.15),
                       blurRadius: 8,
-                    )
+                    ),
                   ],
                 ),
                 child: const Row(

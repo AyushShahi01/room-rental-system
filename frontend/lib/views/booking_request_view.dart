@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
-// This file is currently obsolete since Booking Request is sent directly
-// from RoomDetailScreen in the new flow.
 class BookingRequestView extends StatelessWidget {
-  const BookingRequestView({Key? key}) : super(key: key);
+  const BookingRequestView({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(

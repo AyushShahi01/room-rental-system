@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../controllers/maintenance_controller.dart';
+import 'package:room_rental_system/controllers/maintenance_controller.dart';
 
 class MaintenanceBinding extends Bindings {
   @override

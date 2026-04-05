@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/auth_controller.dart';
+import 'package:room_rental_system/controllers/auth_controller.dart';
 
 class RegisterView extends StatelessWidget {
   const RegisterView({super.key});
@@ -61,10 +61,7 @@ class RegisterView extends StatelessWidget {
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
-
                 const SizedBox(height: 30),
-
-                /// ROLE SELECTION
                 Obx(
                   () => Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -84,10 +81,7 @@ class RegisterView extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
-                /// NAME
                 TextField(
                   controller: controller.nameController,
                   decoration: InputDecoration(
@@ -98,10 +92,7 @@ class RegisterView extends StatelessWidget {
                     prefixIcon: const Icon(Icons.person),
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
-                /// EMAIL
                 TextField(
                   controller: controller.emailController,
                   decoration: InputDecoration(
@@ -113,10 +104,7 @@ class RegisterView extends StatelessWidget {
                   ),
                   keyboardType: TextInputType.emailAddress,
                 ),
-
                 const SizedBox(height: 16),
-
-                /// PASSWORD
                 Obx(
                   () => TextField(
                     controller: controller.passwordController,
@@ -138,10 +126,7 @@ class RegisterView extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
-                /// PHONE (NOW FOR BOTH ROLES ✅)
                 TextField(
                   controller: controller.phoneController,
                   decoration: InputDecoration(
@@ -153,10 +138,7 @@ class RegisterView extends StatelessWidget {
                   ),
                   keyboardType: TextInputType.phone,
                 ),
-
                 const SizedBox(height: 16),
-
-                /// ADDRESS (NOW FOR BOTH ROLES ✅)
                 TextField(
                   controller: controller.addressController,
                   decoration: InputDecoration(
@@ -167,10 +149,7 @@ class RegisterView extends StatelessWidget {
                     prefixIcon: const Icon(Icons.home),
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
-                /// REGISTER BUTTON
                 ElevatedButton(
                   onPressed: controller.register,
                   style: ElevatedButton.styleFrom(
@@ -183,10 +162,7 @@ class RegisterView extends StatelessWidget {
                   ),
                   child: const Text('Register', style: TextStyle(fontSize: 18)),
                 ),
-
                 const SizedBox(height: 20),
-
-                /// LOGIN NAVIGATION
                 TextButton(
                   onPressed: controller.goToLogin,
                   child: const Text('Already have an account? Login'),

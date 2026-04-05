@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+
+import 'package:room_rental_system/routes/app_routes.dart';
 import 'package:get/get.dart';
-import '../controllers/splash_controller.dart';
 
 class SplashView extends StatelessWidget {
   const SplashView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Initialize the controller
-    Get.put(SplashController());
+    Future.delayed(const Duration(seconds: 2), () {
+      Get.offNamed(AppRoutes.onboarding);
+    });
 
     return Scaffold(
       backgroundColor: Colors.blueAccent,

@@ -7,7 +7,7 @@ import 'dashboard_controller.dart';
 class MaintenanceController extends GetxController {
   final titleController = TextEditingController();
   final descController = TextEditingController();
-  
+
   var selectedCategory = "Plumbing".obs;
   final categories = ["Plumbing", "Electrical", "Carpentry", "Other"];
 
@@ -19,7 +19,12 @@ class MaintenanceController extends GetxController {
 
   void submitRequest() {
     if (titleController.text.isEmpty || descController.text.isEmpty) {
-      Get.snackbar("Error", "Please fill in all fields", backgroundColor: Colors.redAccent, colorText: Colors.white);
+      Get.snackbar(
+        "Error",
+        "Please fill in all fields",
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
       return;
     }
 
@@ -31,19 +36,22 @@ class MaintenanceController extends GetxController {
       description: descController.text,
       category: selectedCategory.value,
       tenantName: authCtrl.userName.value,
-      roomTitle: "My Room", // Placeholder dummy room
+      propertyTitle: "My Property",
       status: "Pending",
     );
 
     maintenanceRequests.add(newReq);
 
-    Get.snackbar("Success", "Maintenance request submitted!", backgroundColor: Colors.green, colorText: Colors.white);
-    
-    // Clear fields
+    Get.snackbar(
+      "Success",
+      "Maintenance request submitted!",
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+    );
+
     titleController.clear();
     descController.clear();
-    
-    // Navigate strictly back to dashboard home tab automatically
+
     if (Get.isRegistered<DashboardController>()) {
       Get.find<DashboardController>().changeTab(0);
     }

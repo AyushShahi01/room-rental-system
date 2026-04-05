@@ -1,15 +1,15 @@
 class PaymentModel {
-  final String id;
-  final double amount;
-  final String date;
-  final String method;
-  final String status;
+  String id;
+  double amount;
+  String date;
+  String method;
+  String status;
 
   PaymentModel({
-    this.id = '',
-    this.amount = 0.0,
-    this.date = '',
-    this.method = '',
-    this.status = '',
+    required this.id,
+    required this.amount,
+    required this.date,
+    required this.method,
+    required this.status,
   });
 }

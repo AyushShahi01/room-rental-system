@@ -1,12 +1,11 @@
 import 'package:get/get.dart';
 
-/// A single notification data model.
 class NotificationItem {
   final String id;
   final String title;
   final String description;
   final String time;
-  final String category; // 'rent' | 'bookings' | 'maintenance'
+  final String category;
   final bool isToday;
   RxBool isRead;
 
@@ -21,15 +20,10 @@ class NotificationItem {
   }) : isRead = read.obs;
 }
 
-/// Controller for the Notifications page.
-/// Manages tabs, notification list, and mark-all-read action.
 class NotificationsController extends GetxController {
-  /// Currently selected tab index (0=All, 1=Rent, 2=Bookings, 3=Maintenance)
   final RxInt selectedTab = 0.obs;
 
-  /// Full list of dummy notifications
   final RxList<NotificationItem> notifications = <NotificationItem>[
-    // ── TODAY ────────────────────────────────────────────────────────────
     NotificationItem(
       id: '1',
       title: 'Rent Due Reminder',
@@ -54,7 +48,6 @@ class NotificationsController extends GetxController {
       category: 'maintenance',
       isToday: true,
     ),
-    // ── EARLIER ──────────────────────────────────────────────────────────
     NotificationItem(
       id: '4',
       title: 'Rent Payment Received',
@@ -89,33 +82,27 @@ class NotificationsController extends GetxController {
     ),
   ].obs;
 
-  // ─── Tab labels ──────────────────────────────────────────────────────────
   final List<String> tabs = ['All', 'Rent', 'Bookings', 'Maintenance'];
 
-  /// Returns notifications filtered by the selected tab.
   List<NotificationItem> get filteredNotifications {
     if (selectedTab.value == 0) return notifications;
     final category = tabs[selectedTab.value].toLowerCase();
     return notifications.where((n) => n.category == category).toList();
   }
 
-  /// TODAY section of filtered notifications
   List<NotificationItem> get todayNotifications =>
       filteredNotifications.where((n) => n.isToday).toList();
 
-  /// EARLIER section of filtered notifications
   List<NotificationItem> get earlierNotifications =>
       filteredNotifications.where((n) => !n.isToday).toList();
 
   void selectTab(int index) => selectedTab.value = index;
 
-  /// Mark every notification as read.
   void markAllRead() {
     for (final n in notifications) {
       n.isRead.value = true;
     }
   }
 
-  /// Count of unread notifications.
   int get unreadCount => notifications.where((n) => !n.isRead.value).length;
 }

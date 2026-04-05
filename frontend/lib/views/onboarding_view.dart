@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:room_rental_system/controllers/onboarding_controller';
 
+import 'package:room_rental_system/controllers/onboarding_controller.dart';
 
 class OnboardingView extends StatelessWidget {
   OnboardingView({super.key});
@@ -18,15 +18,9 @@ class OnboardingView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          
-          Image.asset(
-            imagePath,
-            height: 260,
-            fit: BoxFit.contain,
-          ),
+          Image.asset(imagePath, height: 260, fit: BoxFit.contain),
 
           const SizedBox(height: 50),
-
 
           Text(
             title,
@@ -36,7 +30,6 @@ class OnboardingView extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-       
           Text(
             description,
             textAlign: TextAlign.center,
@@ -58,7 +51,6 @@ class OnboardingView extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            /// 🔹 Skip
             Align(
               alignment: Alignment.topRight,
               child: TextButton(
@@ -70,7 +62,6 @@ class OnboardingView extends StatelessWidget {
               ),
             ),
 
-            /// 🔹 Pages
             Expanded(
               child: PageView.builder(
                 controller: controller.pageController,
@@ -87,12 +78,10 @@ class OnboardingView extends StatelessWidget {
               ),
             ),
 
-           
             Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  
                   Obx(
                     () => Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -102,8 +91,7 @@ class OnboardingView extends StatelessWidget {
                           duration: const Duration(milliseconds: 300),
                           margin: const EdgeInsets.only(right: 8),
                           height: 8,
-                          width:
-                              controller.currentPage.value == index ? 24 : 8,
+                          width: controller.currentPage.value == index ? 24 : 8,
                           decoration: BoxDecoration(
                             color: controller.currentPage.value == index
                                 ? Colors.blueAccent
@@ -117,7 +105,6 @@ class OnboardingView extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                 
                   SizedBox(
                     width: double.infinity,
                     height: 50,

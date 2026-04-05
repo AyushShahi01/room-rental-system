@@ -13,7 +13,6 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
   final FocusNode _focusNode = FocusNode();
   List<String> _suggestions = [];
 
-
   void _onChanged(String value) {
     final trimmed = value.trim();
     if (trimmed.isEmpty) {
@@ -47,7 +46,6 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Search Box ─────────────────────────────────────────────────
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -77,8 +75,11 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                         _controller.clear();
                         setState(() => _suggestions = []);
                       },
-                      child: const Icon(Icons.close,
-                          color: Colors.grey, size: 18),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.grey,
+                        size: 18,
+                      ),
                     ),
                   Container(
                     margin: const EdgeInsets.all(8),
@@ -86,8 +87,11 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                       color: Colors.blueAccent,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.filter_list,
-                        color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.filter_list,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ],
               ),
@@ -97,7 +101,6 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
           ),
         ),
 
-        // ── Suggestions Dropdown ───────────────────────────────────────
         if (_suggestions.isNotEmpty)
           Container(
             margin: const EdgeInsets.only(top: 4),
@@ -122,12 +125,16 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
               itemBuilder: (context, index) {
                 final place = _suggestions[index];
                 return ListTile(
-                  leading: const Icon(Icons.location_on_outlined,
-                      color: Colors.blueAccent, size: 20),
-                  title: Text(place,
-                      style: const TextStyle(fontSize: 14)),
-                  subtitle: const Text('Nepal',
-                      style: TextStyle(fontSize: 11, color: Colors.grey)),
+                  leading: const Icon(
+                    Icons.location_on_outlined,
+                    color: Colors.blueAccent,
+                    size: 20,
+                  ),
+                  title: Text(place, style: const TextStyle(fontSize: 14)),
+                  subtitle: const Text(
+                    'Nepal',
+                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
                   dense: true,
                   onTap: () => _selectSuggestion(place),
                 );

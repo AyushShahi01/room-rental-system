@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import '../routes/app_routes.dart';
 
 class AuthController extends GetxController {
-  // Controllers
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -13,16 +12,13 @@ class AuthController extends GetxController {
   final newPasswordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
-  // User Data
   final RxString userName = 'Guest'.obs;
   final RxString userEmail = ''.obs;
   final RxString userPhone = ''.obs;
   final RxString userAddress = ''.obs;
 
-  // Role (Default Tenant)
   final RxString selectedRole = 'Tenant'.obs;
 
-  // Password Visibility
   final RxBool isLoginPasswordVisible = false.obs;
   final RxBool isRegisterPasswordVisible = false.obs;
   final RxBool isNewPasswordVisible = false.obs;
@@ -41,46 +37,62 @@ class AuthController extends GetxController {
     super.onClose();
   }
 
-  // ================= LOGIN =================
   void login() {
-    if (emailController.text.trim().isEmpty ||
-        passwordController.text.trim().isEmpty) {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
       Get.snackbar('Error', 'Please enter email and password');
       return;
     }
 
-    // Save user data
-    userEmail.value = emailController.text.trim();
-    userName.value = emailController.text.split('@').first;
+    if (!email.endsWith('@gmail.com')) {
+      Get.snackbar('Error', 'Email must be a valid Gmail address');
+      return;
+    }
 
-    // IMPORTANT: Do NOT change role here
-    // Role comes from UI selection
+    if (password.length < 8) {
+      Get.snackbar('Error', 'Password must be at least 8 characters');
+      return;
+    }
+
+    userEmail.value = email;
+    userName.value = email.split('@').first;
 
     navToHome();
   }
 
-  // ================= REGISTER =================
   void register() {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
     if (nameController.text.trim().isEmpty ||
-        emailController.text.trim().isEmpty ||
-        passwordController.text.trim().isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
         phoneController.text.trim().isEmpty ||
         addressController.text.trim().isEmpty) {
       Get.snackbar('Error', 'Please fill all fields');
       return;
     }
 
-    // Save user data
+    if (!email.endsWith('@gmail.com')) {
+      Get.snackbar('Error', 'Email must be a valid Gmail address');
+      return;
+    }
+
+    if (password.length < 8) {
+      Get.snackbar('Error', 'Password must be at least 8 characters');
+      return;
+    }
+
     userName.value = nameController.text.trim();
-    userEmail.value = emailController.text.trim();
+    userEmail.value = email;
     userPhone.value = phoneController.text.trim();
     userAddress.value = addressController.text.trim();
 
-    // Navigate based on selected role
     navToHome();
   }
 
-  // ================= NAVIGATION =================
   void navToHome() {
     if (selectedRole.value == 'Landlord') {
       Get.offNamed(AppRoutes.landlordDashboard);
@@ -101,7 +113,6 @@ class AuthController extends GetxController {
     Get.offNamed(AppRoutes.forgotPassword);
   }
 
-  // ================= PASSWORD VISIBILITY =================
   void toggleLoginPasswordVisibility() {
     isLoginPasswordVisible.value = !isLoginPasswordVisible.value;
   }
@@ -118,7 +129,6 @@ class AuthController extends GetxController {
     isConfirmPasswordVisible.value = !isConfirmPasswordVisible.value;
   }
 
-  // ================= OTP =================
   void sendOtp() {
     if (emailController.text.trim().isEmpty &&
         phoneController.text.trim().isEmpty) {
@@ -130,8 +140,8 @@ class AuthController extends GetxController {
   }
 
   void verifyOtp() {
-    if (otpController.text.trim().isEmpty) {
-      Get.snackbar('Error', 'Please enter OTP');
+    if (otpController.text.trim().length != 6) {
+      Get.snackbar('Error', 'Please enter a 6-digit OTP');
       return;
     }
 

@@ -13,7 +13,10 @@ class ManageRoomsView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Manage Rooms", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const Text(
+                "Manage Rooms",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 16),
               Expanded(
                 child: ListView.builder(
@@ -21,7 +24,9 @@ class ManageRoomsView extends StatelessWidget {
                   itemBuilder: (context, index) {
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(12),
                         leading: Container(
@@ -30,8 +35,13 @@ class ManageRoomsView extends StatelessWidget {
                           color: Colors.teal.shade100,
                           child: const Icon(Icons.bed, color: Colors.teal),
                         ),
-                        title: Text("Luxury Room ${index + 1}", style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: const Text("Location: Baneshwor\nPrice: NPR 12000/mo"),
+                        title: Text(
+                          "Luxury Room ${index + 1}",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: const Text(
+                          "Location: Baneshwor\nPrice: NPR 12000/mo",
+                        ),
                         isThreeLine: true,
                         trailing: IconButton(
                           icon: const Icon(Icons.edit, color: Colors.grey),
