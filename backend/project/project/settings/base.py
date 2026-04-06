@@ -130,6 +130,9 @@ REST_FRAMEWORK = {
     # Pagination (can be customized per-view)
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+
+    # OpenAPI schema generation
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 # ─── Simple JWT Configuration ──────────────────────────────────────────────────
@@ -150,11 +153,6 @@ SIMPLE_JWT = {
 
 # ─── OTP Configuration ─────────────────────────────────────────────────────────
 OTP_EXPIRY_MINUTES = int(os.environ.get('OTP_EXPIRY_MINUTES', 10))
-
-
-REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-}
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Smart Room Renting API',

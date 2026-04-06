@@ -9,7 +9,15 @@ class BookingTests(APITestCase):
     def setUp(self):
         self.landlord = CustomUser.objects.create_user(username='landlord', password='password')
         self.tenant = CustomUser.objects.create_user(username='tenant', password='password')
-        self.room = Room.objects.create(landlord=self.landlord, title='Room', description='Desc', price='100.00')
+        self.room = Room.objects.create(
+            landlord=self.landlord,
+            title='Room',
+            description='Desc',
+            price='100.00',
+            province='Bagmati',
+            state='Kathmandu',
+            ward_number=7,
+        )
         self.booking_url = reverse('booking-list-create')
 
     def test_create_booking(self):

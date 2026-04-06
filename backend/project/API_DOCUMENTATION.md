@@ -1,6 +1,6 @@
 # 🔐 Authentication API Documentation
 
-**Base URL:** `http://localhost:8000/api/v1/auth`  
+**Base URL:** `http://localhost:8000/api/auth`  
 **Content-Type:** `application/json`  
 **Auth Header:** `Authorization: Bearer <access_token>`
 
@@ -8,18 +8,18 @@
 
 ## Endpoints Overview
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|:----:|-------------|
-| POST | `/register/` | ❌ | Register a new user |
-| POST | `/login/` | ❌ | Login and receive JWT tokens |
-| POST | `/logout/` | ✅ | Blacklist refresh token |
-| POST | `/refresh/` | ❌ | Refresh access token |
-| GET | `/me/` | ✅ | Get current user profile |
-| POST | `/verify-email/` | ❌ | Verify email with OTP |
-| POST | `/resend-verification/` | ❌ | Resend verification OTP |
-| POST | `/forgot-password/` | ❌ | Request password reset OTP |
-| POST | `/reset-password/` | ❌ | Reset password with OTP |
-| POST | `/change-password/` | ✅ | Change password (authenticated) |
+| Method | Endpoint                | Auth | Description                     |
+| ------ | ----------------------- | :--: | ------------------------------- |
+| POST   | `/register/`            |  ❌  | Register a new user             |
+| POST   | `/login/`               |  ❌  | Login and receive JWT tokens    |
+| POST   | `/logout/`              |  ✅  | Blacklist refresh token         |
+| POST   | `/refresh/`             |  ❌  | Refresh access token            |
+| GET    | `/me/`                  |  ✅  | Get current user profile        |
+| POST   | `/verify-email/`        |  ❌  | Verify email with OTP           |
+| POST   | `/resend-verification/` |  ❌  | Resend verification OTP         |
+| POST   | `/forgot-password/`     |  ❌  | Request password reset OTP      |
+| POST   | `/reset-password/`      |  ❌  | Reset password with OTP         |
+| POST   | `/change-password/`     |  ✅  | Change password (authenticated) |
 
 ---
 
@@ -27,29 +27,25 @@
 
 Create a new user account. Sends an email verification OTP automatically.
 
-**`POST /api/v1/auth/register/`**
+**`POST /api/auth/register/`**
 
 ### Request Body
 
-| Field | Type | Required | Description |
-|-------|------|:--------:|-------------|
-| `email` | string | ✅ | Valid email address |
-| `full_name` | string | ❌ | User's full name |
-| `phone` | string | ❌ | Phone number (with country code) |
-| `role` | string | ❌ | One of: `tenant`, `landlord`, `admin`. Default: `tenant` |
-| `password` | string | ✅ | Min 8 characters, must pass Django validators |
-| `password_confirm` | string | ✅ | Must match `password` |
+| Field      | Type   | Required | Description                                     |
+| ---------- | ------ | :------: | ----------------------------------------------- |
+| `username` | string |    ✅    | Unique username                                 |
+| `email`    | string |    ✅    | Valid email address                             |
+| `role`     | string |    ❌    | One of: `tenant`, `landlord`. Default: `tenant` |
+| `password` | string |    ✅    | Min 8 characters, must pass Django validators   |
 
 ### Example Request
 
 ```json
 {
+  "username": "john_doe",
   "email": "john@example.com",
-  "full_name": "John Doe",
-  "phone": "+9779800000000",
   "role": "tenant",
-  "password": "StrongPass123!",
-  "password_confirm": "StrongPass123!"
+  "password": "StrongPass123!"
 }
 ```
 
@@ -57,24 +53,20 @@ Create a new user account. Sends an email verification OTP automatically.
 
 ```json
 {
-  "message": "Registration successful. Please check your email for verification.",
+  "message": "Registration successful.",
+  "tokens": {
+    "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+  },
   "user": {
-    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "id": 1,
+    "username": "john_doe",
     "email": "john@example.com",
-    "full_name": "John Doe",
-    "phone": "+9779800000000",
+    "first_name": "",
+    "last_name": "",
     "role": "tenant",
-    "is_active": true,
-    "is_verified": false,
-    "created_at": "2026-03-04T04:00:00Z",
-    "profile": {
-      "profile_picture": null,
-      "address": null,
-      "occupation": null,
-      "date_of_birth": null,
-      "created_at": "2026-03-04T04:00:00Z",
-      "updated_at": "2026-03-04T04:00:00Z"
-    }
+    "tenant_id": 1,
+    "landlord_id": null
   }
 }
 ```
@@ -83,9 +75,9 @@ Create a new user account. Sends an email verification OTP automatically.
 
 ```json
 {
-  "email": ["A user with this email already exists."],
-  "password": ["This password is too common."],
-  "password_confirm": ["Passwords do not match."]
+  "username": ["A user with that username already exists."],
+  "role": ["\"tenent\" is not a valid choice."],
+  "password": ["This password is too common."]
 }
 ```
 
@@ -95,20 +87,22 @@ Create a new user account. Sends an email verification OTP automatically.
 
 Authenticate and receive JWT token pair. Records login history and device info.
 
-**`POST /api/v1/auth/login/`**
+**`POST /api/auth/login/`**
 
 ### Request Body
 
-| Field | Type | Required | Description |
-|-------|------|:--------:|-------------|
-| `email` | string | ✅ | Registered email |
-| `password` | string | ✅ | Account password |
+| Field             | Type   | Required | Description                      |
+| ----------------- | ------ | :------: | -------------------------------- |
+| `usernameOrEmail` | string |   ✅\*   | Username or registered email     |
+| `username`        | string |    ❌    | Legacy username-only login field |
+| `email`           | string |    ❌    | Legacy email-only login field    |
+| `password`        | string |    ✅    | Account password                 |
 
 ### Example Request
 
 ```json
 {
-  "email": "john@example.com",
+  "usernameOrEmail": "john@example.com",
   "password": "StrongPass123!"
 }
 ```
@@ -123,15 +117,14 @@ Authenticate and receive JWT token pair. Records login history and device info.
     "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
   },
   "user": {
-    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "id": 1,
+    "username": "john_doe",
     "email": "john@example.com",
-    "full_name": "John Doe",
-    "phone": "+9779800000000",
+    "first_name": "",
+    "last_name": "",
     "role": "tenant",
-    "is_active": true,
-    "is_verified": false,
-    "created_at": "2026-03-04T04:00:00Z",
-    "profile": { ... }
+    "tenant_id": 1,
+    "landlord_id": null
   }
 }
 ```
@@ -152,13 +145,13 @@ Authenticate and receive JWT token pair. Records login history and device info.
 
 Blacklist the refresh token to invalidate the session.
 
-**`POST /api/v1/auth/logout/`** 🔒 _Requires Authentication_
+**`POST /api/auth/logout/`** 🔒 _Requires Authentication_
 
 ### Request Body
 
-| Field | Type | Required | Description |
-|-------|------|:--------:|-------------|
-| `refresh` | string | ✅ | The refresh token to blacklist |
+| Field     | Type   | Required | Description                    |
+| --------- | ------ | :------: | ------------------------------ |
+| `refresh` | string |    ✅    | The refresh token to blacklist |
 
 ### Example Request
 
@@ -190,13 +183,13 @@ Blacklist the refresh token to invalidate the session.
 
 Get a new access token using a valid refresh token. The old refresh token is blacklisted and a new one is returned (rotation enabled).
 
-**`POST /api/v1/auth/refresh/`**
+**`POST /api/auth/refresh/`**
 
 ### Request Body
 
-| Field | Type | Required | Description |
-|-------|------|:--------:|-------------|
-| `refresh` | string | ✅ | Valid refresh token |
+| Field     | Type   | Required | Description         |
+| --------- | ------ | :------: | ------------------- |
+| `refresh` | string |    ✅    | Valid refresh token |
 
 ### Example Request
 
@@ -230,28 +223,20 @@ Get a new access token using a valid refresh token. The old refresh token is bla
 
 Get the authenticated user's profile.
 
-**`GET /api/v1/auth/me/`** 🔒 _Requires Authentication_
+**`GET /api/auth/me/`** 🔒 _Requires Authentication_
 
 ### Success Response — `200 OK`
 
 ```json
 {
-  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "id": 1,
+  "username": "john_doe",
   "email": "john@example.com",
-  "full_name": "John Doe",
-  "phone": "+9779800000000",
+  "first_name": "",
+  "last_name": "",
   "role": "tenant",
-  "is_active": true,
-  "is_verified": true,
-  "created_at": "2026-03-04T04:00:00Z",
-  "profile": {
-    "profile_picture": null,
-    "address": null,
-    "occupation": null,
-    "date_of_birth": null,
-    "created_at": "2026-03-04T04:00:00Z",
-    "updated_at": "2026-03-04T04:00:00Z"
-  }
+  "tenant_id": 1,
+  "landlord_id": null
 }
 ```
 
@@ -269,14 +254,14 @@ Get the authenticated user's profile.
 
 Verify the user's email using the OTP received via email.
 
-**`POST /api/v1/auth/verify-email/`**
+**`POST /api/auth/verify-email/`**
 
 ### Request Body
 
-| Field | Type | Required | Description |
-|-------|------|:--------:|-------------|
-| `email` | string | ✅ | User's email address |
-| `otp_code` | string | ✅ | 6-digit OTP code |
+| Field      | Type   | Required | Description          |
+| ---------- | ------ | :------: | -------------------- |
+| `email`    | string |    ✅    | User's email address |
+| `otp_code` | string |    ✅    | 6-digit OTP code     |
 
 ### Example Request
 
@@ -298,6 +283,7 @@ Verify the user's email using the OTP received via email.
 ### Error Responses
 
 **`400 Bad Request`** — Invalid or expired OTP:
+
 ```json
 {
   "error": "OTP has expired or is invalid. Please request a new one."
@@ -305,6 +291,7 @@ Verify the user's email using the OTP received via email.
 ```
 
 **`400 Bad Request`** — Wrong OTP code:
+
 ```json
 {
   "error": "Invalid OTP code."
@@ -312,6 +299,7 @@ Verify the user's email using the OTP received via email.
 ```
 
 **`404 Not Found`** — Email not registered:
+
 ```json
 {
   "error": "No account found with this email."
@@ -324,13 +312,13 @@ Verify the user's email using the OTP received via email.
 
 Resend the email verification OTP. Response is always success to prevent email enumeration.
 
-**`POST /api/v1/auth/resend-verification/`**
+**`POST /api/auth/resend-verification/`**
 
 ### Request Body
 
-| Field | Type | Required | Description |
-|-------|------|:--------:|-------------|
-| `email` | string | ✅ | User's email address |
+| Field   | Type   | Required | Description          |
+| ------- | ------ | :------: | -------------------- |
+| `email` | string |    ✅    | User's email address |
 
 ### Example Request
 
@@ -354,13 +342,13 @@ Resend the email verification OTP. Response is always success to prevent email e
 
 Initiate password reset by sending an OTP to the user's email. Response is always success to prevent email enumeration.
 
-**`POST /api/v1/auth/forgot-password/`**
+**`POST /api/auth/forgot-password/`**
 
 ### Request Body
 
-| Field | Type | Required | Description |
-|-------|------|:--------:|-------------|
-| `email` | string | ✅ | Registered email address |
+| Field   | Type   | Required | Description              |
+| ------- | ------ | :------: | ------------------------ |
+| `email` | string |    ✅    | Registered email address |
 
 ### Example Request
 
@@ -384,15 +372,15 @@ Initiate password reset by sending an OTP to the user's email. Response is alway
 
 Reset the password using the OTP received from the forgot-password flow.
 
-**`POST /api/v1/auth/reset-password/`**
+**`POST /api/auth/reset-password/`**
 
 ### Request Body
 
-| Field | Type | Required | Description |
-|-------|------|:--------:|-------------|
-| `email` | string | ✅ | Registered email address |
-| `otp_code` | string | ✅ | 6-digit OTP code |
-| `new_password` | string | ✅ | New password (min 8 chars) |
+| Field          | Type   | Required | Description                |
+| -------------- | ------ | :------: | -------------------------- |
+| `email`        | string |    ✅    | Registered email address   |
+| `otp_code`     | string |    ✅    | 6-digit OTP code           |
+| `new_password` | string |    ✅    | New password (min 8 chars) |
 
 ### Example Request
 
@@ -415,6 +403,7 @@ Reset the password using the OTP received from the forgot-password flow.
 ### Error Responses
 
 **`400 Bad Request`**:
+
 ```json
 {
   "error": "OTP has expired or is invalid. Please request a new one."
@@ -422,6 +411,7 @@ Reset the password using the OTP received from the forgot-password flow.
 ```
 
 **`404 Not Found`**:
+
 ```json
 {
   "error": "No account found with this email."
@@ -434,15 +424,15 @@ Reset the password using the OTP received from the forgot-password flow.
 
 Change password for an authenticated user. Requires the current password.
 
-**`POST /api/v1/auth/change-password/`** 🔒 _Requires Authentication_
+**`POST /api/auth/change-password/`** 🔒 _Requires Authentication_
 
 ### Request Body
 
-| Field | Type | Required | Description |
-|-------|------|:--------:|-------------|
-| `old_password` | string | ✅ | Current password |
-| `new_password` | string | ✅ | New password (min 8 chars) |
-| `new_password_confirm` | string | ✅ | Must match `new_password` |
+| Field                  | Type   | Required | Description                |
+| ---------------------- | ------ | :------: | -------------------------- |
+| `old_password`         | string |    ✅    | Current password           |
+| `new_password`         | string |    ✅    | New password (min 8 chars) |
+| `new_password_confirm` | string |    ✅    | Must match `new_password`  |
 
 ### Example Request
 
@@ -465,6 +455,7 @@ Change password for an authenticated user. Requires the current password.
 ### Error Responses
 
 **`400 Bad Request`**:
+
 ```json
 {
   "old_password": ["Current password is incorrect."],
@@ -494,19 +485,18 @@ Authorization: Bearer <access_token>
 
 ## User Roles
 
-| Role | Value | Description |
-|------|-------|-------------|
-| Tenant | `tenant` | Default role for regular users |
-| Landlord | `landlord` | Property owners |
-| Admin | `admin` | Full system access |
+| Role     | Value      | Description                    |
+| -------- | ---------- | ------------------------------ |
+| Tenant   | `tenant`   | Default role for regular users |
+| Landlord | `landlord` | Property owners                |
 
 ---
 
 ## Rate Limiting
 
-| User Type | Limit |
-|-----------|-------|
-| Anonymous | 100 requests/day |
+| User Type     | Limit             |
+| ------------- | ----------------- |
+| Anonymous     | 100 requests/day  |
 | Authenticated | 1000 requests/day |
 
 When rate-limited, the API returns `429 Too Many Requests`.
