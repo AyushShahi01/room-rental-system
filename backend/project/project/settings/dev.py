@@ -8,7 +8,7 @@ from .base import *  # noqa: F401,F403
 DEBUG = True
 ALLOWED_HOSTS = ['*']
 
-# ─── Database (MySQL for local dev) ─────────────────────────────────────────────
+# ─── Database (local dev) ────────────────────────────────────────────────────────
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
