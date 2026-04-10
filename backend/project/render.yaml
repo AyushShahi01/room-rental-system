@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: fotosfolio-backend
+    runtime: docker
+    branch: main
+    autoDeploy: true
+    envVars:
+      - key: SECRET_KEY
+        sync: false
+      - key: DEBUG
+        value: "False"
+      - key: DATABASE_URL
+        sync: false
