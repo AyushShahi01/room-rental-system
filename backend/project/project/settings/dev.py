@@ -12,7 +12,9 @@ ALLOWED_HOSTS = ['*']
 
 # ─── Database (local dev) ────────────────────────────────────────────────────────
 DATABASES = {
-    'default': dj_database_url.parse('postgresql://neondb_owner:npg_wQil81hkJFBG@ep-damp-king-ani3ksii-pooler.c-6.us-east-1.aws.neon.tech/room-rental?sslmode=require&channel_binding=require')
+    'default': dj_database_url.parse(
+        os.environ.get("DATABASE_URL", "postgresql://neondb_owner:npg_wQil81hkJFBG@ep-damp-king-ani3ksii-pooler.c-6.us-east-1.aws.neon.tech/room-rental?sslmode=require&channel_binding=require")
+    )
 }
 
 # ─── CORS (allow everything in dev) ─────────────────────────────────────────────
