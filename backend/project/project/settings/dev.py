@@ -2,6 +2,8 @@
 Development settings — local dev with SQLite and console email.
 Usage:  DJANGO_SETTINGS_MODULE=project.settings.dev python manage.py runserver
 """
+import dj_database_url
+
 from .base import *  # noqa: F401,F403
 
 # ─── Debug ──────────────────────────────────────────────────────────────────────
@@ -10,10 +12,7 @@ ALLOWED_HOSTS = ['*']
 
 # ─── Database (local dev) ────────────────────────────────────────────────────────
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.parse('postgresql://neondb_owner:npg_wQil81hkJFBG@ep-damp-king-ani3ksii-pooler.c-6.us-east-1.aws.neon.tech/room-rental?sslmode=require&channel_binding=require')
 }
 
 # ─── CORS (allow everything in dev) ─────────────────────────────────────────────
