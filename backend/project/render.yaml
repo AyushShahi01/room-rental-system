@@ -1,13 +1,24 @@
 services:
   - type: web
-    name: fotosfolio-backend
-    runtime: docker
+    name: room-rental-api
+    runtime: python
+    pythonVersion: 3.12
     branch: main
+    buildCommand: cd backend/project && pip install -r requirements.txt && python manage.py collectstatic --noinput --settings=project.settings.prod
+    startCommand: cd backend/project && gunicorn project.wsgi:application --bind 0.0.0.0:$PORT
     autoDeploy: true
     envVars:
-      - key: SECRET_KEY
+      - key: PYTHON_VERSION
+        value: "3.12"
+      - key: DJANGO_SETTINGS_MODULE
+        value: project.settings.prod
+      - key: DJANGO_SECRET_KEY
         sync: false
       - key: DEBUG
         value: "False"
       - key: DATABASE_URL
+        sync: false
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
         sync: false

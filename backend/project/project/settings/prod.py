@@ -12,12 +12,11 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 # ─── Secret Key (MUST be set in environment) ───────────────────────────────────
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
-# ─── Database (SQLite) ───────────────────────────────────────────────────────────
+# ─── Database (PostgreSQL on Render) ─────────────────────────────────────────────
+import dj_database_url
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.environ.get('DB_NAME', BASE_DIR / 'db.sqlite3'),
-    }
+    'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
 }
 
 # ─── CORS ────────────────────────────────────────────────────────────────────────
