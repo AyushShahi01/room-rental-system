@@ -3,8 +3,10 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
+from django.contrib.auth import get_user_model
 
 from .serializers import (
     AuthResponseSerializer,
@@ -128,10 +130,47 @@ class ChangePasswordView(APIView):
         return Response({'message': 'Password changed successfully.'}, status=status.HTTP_200_OK)
 
 class AdminUserListView(APIView):
-    def get(self, request): return Response({"message": "Admin list users"})
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_staff:
+            raise PermissionDenied('Admin access required.')
+
+        user_model = get_user_model()
+        users = user_model.objects.all().order_by('username')
+        data = UserSerializer(users, many=True).data
+        return Response({'count': len(data), 'results': data}, status=status.HTTP_200_OK)
 
 class BanUserView(APIView):
-    def patch(self, request, pk): return Response({"message": "Ban user"})
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        if not request.user.is_staff:
+            raise PermissionDenied('Admin access required.')
+
+        user_model = get_user_model()
+        target = user_model.objects.filter(pk=pk).first()
+        if not target:
+            return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if target.id == request.user.id:
+            return Response({'error': 'You cannot ban yourself.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        target.is_active = False
+        target.save(update_fields=['is_active'])
+        return Response({'message': 'User has been banned.'}, status=status.HTTP_200_OK)
 
 class AdminDashboardView(APIView):
-    def get(self, request): return Response({"message": "Admin dashboard"})
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_staff:
+            raise PermissionDenied('Admin access required.')
+
+        user_model = get_user_model()
+        data = {
+            'total_users': user_model.objects.count(),
+            'active_users': user_model.objects.filter(is_active=True).count(),
+            'staff_users': user_model.objects.filter(is_staff=True).count(),
+        }
+        return Response(data, status=status.HTTP_200_OK)

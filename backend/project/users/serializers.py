@@ -5,6 +5,7 @@ from django.contrib.auth.password_validation import validate_password
 from .models import CustomUser
 
 
+
 class UserSerializer(serializers.ModelSerializer):
     tenant_id = serializers.SerializerMethodField()
     landlord_id = serializers.SerializerMethodField()
@@ -26,15 +27,20 @@ class UserSerializer(serializers.ModelSerializer):
             'ward',
         ]
         read_only_fields = ['id']
+        extra_kwargs = {
+            'username': {'read_only': True},
+            'email': {'read_only': True},
+            'role': {'read_only': True},
+        }
 
     def get_tenant_id(self, obj):
         if obj.role == CustomUser.Role.TENANT:
-            return obj.id
+            return str(obj.id)
         return None
 
     def get_landlord_id(self, obj):
         if obj.role == CustomUser.Role.LANDLORD:
-            return obj.id
+            return str(obj.id)
         return None
 
 
@@ -60,6 +66,9 @@ class ErrorResponseSerializer(serializers.Serializer):
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     ward = serializers.IntegerField(required=False, allow_null=True)
+    province = serializers.CharField(required=False, allow_blank=True)
+    district = serializers.CharField(required=False, allow_blank=True)
+    city = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = CustomUser
@@ -67,12 +76,20 @@ class RegisterSerializer(serializers.ModelSerializer):
             'username',
             'email',
             'password',
+            'first_name',
+            'last_name',
             'role',
             'province',
             'district',
             'city',
             'ward',
         ]
+    
+    def validate_email(self, value):
+        email = value.strip().lower()
+        if CustomUser.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError('A user with this email already exists.')
+        return email
 
     def validate_password(self, value):
         validate_password(value)
@@ -114,6 +131,8 @@ class RegisterSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             email=validated_data.get('email', ''),
             password=validated_data['password'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
             role=validated_data.get('role', CustomUser.Role.TENANT),
             province=validated_data.get('province'),
             district=validated_data.get('district'),

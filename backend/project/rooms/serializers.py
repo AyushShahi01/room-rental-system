@@ -15,6 +15,17 @@ class RoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
         fields = '__all__'
+        read_only_fields = ('landlord', 'created_at', 'updated_at')
+
+    def validate_price(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('Price must be greater than zero.')
+        return value
+
+    def validate_ward_number(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('Ward number must be a positive integer.')
+        return value
 
 
 class RoomRecommendationRequestSerializer(serializers.Serializer):

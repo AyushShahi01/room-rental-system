@@ -4,14 +4,14 @@ services:
     runtime: python
     pythonVersion: 3.12
     branch: main
-    buildCommand: cd backend/project && pip install -r requirements.txt && python manage.py collectstatic --noinput --settings=project.settings.prod
+    buildCommand: cd backend/project && pip install -r requirements.txt && python manage.py collectstatic --noinput
     startCommand: cd backend/project && gunicorn project.wsgi:application --bind 0.0.0.0:$PORT
     autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
         value: "3.12"
       - key: DJANGO_SETTINGS_MODULE
-        value: project.settings.prod
+        value: project.settings
       - key: DJANGO_SECRET_KEY
         sync: false
       - key: DEBUG

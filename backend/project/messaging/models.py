@@ -7,3 +7,4 @@ class Message(models.Model):
     content = models.TextField()
     is_read = models.BooleanField(default=False)
     booking_id = models.IntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)

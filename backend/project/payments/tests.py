@@ -4,13 +4,21 @@ from rest_framework import status
 from users.models import CustomUser
 from rooms.models import Room
 from bookings.models import Booking
-from .models import Payment
+from models import Payment
 
 class PaymentTests(APITestCase):
     def setUp(self):
         self.tenant = CustomUser.objects.create_user(username='tenant', password='password')
         self.landlord = CustomUser.objects.create_user(username='landlord', password='password')
-        self.room = Room.objects.create(landlord=self.landlord, title='Room', description='Desc', price='100.00')
+        self.room = Room.objects.create(
+            landlord=self.landlord,
+            title='Room',
+            description='Desc',
+            price='100.00',
+            province='Bagmati',
+            state='Kathmandu',
+            ward_number=7
+        )
         self.booking = Booking.objects.create(tenant=self.tenant, room=self.room)
         self.payment_url = reverse('payment-list-create')
 

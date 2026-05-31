@@ -1,30 +1,94 @@
-from rest_framework import generics
+from rest_framework import generics, status
 from .models import Booking
 from .serializers import BookingSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+
+
+def _booking_for_user_or_404(user, pk):
+    return get_object_or_404(
+        Booking,
+        pk=pk,
+        room__landlord=user,
+    )
 
 class BookingListCreateView(generics.ListCreateAPIView):
-    queryset = Booking.objects.all()
+    permission_classes = [IsAuthenticated]
     serializer_class = BookingSerializer
+
+    def get_queryset(self):
+        return Booking.objects.filter(tenant=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(tenant=self.request.user, status=Booking.STATUS_PENDING)
 
 class BookingDetailView(generics.RetrieveAPIView):
-    queryset = Booking.objects.all()
+    permission_classes = [IsAuthenticated]
     serializer_class = BookingSerializer
 
+    def get_queryset(self):
+        user = self.request.user
+        return Booking.objects.filter(tenant=user) | Booking.objects.filter(room__landlord=user)
+
 class BookingApproveView(APIView):
-    def patch(self, request, pk): return Response({"message": "Approve"})
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        booking = _booking_for_user_or_404(request.user, pk)
+        if booking.status != Booking.STATUS_PENDING:
+            return Response({'error': 'Only pending bookings can be approved.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        booking.status = Booking.STATUS_APPROVED
+        booking.save(update_fields=['status'])
+
+        # Auto-flip room availability to False
+        room = booking.room
+        room.is_available = False
+        room.save(update_fields=['is_available'])
+
+        return Response({'message': 'Booking approved.'}, status=status.HTTP_200_OK)
 
 class BookingRejectView(APIView):
-    def patch(self, request, pk): return Response({"message": "Reject"})
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        booking = _booking_for_user_or_404(request.user, pk)
+        if booking.status != Booking.STATUS_PENDING:
+            return Response({'error': 'Only pending bookings can be rejected.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        booking.status = Booking.STATUS_REJECTED
+        booking.save(update_fields=['status'])
+        return Response({'message': 'Booking rejected.'}, status=status.HTTP_200_OK)
 
 class BookingCancelView(APIView):
-    def patch(self, request, pk): return Response({"message": "Cancel"})
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        booking = get_object_or_404(Booking, pk=pk, tenant=request.user)
+        if booking.status not in (Booking.STATUS_PENDING, Booking.STATUS_APPROVED):
+            return Response({'error': 'Only pending or approved bookings can be cancelled.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        was_approved = booking.status == Booking.STATUS_APPROVED
+
+        booking.status = Booking.STATUS_CANCELLED
+        booking.save(update_fields=['status'])
+
+        # Free the room if the booking was previously approved
+        if was_approved:
+            room = booking.room
+            room.is_available = True
+            room.save(update_fields=['is_available'])
+
+        return Response({'message': 'Booking cancelled.'}, status=status.HTTP_200_OK)
 
 class MyBookingsView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = BookingSerializer
     def get_queryset(self): return Booking.objects.filter(tenant=self.request.user)
 
 class IncomingBookingsView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = BookingSerializer
     def get_queryset(self): return Booking.objects.filter(room__landlord=self.request.user)

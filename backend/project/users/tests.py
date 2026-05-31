@@ -123,6 +123,10 @@ class UserAuthTests(APITestCase):
             'email': 'owner@example.com',
             'password': 'ownerpassword123',
             'role': 'landlord',
+            'province': 'Bagmati',
+            'district': 'Kathmandu',
+            'city': 'Kathmandu',
+            'ward': 7,
         }
         register_response = self.client.post(self.register_url, payload)
         access_token = register_response.data['tokens']['access']

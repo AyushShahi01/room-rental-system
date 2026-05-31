@@ -23,7 +23,7 @@ RUN pip install --no-cache-dir --upgrade pip \
 COPY . .
 
 # Collect static files (for production)
-RUN python manage.py collectstatic --noinput --settings=project.settings.prod || true
+RUN python manage.py collectstatic --noinput || true
 
 # Expose port 8000
 EXPOSE 8000
