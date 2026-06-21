@@ -5,7 +5,7 @@ from .models import MaintenanceRequest
 class MaintenanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = MaintenanceRequest
-        fields = ('id', 'tenant', 'room', 'description', 'status', 'created_at')
+        fields = ('id', 'tenant', 'room', 'description', 'status', 'image', 'created_at')
         read_only_fields = ('id', 'tenant', 'status', 'created_at')
 
     def validate_description(self, value):

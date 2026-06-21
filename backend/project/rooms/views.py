@@ -14,6 +14,7 @@ from .utils.recommendation import recommend_rooms
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
+from users.permissions import IsLandlord
 
 class RoomListCreateView(generics.ListCreateAPIView):
     serializer_class = RoomSerializer
@@ -21,7 +22,7 @@ class RoomListCreateView(generics.ListCreateAPIView):
     def get_permissions(self):
         if self.request.method == 'GET':
             return [AllowAny()]
-        return [IsAuthenticated()]
+        return [IsAuthenticated(), IsLandlord()]
 
     def get_queryset(self):
         user = self.request.user
@@ -80,10 +81,7 @@ class RoomListCreateView(generics.ListCreateAPIView):
         return queryset.distinct()
 
     def perform_create(self, serializer):
-        user = self.request.user
-        if user.role != user.Role.LANDLORD:
-            raise PermissionDenied('Only landlords can create rooms.')
-        serializer.save(landlord=user)
+        serializer.save(landlord=self.request.user)
 
 class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = RoomSerializer
@@ -91,7 +89,7 @@ class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_permissions(self):
         if self.request.method == 'GET':
             return [AllowAny()]
-        return [IsAuthenticated()]
+        return [IsAuthenticated(), IsLandlord()]
 
     def get_queryset(self):
         user = self.request.user
@@ -111,12 +109,13 @@ class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
         instance.delete()
 
 class MyRoomsView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated, IsLandlord]
     serializer_class = RoomSerializer
     def get_queryset(self):
         return Room.objects.filter(landlord=self.request.user)
 
 class RoomAvailabilityView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsLandlord]
 
     def patch(self, request, pk):
         room = get_object_or_404(Room, pk=pk, landlord=request.user)
@@ -126,7 +125,7 @@ class RoomAvailabilityView(APIView):
 
 
 class RoomImageListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsLandlord]
     serializer_class = RoomImageSerializer
 
     def get_queryset(self):

@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from users.permissions import IsTenant, IsLandlord
 
 
 def _booking_for_user_or_404(user, pk):
@@ -15,8 +16,12 @@ def _booking_for_user_or_404(user, pk):
     )
 
 class BookingListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
     serializer_class = BookingSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAuthenticated(), IsTenant()]
+        return [IsAuthenticated()]
 
     def get_queryset(self):
         return Booking.objects.filter(tenant=self.request.user)
@@ -33,7 +38,7 @@ class BookingDetailView(generics.RetrieveAPIView):
         return Booking.objects.filter(tenant=user) | Booking.objects.filter(room__landlord=user)
 
 class BookingApproveView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsLandlord]
 
     def patch(self, request, pk):
         booking = _booking_for_user_or_404(request.user, pk)
@@ -51,7 +56,7 @@ class BookingApproveView(APIView):
         return Response({'message': 'Booking approved.'}, status=status.HTTP_200_OK)
 
 class BookingRejectView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsLandlord]
 
     def patch(self, request, pk):
         booking = _booking_for_user_or_404(request.user, pk)
@@ -63,7 +68,7 @@ class BookingRejectView(APIView):
         return Response({'message': 'Booking rejected.'}, status=status.HTTP_200_OK)
 
 class BookingCancelView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsTenant]
 
     def patch(self, request, pk):
         booking = get_object_or_404(Booking, pk=pk, tenant=request.user)
@@ -84,11 +89,11 @@ class BookingCancelView(APIView):
         return Response({'message': 'Booking cancelled.'}, status=status.HTTP_200_OK)
 
 class MyBookingsView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsTenant]
     serializer_class = BookingSerializer
     def get_queryset(self): return Booking.objects.filter(tenant=self.request.user)
 
 class IncomingBookingsView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsLandlord]
     serializer_class = BookingSerializer
     def get_queryset(self): return Booking.objects.filter(room__landlord=self.request.user)

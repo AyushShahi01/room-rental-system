@@ -5,10 +5,17 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from users.permissions import IsTenant, IsLandlord
 
 class MaintenanceListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
     serializer_class = MaintenanceSerializer
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAuthenticated(), IsTenant()]
+        return [IsAuthenticated()]
 
     def get_queryset(self):
         user = self.request.user
@@ -26,7 +33,7 @@ class MaintenanceDetailView(generics.RetrieveAPIView):
         return MaintenanceRequest.objects.filter(tenant=user) | MaintenanceRequest.objects.filter(room__landlord=user)
 
 class MaintenanceStatusUpdateView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsLandlord]
 
     def patch(self, request, pk):
         maintenance = get_object_or_404(MaintenanceRequest, pk=pk, room__landlord=request.user)
@@ -45,12 +52,12 @@ class MaintenanceStatusUpdateView(APIView):
         return Response({'message': 'Maintenance status updated.'}, status=status.HTTP_200_OK)
 
 class MyMaintenanceView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsTenant]
     serializer_class = MaintenanceSerializer
     def get_queryset(self): return MaintenanceRequest.objects.filter(tenant=self.request.user)
 
 class RoomMaintenanceView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsLandlord]
     serializer_class = MaintenanceSerializer
     def get_queryset(self):
         return MaintenanceRequest.objects.filter(room_id=self.kwargs['room_id'], room__landlord=self.request.user)

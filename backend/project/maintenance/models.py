@@ -19,6 +19,7 @@ class MaintenanceRequest(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     description = models.TextField()
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    image = models.ImageField(upload_to='maintenance/images/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
