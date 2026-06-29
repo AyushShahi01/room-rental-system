@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:room_rental_system/routes/app_routes.dart';
+import 'auth_controller.dart';
 
 /// Controller for the Settings page.
 /// Manages toggle states for notification/visibility preferences.
@@ -35,6 +36,8 @@ class SettingsController extends GetxController {
   /// Navigate to the Profile page (edit profile).
   void goToProfile() => Get.toNamed(AppRoutes.profile);
 
-  /// Logout – delegate to AuthController via route.
-  void logout() => Get.offAllNamed(AppRoutes.login);
+  /// Logout – delegate to AuthController.
+  void logout() {
+    Get.find<AuthController>().logout();
+  }
 }

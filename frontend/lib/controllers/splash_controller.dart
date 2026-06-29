@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:room_rental_system/routes/app_routes.dart';
-
+import '../routes/app_routes.dart';
+import '../utils/token_storage.dart';
 
 class SplashController extends GetxController {
   @override
@@ -9,9 +9,13 @@ class SplashController extends GetxController {
     _navigateToNext();
   }
 
-  void _navigateToNext() async {
-    // Simulate loading
+  Future<void> _navigateToNext() async {
     await Future.delayed(const Duration(seconds: 2));
-    Get.offAllNamed(AppRoutes.onboarding);
+
+    if (TokenStorage.hasTokens) {
+      Get.offAllNamed(AppRoutes.home);
+    } else {
+      Get.offAllNamed(AppRoutes.login);
+    }
   }
 }

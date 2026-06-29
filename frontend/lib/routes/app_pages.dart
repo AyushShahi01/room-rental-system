@@ -18,7 +18,7 @@ class AppPages {
     GetPage(name: AppRoutes.login, page: () => LoginView()),
     GetPage(name: AppRoutes.home, page: () => HomeView()),
     GetPage(name: AppRoutes.settings, page: () => const SettingsView()),
-    GetPage(name: AppRoutes.notifications, page: () => const NotificationsView()),
+    // GetPage(name: AppRoutes.notifications, page: () => const NotificationsView()),
     GetPage(name: AppRoutes.profile, page: () => const ProfileView(showAppBar: true)),
   ];
 }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 
-
 class ProfileView extends StatelessWidget {
   /// Set to true when navigated as a standalone route (e.g. from Settings).
   /// Wraps content in a full Scaffold with an AppBar.
@@ -73,8 +72,8 @@ class ProfileView extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              authController.selectedRole.value == 'Admin'
-                                  ? Icons.admin_panel_settings
+                              authController.selectedRole.value == 'landlord'
+                                  ? Icons.home_work
                                   : Icons.person_pin,
                               color: Colors.white,
                               size: 16,
@@ -97,145 +96,33 @@ class ProfileView extends StatelessWidget {
             const SizedBox(height: 24),
 
             // ─── Details Section ──────────────────────────────────────────
-            Obx(() {
-              final role = authController.selectedRole.value;
-
-              if (role == 'Admin') {
-                // Admin sees a list of all users
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.only(left: 4, bottom: 12),
-                        child: Text(
-                          'All Registered Users',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(left: 4, bottom: 12),
+                    child: Text(
+                      'Your Details',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
-                      Obx(() => ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: authController.mockUsers.length,
-                            itemBuilder: (context, index) {
-                              final user = authController.mockUsers[index];
-                              final userRole = user['role'] ?? 'Tenant';
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                elevation: 2,
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  leading: CircleAvatar(
-                                    backgroundColor: userRole == 'Admin'
-                                        ? Colors.deepPurple.shade100
-                                        : Colors.blue.shade100,
-                                    child: Icon(
-                                      userRole == 'Admin'
-                                          ? Icons.admin_panel_settings
-                                          : Icons.person,
-                                      color: userRole == 'Admin'
-                                          ? Colors.deepPurple
-                                          : Colors.blueAccent,
-                                    ),
-                                  ),
-                                  title: Text(
-                                    user['name'] ?? '',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(user['email'] ?? ''),
-                                      if (user['phone'] != null &&
-                                          user['phone']!.isNotEmpty)
-                                        Text('📞 ${user['phone']}'),
-                                      if (user['address'] != null &&
-                                          user['address']!.isNotEmpty)
-                                        Text('🏠 ${user['address']}'),
-                                    ],
-                                  ),
-                                  trailing: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: userRole == 'Admin'
-                                          ? Colors.deepPurple.shade50
-                                          : Colors.blue.shade50,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: userRole == 'Admin'
-                                            ? Colors.deepPurple.shade200
-                                            : Colors.blue.shade200,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      userRole,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: userRole == 'Admin'
-                                            ? Colors.deepPurple
-                                            : Colors.blueAccent,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          )),
-                    ],
+                    ),
                   ),
-                );
-              } else {
-                // Tenant sees their own details
-                final users = authController.mockUsers;
-                final currentUserData = users.lastWhere(
-                  (u) => u['email'] == authController.userEmail.value,
-                  orElse: () => {},
-                );
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.only(left: 4, bottom: 12),
-                        child: Text(
-                          'Your Details',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 2,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Obx(() => Column(
                             children: [
                               _detailRow(
                                 Icons.person,
-                                'Full Name',
+                                'Username',
                                 authController.userName.value,
                               ),
                               const Divider(height: 24),
@@ -244,58 +131,49 @@ class ProfileView extends StatelessWidget {
                                 'Email',
                                 authController.userEmail.value,
                               ),
-                              if (currentUserData['phone'] != null &&
-                                  currentUserData['phone']!.isNotEmpty) ...[
-                                const Divider(height: 24),
-                                _detailRow(
-                                  Icons.phone,
-                                  'Phone',
-                                  currentUserData['phone']!,
-                                ),
-                              ],
-                              if (currentUserData['address'] != null &&
-                                  currentUserData['address']!.isNotEmpty) ...[
-                                const Divider(height: 24),
-                                _detailRow(
-                                  Icons.home,
-                                  'Address',
-                                  currentUserData['address']!,
-                                ),
-                              ],
                               const Divider(height: 24),
                               _detailRow(
                                 Icons.badge,
                                 'Role',
-                                'Tenant',
+                                authController.selectedRole.value,
                               ),
                             ],
-                          ),
-                        ),
-                      ),
-                    ],
+                          )),
+                    ),
                   ),
-                );
-              }
-            }),
+                ],
+              ),
+            ),
 
             const SizedBox(height: 24),
 
             // ─── Logout ───────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ElevatedButton.icon(
-                onPressed: authController.goToLogin,
-                icon: const Icon(Icons.logout),
-                label: const Text('Logout'),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(52),
-                  backgroundColor: Colors.redAccent,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              ),
+              child: Obx(() => ElevatedButton.icon(
+                    onPressed: authController.isLoading.value
+                        ? null
+                        : authController.logout,
+                    icon: authController.isLoading.value
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.logout),
+                    label: const Text('Logout'),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  )),
             ),
 
             const SizedBox(height: 32),

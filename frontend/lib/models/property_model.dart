@@ -4,7 +4,7 @@ class PropertyModel {
   final String location;
   final int price;
   final String imageUrl;
-  final String status; // "AVAILABLE", "FAST FILLING"
+  final String status; 
   final int bedrooms;
   final int bathrooms;
   final bool hasWifi;

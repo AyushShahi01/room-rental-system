@@ -45,7 +45,7 @@ class SettingsView extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // ─── User Profile Card ─────────────────────────────────────────
+           
             Container(
               margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
               padding: const EdgeInsets.all(16),
