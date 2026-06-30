@@ -5,8 +5,17 @@ from .models import Payment
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
-        fields = ('id', 'booking', 'amount', 'status', 'created_at')
-        read_only_fields = ('id', 'status', 'created_at')
+        fields = (
+            'id',
+            'booking',
+            'amount',
+            'status',
+            'payment_gateway',
+            'transaction_token',
+            'gateway_response',
+            'created_at',
+        )
+        read_only_fields = ('id', 'status', 'transaction_token', 'gateway_response', 'created_at')
 
     def validate(self, attrs):
         request = self.context.get('request')

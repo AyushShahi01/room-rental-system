@@ -34,6 +34,7 @@ class RoomListCreateView(generics.ListCreateAPIView):
         # Extract search query parameters
         province = self.request.query_params.get('province')
         state = self.request.query_params.get('state')
+        city = self.request.query_params.get('city')
         ward_number = self.request.query_params.get('ward_number')
         min_price = self.request.query_params.get('min_price')
         max_price = self.request.query_params.get('max_price')
@@ -53,6 +54,8 @@ class RoomListCreateView(generics.ListCreateAPIView):
             queryset = queryset.filter(province__iexact=province)
         if state:
             queryset = queryset.filter(state__iexact=state)
+        if city:
+            queryset = queryset.filter(state__iexact=city)
         if ward_number:
             queryset = queryset.filter(ward_number=ward_number)
         if min_price:

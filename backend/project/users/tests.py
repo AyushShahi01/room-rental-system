@@ -2,6 +2,12 @@ from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth import get_user_model
+from django.core import mail
+from django.test import override_settings
+from django.utils import timezone
+from datetime import timedelta
+
+from .models import OTP
 
 User = get_user_model()
 
@@ -178,4 +184,42 @@ class UserAuthTests(APITestCase):
             'new_password': 'newstrongpassword123',
             'new_password_confirm': 'newstrongpassword123',
         })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_device_token_update(self):
+        user = User.objects.create_user(**self.user_data)
+        self.client.force_authenticate(user=user)
+        response = self.client.post(reverse('device-token'), {'fcm_token': 'token-123'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user.refresh_from_db()
+        self.assertEqual(user.fcm_token, 'token-123')
+
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+    def test_otp_send_and_verify(self):
+        user = User.objects.create_user(**self.user_data)
+        self.client.force_authenticate(user=user)
+
+        send_response = self.client.post(reverse('otp-send'), {})
+        self.assertEqual(send_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(mail.outbox), 1)
+
+        otp = OTP.objects.get(user=user)
+        verify_response = self.client.post(reverse('otp-verify'), {'code': otp.code})
+
+        self.assertEqual(verify_response.status_code, status.HTTP_200_OK)
+        otp.refresh_from_db()
+        self.assertTrue(otp.is_used)
+
+    def test_expired_otp_rejected(self):
+        user = User.objects.create_user(**self.user_data)
+        otp = OTP.objects.create(
+            user=user,
+            code='123456',
+            expires_at=timezone.now() - timedelta(minutes=1),
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.post(reverse('otp-verify'), {'code': otp.code})
+
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

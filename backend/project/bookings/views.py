@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from users.permissions import IsTenant, IsLandlord
+from notifications.helpers import create_notification
 
 
 def _booking_for_user_or_404(user, pk):
@@ -27,7 +28,11 @@ class BookingListCreateView(generics.ListCreateAPIView):
         return Booking.objects.filter(tenant=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(tenant=self.request.user, status=Booking.STATUS_PENDING)
+        booking = serializer.save(tenant=self.request.user, status=Booking.STATUS_PENDING)
+        create_notification(
+            booking.room.landlord,
+            f'New booking request from {booking.tenant.username} for {booking.room.title}.',
+        )
 
 class BookingDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
@@ -52,6 +57,7 @@ class BookingApproveView(APIView):
         room = booking.room
         room.is_available = False
         room.save(update_fields=['is_available'])
+        create_notification(booking.tenant, f'Your booking for {booking.room.title} has been approved!')
 
         return Response({'message': 'Booking approved.'}, status=status.HTTP_200_OK)
 
@@ -65,6 +71,7 @@ class BookingRejectView(APIView):
 
         booking.status = Booking.STATUS_REJECTED
         booking.save(update_fields=['status'])
+        create_notification(booking.tenant, f'Your booking for {booking.room.title} has been rejected.')
         return Response({'message': 'Booking rejected.'}, status=status.HTTP_200_OK)
 
 class BookingCancelView(APIView):
@@ -85,6 +92,7 @@ class BookingCancelView(APIView):
             room = booking.room
             room.is_available = True
             room.save(update_fields=['is_available'])
+        create_notification(booking.room.landlord, f'Booking for {booking.room.title} has been cancelled.')
 
         return Response({'message': 'Booking cancelled.'}, status=status.HTTP_200_OK)
 

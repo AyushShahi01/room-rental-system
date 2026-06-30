@@ -25,12 +25,14 @@ class UserSerializer(serializers.ModelSerializer):
             'district',
             'city',
             'ward',
+            'fcm_token',
         ]
         read_only_fields = ['id']
         extra_kwargs = {
             'username': {'read_only': True},
             'email': {'read_only': True},
             'role': {'read_only': True},
+            'fcm_token': {'read_only': True},
         }
 
     def get_tenant_id(self, obj):
@@ -204,3 +206,16 @@ class ChangePasswordSerializer(serializers.Serializer):
 
         validate_password(attrs['new_password'], user=user)
         return attrs
+
+
+class DeviceTokenSerializer(serializers.Serializer):
+    fcm_token = serializers.CharField(max_length=255, allow_blank=True)
+
+
+class OTPSendSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=False)
+
+
+class OTPVerifySerializer(serializers.Serializer):
+    email = serializers.EmailField(required=False)
+    code = serializers.CharField(max_length=6, min_length=6)

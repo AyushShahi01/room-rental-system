@@ -514,3 +514,39 @@ All validation errors follow this format:
 ```
 
 Non-field errors use `non_field_errors` key. Single error messages use `error` or `detail` key.
+
+---
+
+## Recent Backend Additions
+
+### Auth & Devices
+
+- `POST /api/auth/device-token/` updates the authenticated user's FCM token.
+- `POST /api/auth/otp/send/` sends a 6-digit email OTP to the authenticated user's email address.
+- `POST /api/auth/otp/verify/` verifies an unused, unexpired OTP code.
+
+### Messaging
+
+- `GET /api/messages/?recipient_id=<user_id>` returns the authenticated user's thread with a specific recipient.
+- `GET /api/messages/conversations/` returns unique conversation partners ordered by latest message.
+
+### Payments
+
+- `GET /api/payments/history/` is an alias for the authenticated tenant payment history.
+- `POST /api/payments/khalti/verify/` verifies Khalti KPG-2 payments with `pidx`, `amount`, and `booking_id`.
+- `POST /api/payments/esewa/verify/` verifies eSewa payments with `transaction_uuid`, `amount`, and `booking_id`.
+- Payment records include `payment_gateway`, `transaction_token`, and `gateway_response`.
+
+### Rooms
+
+- `GET /api/rooms/?city=<city>` filters by the existing room `state` field for PRD compatibility.
+
+### Environment Variables
+
+```env
+KHALTI_SECRET_KEY=your-khalti-secret-key
+KHALTI_API_BASE_URL=https://dev.khalti.com/api/v2
+ESEWA_PRODUCT_CODE=EPAYTEST
+ESEWA_API_BASE_URL=https://rc.esewa.com.np
+FIREBASE_CREDENTIALS_PATH=/absolute/path/to/firebase-service-account.json
+```

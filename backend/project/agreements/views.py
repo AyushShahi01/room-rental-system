@@ -8,6 +8,8 @@ from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from users.permissions import IsTenant, IsLandlord
+from notifications.helpers import create_notification
+from .utils import generate_agreement_content
 
 class AgreementListCreateView(generics.ListCreateAPIView):
     serializer_class = AgreementSerializer
@@ -22,7 +24,10 @@ class AgreementListCreateView(generics.ListCreateAPIView):
         return Agreement.objects.filter(booking__tenant=user) | Agreement.objects.filter(booking__room__landlord=user)
 
     def perform_create(self, serializer):
-        serializer.save()
+        booking = serializer.validated_data['booking']
+        content = serializer.validated_data.get('content') or generate_agreement_content(booking)
+        agreement = serializer.save(content=content)
+        create_notification(agreement.booking.tenant, 'A lease agreement has been created for your booking.')
 
 class AgreementDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
@@ -43,6 +48,7 @@ class SignAgreementView(APIView):
         agreement.is_signed = True
         agreement.signed_at = timezone.now()
         agreement.save(update_fields=['is_signed', 'signed_at'])
+        create_notification(agreement.booking.room.landlord, 'Tenant has signed the lease agreement.')
         return Response({'message': 'Agreement signed.'}, status=status.HTTP_200_OK)
 
 class BookingAgreementView(generics.RetrieveAPIView):

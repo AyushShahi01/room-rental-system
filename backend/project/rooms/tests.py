@@ -24,6 +24,34 @@ class RoomTests(APITestCase):
         response = self.client.post(self.room_list_url, self.room_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_city_filter_aliases_state(self):
+        Room.objects.create(
+            landlord=self.user,
+            title='Kathmandu Room',
+            description='Desc',
+            price='500.00',
+            province='Bagmati',
+            state='Kathmandu',
+            ward_number=7,
+            is_available=True,
+        )
+        Room.objects.create(
+            landlord=self.user,
+            title='Pokhara Room',
+            description='Desc',
+            price='500.00',
+            province='Gandaki',
+            state='Pokhara',
+            ward_number=4,
+            is_available=True,
+        )
+
+        response = self.client.get(self.room_list_url, {'city': 'Kathmandu'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        titles = {item['title'] for item in response.data['results']}
+        self.assertEqual(titles, {'Kathmandu Room'})
+
 
 class RoomRecommendationTests(APITestCase):
     def setUp(self):

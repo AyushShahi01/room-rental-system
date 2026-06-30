@@ -8,6 +8,9 @@ class AgreementSerializer(serializers.ModelSerializer):
         model = Agreement
         fields = ('id', 'booking', 'content', 'is_signed', 'created_at', 'signed_at')
         read_only_fields = ('id', 'is_signed', 'created_at', 'signed_at')
+        extra_kwargs = {
+            'content': {'required': False, 'allow_blank': True},
+        }
 
     def validate_booking(self, booking):
         request = self.context.get('request')

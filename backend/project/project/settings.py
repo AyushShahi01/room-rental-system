@@ -208,6 +208,15 @@ SIMPLE_JWT = {
 # ─── OTP Configuration ─────────────────────────────────────────────────────────
 OTP_EXPIRY_MINUTES = int(os.environ.get('OTP_EXPIRY_MINUTES', 10))
 
+# Payment Gateway Configuration
+KHALTI_SECRET_KEY = os.environ.get('KHALTI_SECRET_KEY', '')
+KHALTI_API_BASE_URL = os.environ.get('KHALTI_API_BASE_URL', 'https://dev.khalti.com/api/v2')
+ESEWA_PRODUCT_CODE = os.environ.get('ESEWA_PRODUCT_CODE', 'EPAYTEST')
+ESEWA_API_BASE_URL = os.environ.get('ESEWA_API_BASE_URL', 'https://rc.esewa.com.np')
+
+# Firebase Cloud Messaging
+FIREBASE_CREDENTIALS_PATH = os.environ.get('FIREBASE_CREDENTIALS_PATH', '')
+
 # ─── OpenAPI Docs (Swagger) ────────────────────────────────────────────────────
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Smart Room Renting API',

@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from users.permissions import IsTenant, IsLandlord
+from notifications.helpers import create_notification
 
 class MaintenanceListCreateView(generics.ListCreateAPIView):
     serializer_class = MaintenanceSerializer
@@ -22,7 +23,8 @@ class MaintenanceListCreateView(generics.ListCreateAPIView):
         return MaintenanceRequest.objects.filter(tenant=user) | MaintenanceRequest.objects.filter(room__landlord=user)
 
     def perform_create(self, serializer):
-        serializer.save(tenant=self.request.user, status=MaintenanceRequest.STATUS_PENDING)
+        maintenance = serializer.save(tenant=self.request.user, status=MaintenanceRequest.STATUS_PENDING)
+        create_notification(maintenance.room.landlord, f'New maintenance request for {maintenance.room.title}.')
 
 class MaintenanceDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
@@ -49,6 +51,7 @@ class MaintenanceStatusUpdateView(APIView):
 
         maintenance.status = new_status
         maintenance.save(update_fields=['status'])
+        create_notification(maintenance.tenant, f'Your maintenance request status: {maintenance.status}.')
         return Response({'message': 'Maintenance status updated.'}, status=status.HTTP_200_OK)
 
 class MyMaintenanceView(generics.ListAPIView):

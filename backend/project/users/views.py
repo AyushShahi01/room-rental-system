@@ -6,18 +6,27 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
+from django.utils import timezone
+from datetime import timedelta
+import random
 
 from .serializers import (
     AuthResponseSerializer,
     ChangePasswordSerializer,
+    DeviceTokenSerializer,
     ErrorResponseSerializer,
     LoginSerializer,
     LogoutSerializer,
     MessageResponseSerializer,
+    OTPSendSerializer,
+    OTPVerifySerializer,
     RegisterSerializer,
     UserSerializer,
 )
+from .models import OTP
 
 
 class RegisterView(APIView):
@@ -128,6 +137,74 @@ class ChangePasswordView(APIView):
         request.user.set_password(serializer.validated_data['new_password'])
         request.user.save(update_fields=['password'])
         return Response({'message': 'Password changed successfully.'}, status=status.HTTP_200_OK)
+
+
+class DeviceTokenView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = DeviceTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        request.user.fcm_token = serializer.validated_data['fcm_token'] or None
+        request.user.save(update_fields=['fcm_token'])
+        return Response({'message': 'Device token updated.'}, status=status.HTTP_200_OK)
+
+
+def _resolve_otp_email(request, serializer):
+    email = serializer.validated_data.get('email') or request.user.email
+    if not email:
+        return None, Response({'error': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+    if request.user.email and email.lower() != request.user.email.lower():
+        return None, Response({'error': 'Email must match the authenticated user.'}, status=status.HTTP_400_BAD_REQUEST)
+    return email, None
+
+
+class OTPSendView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = OTPSendSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email, error_response = _resolve_otp_email(request, serializer)
+        if error_response:
+            return error_response
+
+        code = f'{random.SystemRandom().randint(0, 999999):06d}'
+        expires_at = timezone.now() + timedelta(minutes=settings.OTP_EXPIRY_MINUTES)
+        OTP.objects.create(user=request.user, code=code, expires_at=expires_at)
+
+        send_mail(
+            'Your Smart Room Renting OTP',
+            f'Your verification code is {code}. It expires in {settings.OTP_EXPIRY_MINUTES} minutes.',
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            fail_silently=False,
+        )
+        return Response({'message': 'OTP sent.'}, status=status.HTTP_200_OK)
+
+
+class OTPVerifyView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = OTPVerifySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email, error_response = _resolve_otp_email(request, serializer)
+        if error_response:
+            return error_response
+
+        otp = OTP.objects.filter(
+            user=request.user,
+            code=serializer.validated_data['code'],
+            is_used=False,
+        ).first()
+
+        if not otp or otp.is_expired():
+            return Response({'error': 'Invalid or expired OTP.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        otp.is_used = True
+        otp.save(update_fields=['is_used'])
+        return Response({'message': 'OTP verified.'}, status=status.HTTP_200_OK)
 
 class AdminUserListView(APIView):
     permission_classes = [IsAuthenticated]
