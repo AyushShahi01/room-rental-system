@@ -1,0 +1,23 @@
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDE/Agent metadata
+.idea/
+.vscode/
+.agents/
+
+# Build/Analysis outputs
+graphify-out/
+build/
+
+# Temporary and office files
+~$*
+*.docx
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
