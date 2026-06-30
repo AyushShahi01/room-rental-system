@@ -45,7 +45,7 @@ git push origin main
 3. **Configure:**
    - **Name:** room-rental-api
    - **Environment:** Python
-   - **Build Command:** `cd backend/project && pip install -r requirements.txt && python manage.py collectstatic --noinput --settings=project.settings.prod`
+   - **Build Command:** `cd backend/project && pip install -r requirements.txt && python manage.py collectstatic --noinput`
    - **Start Command:** `cd backend/project && gunicorn project.wsgi:application --bind 0.0.0.0:$PORT`
    - **Plan:** Free (for testing)
 
@@ -55,7 +55,7 @@ In the Web Service settings, go to **Environment** and add:
 
 | Key                      | Value                                    | Notes                    |
 | ------------------------ | ---------------------------------------- | ------------------------ |
-| `DJANGO_SETTINGS_MODULE` | `project.settings.prod`                  | Fixed                    |
+| `DJANGO_SETTINGS_MODULE` | `project.settings`                       | Fixed                    |
 | `DJANGO_SECRET_KEY`      | `<paste-generated-key>`                  | From step 1              |
 | `DEBUG`                  | `False`                                  | Fixed                    |
 | `DATABASE_URL`           | `<paste-database-url>`                   | From step 3              |
@@ -79,15 +79,15 @@ curl -X POST https://your-api-url.onrender.com/api/migrate/ \
 Alternative: Connect to Render PostgreSQL via SSH and run:
 
 ```bash
-python manage.py migrate --settings=project.settings.prod
-python manage.py createsuperuser --settings=project.settings.prod
+python manage.py migrate
+python manage.py createsuperuser
 ```
 
 ## Files Updated for Render
 
 ✅ **Procfile** - Fixed gunicorn command
 ✅ **render.yaml** - Contains build and start commands
-✅ **project/settings/prod.py** - Now uses PostgreSQL via DATABASE_URL
+✅ **project/settings.py** - Consolidated settings using PostgreSQL via DATABASE_URL
 ✅ **.gitignore** - Excludes .env and sensitive files
 ✅ **requirements.txt** - Includes psycopg2-binary for PostgreSQL
 
@@ -95,7 +95,7 @@ python manage.py createsuperuser --settings=project.settings.prod
 
 ```bash
 # Test production settings locally
-DJANGO_SETTINGS_MODULE=project.settings.prod \
+DJANGO_SETTINGS_MODULE=project.settings \
 DJANGO_SECRET_KEY=test-key \
 DEBUG=False \
 ALLOWED_HOSTS=localhost,127.0.0.1 \
