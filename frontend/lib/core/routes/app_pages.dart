@@ -9,6 +9,7 @@ import 'package:room_rental_system/features/home/views/home_view.dart';
 import 'package:room_rental_system/features/settings/views/settings_view.dart';
 import 'package:room_rental_system/features/notifications/views/notifications_view.dart';
 import 'package:room_rental_system/features/profile/views/profile_view.dart';
+import 'package:room_rental_system/features/message/views/chat_detail_view.dart';
 
 class AppPages {
   static final pages = [
@@ -20,5 +21,6 @@ class AppPages {
     GetPage(name: AppRoutes.settings, page: () => const SettingsView()),
     // GetPage(name: AppRoutes.notifications, page: () => const NotificationsView()),
     GetPage(name: AppRoutes.profile, page: () => const ProfileView(showAppBar: true)),
+    GetPage(name: AppRoutes.chatDetail, page: () => const ChatDetailView()),
   ];
 }

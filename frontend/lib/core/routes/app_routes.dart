@@ -7,4 +7,5 @@ class AppRoutes {
   static String settings = "/settings";
   static String notifications = "/notifications";
   static String profile = "/profile";
+  static String chatDetail = "/chat-detail";
 }

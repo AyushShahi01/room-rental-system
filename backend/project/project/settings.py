@@ -36,6 +36,8 @@ else:
 
 # ─── Application Definition ────────────────────────────────────────────────────
 INSTALLED_APPS = [
+    'daphne',
+    'channels',
     'notifications',
     'messaging',
     'maintenance',
@@ -98,6 +100,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'project.wsgi.application'
 ASGI_APPLICATION = 'project.asgi.application'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
 
 # ─── Database ──────────────────────────────────────────────────────────────────
 # Default to Neon Postgres database URL (falls back to local development Neon instance or similar)
