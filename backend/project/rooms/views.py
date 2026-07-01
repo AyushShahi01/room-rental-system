@@ -112,6 +112,8 @@ class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class MyRoomsView(generics.ListAPIView):
     serializer_class = RoomSerializer
+    permission_classes = [IsAuthenticated]
+
     def get_queryset(self):
         return Room.objects.filter(landlord=self.request.user)
 

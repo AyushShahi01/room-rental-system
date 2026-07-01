@@ -19,6 +19,21 @@ class RoomTests(APITestCase):
             'is_available': True
         }
 
+    def test_list_rooms_without_auth(self):
+        Room.objects.create(
+            landlord=self.user,
+            title='Public Room',
+            description='Available to everyone',
+            price='500.00',
+            province='Bagmati',
+            state='Kathmandu',
+            ward_number=7,
+            is_available=True,
+        )
+        response = self.client.get(self.room_list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+
     def test_create_room(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.post(self.room_list_url, self.room_data)

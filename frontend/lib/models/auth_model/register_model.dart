@@ -52,11 +52,11 @@ class User {
   String? lastName;
   String? role;
   String? tenantId;
-  Null? landlordId;
-  Null? province;
-  Null? district;
-  Null? city;
-  Null? ward;
+  String? landlordId;
+  String? province;
+  String? district;
+  String? city;
+  dynamic ward;
 
   User(
       {this.id,

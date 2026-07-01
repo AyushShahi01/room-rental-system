@@ -15,7 +15,7 @@ class RoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
         fields = '__all__'
-        read_only_fields = ('landlord', 'created_at', 'updated_at')
+        read_only_fields = ('id', 'landlord', 'created_at', 'updated_at')
 
     def validate_price(self, value):
         if value <= 0:

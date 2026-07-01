@@ -1,0 +1,35 @@
+# Python
+*.pyc
+__pycache__/
+*.egg-info/
+.env
+venv/
+env/
+*.db
+db.sqlite3
+
+# Flutter/Dart
+.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+*.iml
+.gradle/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+node_modules/
+dist/
+*.apk
+*.aab
+*.app
