@@ -257,6 +257,7 @@ class AuthController extends GetxController {
       if (result.user != null) {
         final u = result.user!;
         currentUser.value = UserModel.fromJson(u.toJson());
+        selectedRole.value = u.role ?? 'tenant';
         editFirstNameController.text = u.firstName ?? '';
         editLastNameController.text = u.lastName ?? '';
         editProvinceController.text = u.province ?? '';

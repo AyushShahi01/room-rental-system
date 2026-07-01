@@ -15,7 +15,6 @@ class TenantRoomsView extends StatefulWidget {
 class _TenantRoomsViewState extends State<TenantRoomsView> {
   final RoomService _roomService = RoomService();
   bool _isLoading = true;
-  bool _showRecommendations = false;
   List<Result> _rooms = [];
   List<Result> _recommended = [];
 
@@ -28,62 +27,43 @@ class _TenantRoomsViewState extends State<TenantRoomsView> {
   Future<void> _loadRooms() async {
     setState(() => _isLoading = true);
 
-    List<Result> rooms = [];
-    List<Result> recommendations = [];
-    String? roomsError;
-    String? recommendationsError;
-
     try {
       final response = await _roomService.getRooms();
-      rooms = response.results;
+      final recommendations = await _roomService.getRecommendations({});
+      if (mounted) {
+        setState(() {
+          _rooms = response.results;
+          _recommended = recommendations.results;
+        });
+      }
     } catch (e) {
-      roomsError = e.toString();
-    }
-
-    try {
-      final response = await _roomService.getRecommendations({});
-      recommendations = response.results;
-    } catch (e) {
-      recommendationsError = e.toString();
-    }
-
-    if (mounted) {
-      setState(() {
-        _rooms = rooms;
-        _recommended = recommendations;
-      });
-
-      if (roomsError != null && recommendationsError != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load rooms: $roomsError')),
-        );
-      } else if (roomsError != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load all rooms: $roomsError')),
-        );
-      } else if (recommendationsError != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to load recommendations: $recommendationsError'),
-          ),
-        );
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load rooms: $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
-
-    if (mounted) setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8FA),
+      backgroundColor: colorScheme.surfaceContainerHighest.withValues(
+        alpha: 0.2,
+      ),
       appBar: AppBar(
         title: const Text(
-          'Home Listings',
+          'Explore Rooms',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
         elevation: 0.5,
       ),
       body: RefreshIndicator(
@@ -97,17 +77,19 @@ class _TenantRoomsViewState extends State<TenantRoomsView> {
                   children: [
                     if (_recommended.isNotEmpty) ...[
                       Text(
-                        'Recommended Rooms',
+                        'Recommended',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(height: 12),
                       SizedBox(
-                        height: 220,
+                        height: 240,
+                        width: double.infinity,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
                           itemCount: _recommended.length,
+                          padding: const EdgeInsets.only(right: 16),
                           itemBuilder: (context, index) {
                             final room = _recommended[index];
                             return _RoomCard(
@@ -122,19 +104,24 @@ class _TenantRoomsViewState extends State<TenantRoomsView> {
                       const SizedBox(height: 24),
                     ],
                     Text(
-                      'All Rooms',
+                      'Available Rooms',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 12),
                     if (_rooms.isEmpty)
-                      const Center(child: Text('No rooms available right now.'))
+                      _EmptyState(
+                        icon: Icons.home_work_outlined,
+                        title: 'No rooms available',
+                        subtitle: 'Try again later for fresh listings.',
+                      )
                     else
-                      ListView.builder(
+                      ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: _rooms.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final room = _rooms[index];
                           return _RoomCard(
@@ -161,58 +148,152 @@ class _RoomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final imageUrl = room.images.isNotEmpty ? room.images.first.image : null;
+
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(22),
       child: Container(
         width: 260,
         margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.indigo.shade50,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.home_work_outlined,
-                    color: Colors.indigo.shade700,
-                    size: 52,
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(22),
+              ),
+              child: SizedBox(
+                height: 140,
+                width: double.infinity,
+                child: imageUrl != null && imageUrl.isNotEmpty
+                    ? Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => SizedBox(
+                          height: 140,
+                          child: Center(
+                            child: Icon(
+                              Icons.home_work_outlined,
+                              size: 40,
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
+                        ),
+                      )
+                    : SizedBox(
+                        height: 140,
+                        child: Center(
+                          child: Icon(
+                            Icons.home_work_outlined,
+                            size: 40,
+                            color: Colors.grey.shade400,
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    room.title ?? 'Room',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${room.province ?? ''}, ${room.state ?? ''}'.trim(),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.attach_money_rounded,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '₹${room.price ?? '0'}',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 30,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              room.title ?? 'Room',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${room.province ?? ''}, ${room.state ?? ''}',
-              style: TextStyle(color: Colors.grey.shade600),
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 6),
             Text(
-              '₹${room.price ?? '0'}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.indigo,
-              ),
+              subtitle,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
           ],
         ),

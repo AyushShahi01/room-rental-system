@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../services/auth_service.dart';
-import '../models/auth_model/tenant_dash_model.dart';
+import '../models/room/room_model.dart';
+import '../services/room_service.dart';
 
 class TenantDashboardController extends GetxController {
-  final AuthService _authService = AuthService();
+  final RoomService _roomService = RoomService();
 
   final RxInt selectedIndex = 0.obs;
 
-  final Rxn<TenantDashModel> dashboardData = Rxn<TenantDashModel>();
+  final Rxn<RoomModel> dashboardData = Rxn<RoomModel>();
   final RxBool isLoading = false.obs;
   final RxString errorMessage = ''.obs;
 
@@ -43,11 +43,13 @@ class TenantDashboardController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      final data = await _authService.getTenantDashboard();
+      final data = await _roomService.getRooms();
       dashboardData.value = data;
+      allProperties.assignAll(data.results);
+      featuredProperties.assignAll(data.results.take(3).toList());
     } catch (e) {
-      errorMessage.value = 'Failed to load dashboard: ${e.toString()}';
-      debugPrint('Error loading tenant dashboard: $e');
+      errorMessage.value = 'Failed to load rooms: ${e.toString()}';
+      debugPrint('Error loading tenant dashboard rooms: $e');
     } finally {
       isLoading.value = false;
     }

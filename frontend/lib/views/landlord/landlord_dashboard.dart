@@ -123,6 +123,7 @@ class LandlordDashboard extends StatelessWidget {
                               value: '${controller.totalRooms.value}',
                               icon: Icons.meeting_room,
                               color: Colors.blue.shade600,
+                              onTap: () => controller.selectedIndex.value = 1,
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -132,6 +133,7 @@ class LandlordDashboard extends StatelessWidget {
                               value: '${controller.pendingBookings.value}',
                               icon: Icons.pending_actions,
                               color: Colors.orange.shade700,
+                              onTap: () => controller.selectedIndex.value = 2,
                             ),
                           ),
                         ],
@@ -145,6 +147,7 @@ class LandlordDashboard extends StatelessWidget {
                               value: '${controller.totalPayments.value}',
                               icon: Icons.monetization_on,
                               color: Colors.green.shade600,
+                              onTap: () => Get.snackbar('Payments', 'Payments API is pending'),
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -154,6 +157,7 @@ class LandlordDashboard extends StatelessWidget {
                               value: '${controller.maintenanceRequests.value}',
                               icon: Icons.build,
                               color: Colors.purple.shade600,
+                              onTap: () => Get.snackbar('Maintenance', 'Maintenance API is pending'),
                             ),
                           ),
                         ],
@@ -343,21 +347,24 @@ class LandlordDashboard extends StatelessWidget {
     required String value,
     required IconData icon,
     required Color color,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
@@ -394,6 +401,7 @@ class LandlordDashboard extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 

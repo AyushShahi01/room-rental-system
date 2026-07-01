@@ -5,7 +5,6 @@ import '../models/auth_model/refresh_model.dart';
 import '../models/auth_model/logout_model.dart';
 import '../models/auth_model/user_model.dart';
 import '../models/auth_model/landlord_dash_model.dart';
-import '../models/auth_model/tenant_dash_model.dart';
 import '../utils/dio_connection.dart';
 
 class AuthService {
@@ -51,10 +50,12 @@ class AuthService {
       'role': role,
     };
 
-    if (firstName != null && firstName.isNotEmpty)
+    if (firstName != null && firstName.isNotEmpty) {
       body['first_name'] = firstName.trim();
-    if (lastName != null && lastName.isNotEmpty)
+    }
+    if (lastName != null && lastName.isNotEmpty) {
       body['last_name'] = lastName.trim();
+    }
     if (province != null && province.isNotEmpty) body['province'] = province;
     if (district != null && district.isNotEmpty) body['district'] = district;
     if (city != null && city.isNotEmpty) body['city'] = city;
@@ -144,13 +145,5 @@ class AuthService {
   Future<Map<String, dynamic>> banUser(String userId) async {
     final response = await _dio.patch('auth/admin/users/$userId/ban/');
     return response.data as Map<String, dynamic>;
-  }
-
-  // ─── Tenant endpoints ─────────────────────────────────────────────────────
-
-  /// GET /api/auth/tenant/dashboard/
-  Future<TenantDashModel> getTenantDashboard() async {
-    final response = await _dio.get('auth/tenant/dashboard/');
-    return TenantDashModel.fromJson(response.data as Map<String, dynamic>);
   }
 }

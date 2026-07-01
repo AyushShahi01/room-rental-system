@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../services/auth_service.dart';
 import '../models/auth_model/landlord_dash_model.dart';
+import '../services/room_service.dart';
+import '../services/booking_service.dart';
 
 class LandlordDashboardController extends GetxController {
   final AuthService _authService = AuthService();
@@ -38,22 +40,44 @@ class LandlordDashboardController extends GetxController {
       isLoading.value = true;
       errorMessage.value = '';
 
-      // GET /api/auth/admin/dashboard/ → {total_users, active_users, staff_users}
-      final dashData = await _authService.getAdminStats();
-      stats.assignAll(dashData);
-      dashboardData.value = LandlordDashModel(
-        message:
-            'Welcome! Total users: ${dashData['total_users'] ?? 0}, '
-            'Active: ${dashData['active_users'] ?? 0}.',
-      );
+      try {
+        // GET /api/auth/admin/dashboard/ → {total_users, active_users, staff_users}
+        final dashData = await _authService.getAdminStats();
+        stats.assignAll(dashData);
+        dashboardData.value = LandlordDashModel(
+          message:
+              'Welcome! Total users: ${dashData['total_users'] ?? 0}, '
+              'Active: ${dashData['active_users'] ?? 0}.',
+        );
 
-      // GET /api/auth/admin/users/ → {count, results: [...]}
-      final usersData = await _authService.getLandlordUsers();
-      if (usersData['results'] != null) {
-        users.assignAll(usersData['results'] as List);
-      } else {
-        users.clear();
+        // GET /api/auth/admin/users/ → {count, results: [...]}
+        final usersData = await _authService.getLandlordUsers();
+        if (usersData['results'] != null) {
+          users.assignAll(usersData['results'] as List);
+        } else {
+          users.clear();
+        }
+      } catch (e) {
+        debugPrint('Failed to load admin stats: $e');
+        // We do not throw here to allow fetching rooms & bookings below
       }
+
+      try {
+        final roomService = RoomService();
+        final roomsRes = await roomService.getMyRooms();
+        totalRooms.value = roomsRes.results.length;
+      } catch (e) {
+        debugPrint('Failed to load rooms count: $e');
+      }
+
+      try {
+        final bookingService = BookingService();
+        final bookingsRes = await bookingService.getIncomingBookings();
+        pendingBookings.value = bookingsRes.results.where((b) => b.status == 'pending').length;
+      } catch (e) {
+        debugPrint('Failed to load bookings count: $e');
+      }
+
     } catch (e) {
       errorMessage.value = 'Failed to load dashboard: ${e.toString()}';
       debugPrint('Error loading landlord dashboard: $e');

@@ -1,5 +1,5 @@
-class RoomImageModel {
-    RoomImageModel({
+class BookingListModel {
+    BookingListModel({
         required this.count,
         required this.next,
         required this.previous,
@@ -11,8 +11,8 @@ class RoomImageModel {
     final String? previous;
     final List<Result> results;
 
-    factory RoomImageModel.fromJson(Map<String, dynamic> json){ 
-        return RoomImageModel(
+    factory BookingListModel.fromJson(Map<String, dynamic> json){ 
+        return BookingListModel(
             count: json["count"],
             next: json["next"],
             previous: json["previous"],
@@ -25,26 +25,22 @@ class RoomImageModel {
 class Result {
     Result({
         required this.id,
+        required this.status,
+        required this.tenant,
         required this.room,
-        required this.image,
-        required this.createdAt,
     });
 
     final int? id;
+    final String? status;
+    final String? tenant;
     final int? room;
-    final String? image;
-    final DateTime? createdAt;
 
     factory Result.fromJson(Map<String, dynamic> json){ 
-        String? imgUrl = json["image"]?.toString();
-        if (imgUrl != null && !imgUrl.startsWith('http')) {
-          imgUrl = 'https://room-rental-system-f5x8.onrender.com' + (imgUrl.startsWith('/') ? '' : '/') + imgUrl;
-        }
         return Result(
             id: json["id"],
+            status: json["status"],
+            tenant: json["tenant"],
             room: json["room"],
-            image: imgUrl,
-            createdAt: DateTime.tryParse(json["created_at"] ?? ""),
         );
     }
 

@@ -96,10 +96,14 @@ class Image {
     final DateTime? createdAt;
 
     factory Image.fromJson(Map<String, dynamic> json){ 
+        String? imgUrl = json["image"]?.toString();
+        if (imgUrl != null && !imgUrl.startsWith('http')) {
+          imgUrl = 'https://room-rental-system-f5x8.onrender.com' + (imgUrl.startsWith('/') ? '' : '/') + imgUrl;
+        }
         return Image(
             id: json["id"],
             room: json["room"],
-            image: json["image"],
+            image: imgUrl,
             createdAt: DateTime.tryParse(json["created_at"] ?? ""),
         );
     }
