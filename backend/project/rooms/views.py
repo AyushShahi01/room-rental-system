@@ -1,10 +1,12 @@
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
+from rest_framework.parsers import MultiPartParser, FormParser
 from drf_spectacular.utils import extend_schema
 from .models import Room, RoomImage
 from .serializers import (
     RoomSerializer,
     RoomImageSerializer,
+    RoomImageUploadSerializer,
     RoomRecommendationRequestSerializer,
     RoomRecommendationResponseSerializer,
 )
@@ -127,16 +129,90 @@ class RoomAvailabilityView(APIView):
         return Response({'message': 'Room availability updated.', 'is_available': room.is_available}, status=status.HTTP_200_OK)
 
 
-class RoomImageListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated, IsLandlord]
+class RoomImageListView(generics.ListAPIView):
+    """GET  /rooms/<room_id>/images/  — list images for any room (public)."""
     serializer_class = RoomImageSerializer
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         return RoomImage.objects.filter(room_id=self.kwargs['room_id'])
 
-    def perform_create(self, serializer):
-        room = get_object_or_404(Room, pk=self.kwargs['room_id'], landlord=self.request.user)
-        serializer.save(room=room)
+
+class RoomImageUploadView(APIView):
+    """POST /rooms/<room_id>/images/upload/  — upload up to 10 images (landlord only)."""
+    permission_classes = [IsAuthenticated, IsLandlord]
+    parser_classes = (MultiPartParser, FormParser)
+
+    # Build Swagger properties: image_1 … image_10, all optional binary fields
+    _image_properties = {
+        f'image_{i}': {
+            'type': 'string',
+            'format': 'binary',
+            'description': f'Image file #{i} (optional)',
+        }
+        for i in range(1, 11)
+    }
+
+    @extend_schema(
+        request={
+            'multipart/form-data': {
+                'type': 'object',
+                'properties': _image_properties,
+                'description': (
+                    'Upload 1–10 image files. Fill image_1 through image_10 as needed. '
+                    'Each field is optional but at least one must be provided. '
+                    'Combined total per room must not exceed 10.'
+                ),
+            }
+        },
+        responses={201: RoomImageSerializer(many=True)},
+    )
+    def post(self, request, room_id):
+        room = get_object_or_404(Room, pk=room_id, landlord=request.user)
+
+        # Collect files from image_1…image_10 (Swagger UI) OR repeated 'images' key (Postman/Flutter)
+        files = [
+            request.FILES[key]
+            for key in sorted(request.FILES.keys())
+            if key.startswith('image_') or key == 'images'
+        ]
+        # Also handle repeated 'images' key (getlist covers multiple files under same key)
+        if not files:
+            files = request.FILES.getlist('images')
+
+        if not files:
+            return Response(
+                {'error': 'No files provided. Use image_1…image_10 keys or repeated "images" key.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = RoomImageUploadSerializer(
+            data={'images': files},
+            context={'room': room},
+        )
+        serializer.is_valid(raise_exception=True)
+
+        created = [
+            RoomImage.objects.create(room=room, image=img)
+            for img in serializer.validated_data['images']
+        ]
+        return Response(
+            RoomImageSerializer(created, many=True, context={'request': request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class RoomImageDeleteView(APIView):
+    """DELETE /rooms/<room_id>/images/<image_id>/  — remove one image (landlord only)."""
+    permission_classes = [IsAuthenticated, IsLandlord]
+
+    @extend_schema(responses={204: None})
+    def delete(self, request, room_id, image_id):
+        # Ensures the room belongs to this landlord
+        room = get_object_or_404(Room, pk=room_id, landlord=request.user)
+        image = get_object_or_404(RoomImage, pk=image_id, room=room)
+        image.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class RecommendedRoomsView(APIView):

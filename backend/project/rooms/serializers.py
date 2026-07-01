@@ -1,12 +1,35 @@
 from rest_framework import serializers
 from .models import Room, RoomImage
 
+MAX_ROOM_IMAGES = 10
+
 
 class RoomImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = RoomImage
         fields = ('id', 'room', 'image', 'created_at')
         read_only_fields = ('created_at', 'room')
+
+
+class RoomImageUploadSerializer(serializers.Serializer):
+    """Accepts 1-10 images in a single request."""
+    images = serializers.ListField(
+        child=serializers.ImageField(),
+        min_length=1,
+        max_length=MAX_ROOM_IMAGES,
+    )
+
+    def validate_images(self, images):
+        room = self.context.get('room')
+        if room is not None:
+            existing = room.images.count()
+            if existing + len(images) > MAX_ROOM_IMAGES:
+                remaining = MAX_ROOM_IMAGES - existing
+                raise serializers.ValidationError(
+                    f'A room can have at most {MAX_ROOM_IMAGES} images. '
+                    f'This room already has {existing}; you can add at most {remaining} more.'
+                )
+        return images
 
 
 

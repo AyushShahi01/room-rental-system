@@ -60,7 +60,19 @@ class MaintenanceImageUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
     @extend_schema(
-        request=MaintenanceImageUploadSerializer,
+        request={
+            'multipart/form-data': {
+                'type': 'object',
+                'properties': {
+                    'image': {
+                        'type': 'string',
+                        'format': 'binary',
+                        'description': 'Image file to attach to this maintenance request',
+                    }
+                },
+                'required': ['image'],
+            }
+        },
         responses={200: MaintenanceSerializer}
     )
     def post(self, request, pk):

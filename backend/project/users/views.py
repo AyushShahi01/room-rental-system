@@ -1,4 +1,5 @@
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiTypes, inline_serializer
+from drf_spectacular import openapi as spectacular_openapi
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -131,7 +132,19 @@ class UserProfilePictureUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
     @extend_schema(
-        request=ProfilePictureUploadSerializer,
+        request={
+            'multipart/form-data': {
+                'type': 'object',
+                'properties': {
+                    'profile_picture': {
+                        'type': 'string',
+                        'format': 'binary',
+                        'description': 'Image file to upload as profile picture',
+                    }
+                },
+                'required': ['profile_picture'],
+            }
+        },
         responses={200: UserSerializer, 400: ErrorResponseSerializer}
     )
     def post(self, request):

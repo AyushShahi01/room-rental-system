@@ -154,6 +154,10 @@ B2_BUCKET_NAME = env("B2_BUCKET_NAME", default=None)
 B2_ENDPOINT_URL = env("B2_ENDPOINT_URL", default=None)
 B2_REGION = env("B2_REGION", default=None)
 
+# Strip trailing slash — boto3 constructs URLs itself and a double-slash causes 400 errors
+if B2_ENDPOINT_URL:
+    B2_ENDPOINT_URL = B2_ENDPOINT_URL.rstrip("/")
+
 if B2_KEY_ID and B2_APPLICATION_KEY and B2_BUCKET_NAME and B2_ENDPOINT_URL:
     AWS_ACCESS_KEY_ID = B2_KEY_ID
     AWS_SECRET_ACCESS_KEY = B2_APPLICATION_KEY
@@ -161,12 +165,13 @@ if B2_KEY_ID and B2_APPLICATION_KEY and B2_BUCKET_NAME and B2_ENDPOINT_URL:
     AWS_S3_ENDPOINT_URL = B2_ENDPOINT_URL
     AWS_S3_REGION_NAME = B2_REGION
 
-    AWS_S3_ADDRESSING_STYLE = "virtual"
+    AWS_S3_ADDRESSING_STYLE = "path"    # B2 requires path-style addressing
     AWS_S3_FILE_OVERWRITE = False       # don't silently overwrite same-named files
     AWS_DEFAULT_ACL = None              # B2 doesn't support per-object ACLs
     AWS_QUERYSTRING_AUTH = True         # generates signed, expiring URLs (required since bucket is private)
     AWS_QUERYSTRING_EXPIRE = 3600       # default signed URL lifetime: 1 hour
     AWS_S3_SIGNATURE_VERSION = "s3v4"
+    AWS_LOCATION = "media"              # all uploads land under media/ in the bucket
 
     STORAGES = {
         "default": {
@@ -176,10 +181,14 @@ if B2_KEY_ID and B2_APPLICATION_KEY and B2_BUCKET_NAME and B2_ENDPOINT_URL:
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
+
+    print(f"[Storage] [B2 ACTIVE] bucket={B2_BUCKET_NAME} endpoint={B2_ENDPOINT_URL}")
 else:
-    # Local fallback for development
+    # Local fallback -- only when B2 credentials are missing
     MEDIA_URL = 'media/'
     MEDIA_ROOT = BASE_DIR / 'media'
+
+    print("[Storage] [LOCAL] Disk storage active (media/ folder) -- set B2_* env vars to use Backblaze B2")
 
 
 # ─── Default Primary Key ───────────────────────────────────────────────────────
