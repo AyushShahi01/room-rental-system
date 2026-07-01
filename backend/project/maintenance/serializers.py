@@ -13,3 +13,8 @@ class MaintenanceSerializer(serializers.ModelSerializer):
         if not cleaned:
             raise serializers.ValidationError('Description cannot be empty.')
         return cleaned
+
+
+class MaintenanceImageUploadSerializer(serializers.Serializer):
+    image = serializers.ImageField(required=True)
+

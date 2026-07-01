@@ -51,3 +51,22 @@ class MaintenanceTests(APITestCase):
         maintenance.refresh_from_db()
         self.assertEqual(maintenance.status, MaintenanceRequest.STATUS_IN_PROGRESS)
         self.assertEqual(self.tenant.notification_set.count(), 1)
+
+    def test_maintenance_image_upload(self):
+        maintenance = MaintenanceRequest.objects.create(
+            tenant=self.tenant,
+            room=self.room,
+            description='Leaking tap',
+        )
+        self.client.force_authenticate(user=self.tenant)
+        gif_bytes = b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x00\x00\x00\x21\xf9\x04\x01\x0a\x00\x01\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x4c\x01\x00\x3b'
+        image = SimpleUploadedFile('issue.gif', gif_bytes, content_type='image/gif')
+        url = reverse('maintenance-image-upload', kwargs={'pk': maintenance.pk})
+        response = self.client.post(url, {'image': image}, format='multipart')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('image', response.data)
+        self.assertIsNotNone(response.data['image'])
+        maintenance.refresh_from_db()
+        self.assertTrue(bool(maintenance.image))
+

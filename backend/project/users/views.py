@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from django.conf import settings
@@ -25,6 +26,7 @@ from .serializers import (
     OTPVerifySerializer,
     RegisterSerializer,
     UserSerializer,
+    ProfilePictureUploadSerializer,
 )
 from .models import OTP
 
@@ -107,8 +109,10 @@ class LogoutView(APIView):
 
         return Response({'message': 'Logged out successfully.'}, status=status.HTTP_200_OK)
 
+
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
 
     @extend_schema(responses={200: UserSerializer})
     def get(self, request):
@@ -121,7 +125,27 @@ class UserProfileView(APIView):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+class UserProfilePictureUploadView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser)
+
+    @extend_schema(
+        request=ProfilePictureUploadSerializer,
+        responses={200: UserSerializer, 400: ErrorResponseSerializer}
+    )
+    def post(self, request):
+        user = request.user
+        if 'profile_picture' not in request.FILES:
+            return Response({'error': 'No file uploaded under key "profile_picture".'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user.profile_picture = request.FILES['profile_picture']
+        user.save(update_fields=['profile_picture'])
+        return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
+
+
 class ChangePasswordView(APIView):
+
     permission_classes = [IsAuthenticated]
 
     @extend_schema(

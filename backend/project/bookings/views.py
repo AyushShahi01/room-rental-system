@@ -13,8 +13,6 @@ def _booking_for_user_or_404(user, pk):
     return get_object_or_404(
         Booking,
         pk=pk,
-
-        
         room__landlord=user,
     )
 

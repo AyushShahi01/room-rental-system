@@ -219,7 +219,32 @@ class UserAuthTests(APITestCase):
             expires_at=timezone.now() - timedelta(minutes=1),
         )
         self.client.force_authenticate(user=user)
-
         response = self.client.post(reverse('otp-verify'), {'code': otp.code})
 
+
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_profile_picture_upload(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        user = User.objects.create_user(**self.user_data)
+        self.client.force_authenticate(user=user)
+
+        gif_bytes = (
+            b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xff\xff\xff\x21\xf9\x04\x01\x00\x00\x00\x00\x2c\x00\x00\x00\x00'
+            b'\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b'
+        )
+        profile_pic = SimpleUploadedFile('profile.gif', gif_bytes, content_type='image/gif')
+
+        # POST request to upload profile picture to dedicated endpoint
+        url = reverse('me-profile-picture')
+        response = self.client.post(url, {'profile_picture': profile_pic}, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('profile_picture', response.data)
+        self.assertIsNotNone(response.data['profile_picture'])
+
+
+        user.refresh_from_db()
+        self.assertTrue(bool(user.profile_picture))
+        self.assertTrue(user.profile_picture.name.startswith('profiles/profile'))
+

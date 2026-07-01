@@ -9,6 +9,7 @@ urlpatterns = [
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('me/', views.UserProfileView.as_view(), name='me'),
     path('me/update/', views.UserProfileView.as_view(), name='me-update'),
+    path('me/profile-picture/', views.UserProfilePictureUploadView.as_view(), name='me-profile-picture'),
     path('change-password/', views.ChangePasswordView.as_view(), name='change-password'),
     path('device-token/', views.DeviceTokenView.as_view(), name='device-token'),
     path('otp/send/', views.OTPSendView.as_view(), name='otp-send'),

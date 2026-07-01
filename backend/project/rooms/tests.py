@@ -24,6 +24,34 @@ class RoomTests(APITestCase):
         response = self.client.post(self.room_list_url, self.room_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_room_image_upload(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        self.client.force_authenticate(user=self.user)
+        room = Room.objects.create(
+            landlord=self.user,
+            title='Room for Image test',
+            description='A room',
+            price='500.00',
+            province='Bagmati',
+            state='Kathmandu',
+            ward_number=7,
+            is_available=True
+        )
+        url = reverse('room-image-list-create', kwargs={'room_id': room.id})
+
+        gif_bytes = (
+            b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xff\xff\xff\x21\xf9\x04\x01\x00\x00\x00\x00\x2c\x00\x00\x00\x00'
+            b'\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b'
+        )
+        room_image = SimpleUploadedFile('room.gif', gif_bytes, content_type='image/gif')
+
+        response = self.client.post(url, {'image': room_image}, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn('image', response.data)
+        self.assertIsNotNone(response.data['image'])
+
+
     def test_city_filter_aliases_state(self):
         Room.objects.create(
             landlord=self.user,

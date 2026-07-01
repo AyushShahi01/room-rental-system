@@ -19,6 +19,7 @@ class CustomUser(AbstractUser):
     city = models.CharField(max_length=100, blank=True, null=True)
     ward = models.PositiveIntegerField(blank=True, null=True)
     fcm_token = models.CharField(max_length=255, null=True, blank=True)
+    profile_picture = models.ImageField(upload_to='profiles/', null=True, blank=True)
 
 
 class OTP(models.Model):

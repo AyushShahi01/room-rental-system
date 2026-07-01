@@ -6,7 +6,8 @@ class RoomImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = RoomImage
         fields = ('id', 'room', 'image', 'created_at')
-        read_only_fields = ('created_at',)
+        read_only_fields = ('created_at', 'room')
+
 
 
 class RoomSerializer(serializers.ModelSerializer):

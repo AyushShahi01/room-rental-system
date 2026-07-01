@@ -9,6 +9,7 @@ from pathlib import Path
 from datetime import timedelta
 import dj_database_url
 from dotenv import load_dotenv
+import environ
 
 # ─── Path Config ────────────────────────────────────────────────────────────────
 # BASE_DIR points to the project root (where manage.py lives)
@@ -16,6 +17,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load .env file automatically
 load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+# Initialize django-environ
+env = environ.Env()
 
 # ─── Debug & Security ───────────────────────────────────────────────────────────
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 't')
@@ -52,6 +56,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',  # Required for logout / token blacklisting
     'corsheaders',
+    'storages',
 
     # Local apps
     'users',
@@ -141,8 +146,41 @@ USE_TZ = True
 # ─── Static & Media Files ──────────────────────────────────────────────────────
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+
+# --- Backblaze B2 (S3-compatible) ---
+B2_KEY_ID = env("B2_KEY_ID", default=None)
+B2_APPLICATION_KEY = env("B2_APPLICATION_KEY", default=None)
+B2_BUCKET_NAME = env("B2_BUCKET_NAME", default=None)
+B2_ENDPOINT_URL = env("B2_ENDPOINT_URL", default=None)
+B2_REGION = env("B2_REGION", default=None)
+
+if B2_KEY_ID and B2_APPLICATION_KEY and B2_BUCKET_NAME and B2_ENDPOINT_URL:
+    AWS_ACCESS_KEY_ID = B2_KEY_ID
+    AWS_SECRET_ACCESS_KEY = B2_APPLICATION_KEY
+    AWS_STORAGE_BUCKET_NAME = B2_BUCKET_NAME
+    AWS_S3_ENDPOINT_URL = B2_ENDPOINT_URL
+    AWS_S3_REGION_NAME = B2_REGION
+
+    AWS_S3_ADDRESSING_STYLE = "virtual"
+    AWS_S3_FILE_OVERWRITE = False       # don't silently overwrite same-named files
+    AWS_DEFAULT_ACL = None              # B2 doesn't support per-object ACLs
+    AWS_QUERYSTRING_AUTH = True         # generates signed, expiring URLs (required since bucket is private)
+    AWS_QUERYSTRING_EXPIRE = 3600       # default signed URL lifetime: 1 hour
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
+
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+else:
+    # Local fallback for development
+    MEDIA_URL = 'media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
+
 
 # ─── Default Primary Key ───────────────────────────────────────────────────────
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

@@ -1,6 +1,7 @@
 from rest_framework import generics, status
+from drf_spectacular.utils import extend_schema
 from .models import MaintenanceRequest
-from .serializers import MaintenanceSerializer
+from .serializers import MaintenanceSerializer, MaintenanceImageUploadSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -53,6 +54,23 @@ class MaintenanceStatusUpdateView(APIView):
         maintenance.save(update_fields=['status'])
         create_notification(maintenance.tenant, f'Your maintenance request status: {maintenance.status}.')
         return Response({'message': 'Maintenance status updated.'}, status=status.HTTP_200_OK)
+
+class MaintenanceImageUploadView(APIView):
+    permission_classes = [IsAuthenticated, IsTenant]
+    parser_classes = (MultiPartParser, FormParser)
+
+    @extend_schema(
+        request=MaintenanceImageUploadSerializer,
+        responses={200: MaintenanceSerializer}
+    )
+    def post(self, request, pk):
+        maintenance = get_object_or_404(MaintenanceRequest, pk=pk, tenant=request.user)
+        if 'image' not in request.FILES:
+            return Response({'error': 'No file uploaded under key "image".'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        maintenance.image = request.FILES['image']
+        maintenance.save(update_fields=['image'])
+        return Response(MaintenanceSerializer(maintenance).data, status=status.HTTP_200_OK)
 
 class MyMaintenanceView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsTenant]
