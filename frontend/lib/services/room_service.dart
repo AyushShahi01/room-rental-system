@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 
 import '../models/room/common_response_model.dart';
+import '../models/room/recommendation_model.dart';
 import '../models/room/room_detail_model.dart';
 import '../models/room/room_image_model.dart';
 import '../models/room/room_model.dart' as room_model;
@@ -74,26 +75,13 @@ class RoomService {
     return room_model.RoomModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<room_model.RoomModel> getRecommendations(
+  Future<RoomRecommendationModel> getRecommendations(
     Map<String, dynamic> preferences,
   ) async {
     final response = await _dio.post(
       'rooms/recommendations/',
       data: preferences,
     );
-    final data = response.data as Map<String, dynamic>;
-    final results = (data['results'] as List<dynamic>? ?? [])
-        .map(
-          (item) =>
-              room_model.Result.fromJson(item['room'] as Map<String, dynamic>),
-        )
-        .toList();
-
-    return room_model.RoomModel(
-      count: data['count'] as int? ?? results.length,
-      next: null,
-      previous: null,
-      results: results,
-    );
+    return RoomRecommendationModel.fromJson(response.data as Map<String, dynamic>);
   }
 }

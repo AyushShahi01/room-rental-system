@@ -1,7 +1,49 @@
 import 'landlord_model.dart';
 
-class RoomDetailModel {
-    RoomDetailModel({
+class RoomRecommendationModel {
+    RoomRecommendationModel({
+        required this.count,
+        required this.results,
+    });
+
+    final int? count;
+    final List<Result> results;
+
+    factory RoomRecommendationModel.fromJson(Map<String, dynamic> json){ 
+        return RoomRecommendationModel(
+            count: json["count"],
+            results: json["results"] == null ? [] : List<Result>.from(json["results"]!.map((x) => Result.fromJson(x))),
+        );
+    }
+
+}
+
+class Result {
+    Result({
+        required this.room,
+        required this.cosineSimilarity,
+        required this.locationScore,
+        required this.combinedScore,
+    });
+
+    final Room? room;
+    final double? cosineSimilarity;
+    final double? locationScore;
+    final double? combinedScore;
+
+    factory Result.fromJson(Map<String, dynamic> json){ 
+        return Result(
+            room: json["room"] == null ? null : Room.fromJson(json["room"]),
+            cosineSimilarity: json["cosine_similarity"],
+            locationScore: json["location_score"],
+            combinedScore: json["combined_score"],
+        );
+    }
+
+}
+
+class Room {
+    Room({
         required this.id,
         required this.images,
         required this.title,
@@ -31,7 +73,7 @@ class RoomDetailModel {
     });
 
     final int? id;
-    final List<Image> images;
+    final List<dynamic> images;
     final String? title;
     final String? description;
     final String? price;
@@ -57,20 +99,20 @@ class RoomDetailModel {
     final DateTime? updatedAt;
     final LandlordModel? landlord;
 
-    factory RoomDetailModel.fromJson(Map<String, dynamic> json){ 
-        return RoomDetailModel(
+    factory Room.fromJson(Map<String, dynamic> json){ 
+        return Room(
             id: json["id"],
-            images: json["images"] == null ? [] : List<Image>.from(json["images"]!.map((x) => Image.fromJson(x))),
+            images: json["images"] == null ? [] : List<dynamic>.from(json["images"]!.map((x) => x)),
             title: json["title"],
             description: json["description"],
-            price: json["price"]?.toString(),
+            price: json["price"],
             province: json["province"],
             state: json["state"],
             wardNumber: json["ward_number"],
             furnishedStatus: json["furnished_status"],
             areaSqft: json["area_sqft"],
-            securityDeposit: json["security_deposit"]?.toString(),
-            maintenanceCharges: json["maintenance_charges"]?.toString(),
+            securityDeposit: json["security_deposit"],
+            maintenanceCharges: json["maintenance_charges"],
             hasWifi: json["has_wifi"],
             hasAc: json["has_ac"],
             hasAttachedBathroom: json["has_attached_bathroom"],
@@ -85,34 +127,6 @@ class RoomDetailModel {
             createdAt: DateTime.tryParse(json["created_at"] ?? ""),
             updatedAt: DateTime.tryParse(json["updated_at"] ?? ""),
             landlord: json["landlord"] == null ? null : LandlordModel.fromJson(json["landlord"]),
-        );
-    }
-
-}
-
-class Image {
-    Image({
-        required this.id,
-        required this.room,
-        required this.image,
-        required this.createdAt,
-    });
-
-    final int? id;
-    final int? room;
-    final String? image;
-    final DateTime? createdAt;
-
-    factory Image.fromJson(Map<String, dynamic> json){ 
-        String? imgUrl = json["image"]?.toString();
-        if (imgUrl != null && !imgUrl.startsWith('http')) {
-          imgUrl = 'https://room-rental-system-f5x8.onrender.com' + (imgUrl.startsWith('/') ? '' : '/') + imgUrl;
-        }
-        return Image(
-            id: json["id"],
-            room: json["room"],
-            image: imgUrl,
-            createdAt: DateTime.tryParse(json["created_at"] ?? ""),
         );
     }
 

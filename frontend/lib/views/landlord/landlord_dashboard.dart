@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../controllers/landlord_dashboard_controller.dart';
 import '../../controllers/auth_controller.dart';
 import '../../routes/app_routes.dart';
+import 'landlord_maintenance_view.dart';
 
 class LandlordDashboard extends StatelessWidget {
   const LandlordDashboard({super.key});
@@ -157,7 +158,7 @@ class LandlordDashboard extends StatelessWidget {
                               value: '${controller.maintenanceRequests.value}',
                               icon: Icons.build,
                               color: Colors.purple.shade600,
-                              onTap: () => Get.snackbar('Maintenance', 'Maintenance API is pending'),
+                              onTap: () => Get.to(() => const LandlordMaintenanceView()),
                             ),
                           ),
                         ],
@@ -206,7 +207,7 @@ class LandlordDashboard extends StatelessWidget {
 
                 // Recent Activities
                 const Text(
-                  'Recent Booking Requests',
+                  'Recent Activity',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -252,10 +253,19 @@ class LandlordDashboard extends StatelessWidget {
                     itemCount: controller.recentActivities.length,
                     itemBuilder: (context, index) {
                       final activity = controller.recentActivities[index];
-                      final bookingId = activity['id'] as int;
-                      final status =
-                          activity['status']?.toString() ?? 'pending';
-                      final roomId = activity['room']?.toString() ?? '';
+
+                      IconData iconData;
+                      Color iconColor;
+                      if (activity.type == 'room') {
+                        iconData = Icons.meeting_room;
+                        iconColor = Colors.blue.shade600;
+                      } else if (activity.type == 'maintenance') {
+                        iconData = Icons.build;
+                        iconColor = Colors.purple.shade600;
+                      } else {
+                        iconData = Icons.bookmark;
+                        iconColor = Colors.orange.shade700;
+                      }
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12),
@@ -275,58 +285,74 @@ class LandlordDashboard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  'Room ID: $roomId',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: iconColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(iconData, color: iconColor, size: 24),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        activity.title,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        activity.subtitle,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                _buildStatusBadge(status),
                               ],
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Tenant ID: ${activity['tenant'] ?? 'N/A'}',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            if (status == 'pending')
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  OutlinedButton(
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: Colors.red,
-                                      side: const BorderSide(color: Colors.red),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
+                            if (activity.type == 'booking' && activity.data != null && activity.data.status == 'pending')
+                              Padding(
+                                padding: const EdgeInsets.only(top: 16.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    OutlinedButton(
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: Colors.red,
+                                        side: const BorderSide(color: Colors.red),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
                                       ),
+                                      onPressed: () =>
+                                          controller.rejectBooking(activity.data.id as int),
+                                      child: const Text('Reject'),
                                     ),
-                                    onPressed: () =>
-                                        controller.rejectBooking(bookingId),
-                                    child: const Text('Reject'),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green.shade600,
-                                      foregroundColor: Colors.white,
-                                      elevation: 0,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
+                                    const SizedBox(width: 12),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green.shade600,
+                                        foregroundColor: Colors.white,
+                                        elevation: 0,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
                                       ),
+                                      onPressed: () =>
+                                          controller.approveBooking(activity.data.id as int),
+                                      child: const Text('Approve'),
                                     ),
-                                    onPressed: () =>
-                                        controller.approveBooking(bookingId),
-                                    child: const Text('Approve'),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                           ],
                         ),

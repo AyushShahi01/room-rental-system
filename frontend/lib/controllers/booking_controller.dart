@@ -3,7 +3,10 @@ import 'package:get/get.dart';
 
 import '../models/booking/booking_model.dart';
 import '../models/booking/bookinglist_model.dart';
+import '../models/room/room_detail_model.dart' as room_detail;
 import '../services/booking_service.dart';
+import '../services/room_service.dart';
+import '../services/auth_service.dart';
 
 class BookingController extends GetxController {
   final BookingService _service = BookingService();
@@ -15,6 +18,9 @@ class BookingController extends GetxController {
   final RxList<Result> tenantBookings = <Result>[].obs;
   final RxList<Result> incomingBookings = <Result>[].obs;
   final Rxn<BookingModel> selectedBooking = Rxn<BookingModel>();
+  final Rxn<room_detail.RoomDetailModel> selectedBookingRoom = Rxn<room_detail.RoomDetailModel>();
+  final RxString tenantName = ''.obs;
+  final RxString landlordName = ''.obs;
   final TextEditingController roomIdController = TextEditingController();
 
   Future<void> loadTenantBookings({bool showLoading = true}) async {
@@ -57,8 +63,57 @@ class BookingController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
+      selectedBooking.value = null;
+      selectedBookingRoom.value = null;
+      tenantName.value = '';
+      landlordName.value = '';
+
       final booking = await _service.getBooking(bookingId);
       selectedBooking.value = booking;
+
+      // 1. Fetch Room Detail
+      if (booking.roomId != null) {
+        try {
+          final roomService = RoomService();
+          selectedBookingRoom.value = await roomService.getRoom(booking.roomId!);
+        } catch (e) {
+          debugPrint('Error loading room for booking: $e');
+        }
+      }
+
+      // 2. Fetch/Determine Landlord and Tenant names
+      if (booking.tenantName != null) {
+        tenantName.value = booking.tenantName!;
+      } else if (booking.tenantId != null) {
+        try {
+          final authService = AuthService();
+          final usersData = await authService.getLandlordUsers();
+          if (usersData['results'] != null) {
+            final List users = usersData['results'];
+            final t = users.firstWhere((u) => u['id'] == booking.tenantId, orElse: () => null);
+            if (t != null) {
+              tenantName.value = t['username'] ?? t['first_name'] ?? booking.tenantId!;
+            } else {
+              tenantName.value = booking.tenantId!;
+            }
+          }
+        } catch (_) {}
+      }
+
+      if (booking.landlordName != null) {
+        landlordName.value = booking.landlordName!;
+      } else {
+        final landlord = selectedBookingRoom.value?.landlord;
+        if (landlord != null) {
+          landlordName.value = landlord.username
+              ?? ((landlord.firstName?.isNotEmpty == true)
+                  ? '${landlord.firstName} ${landlord.lastName ?? ''}'.trim()
+                  : null)
+              ?? landlord.id
+              ?? 'Landlord';
+        }
+      }
+
     } catch (e) {
       errorMessage.value = 'Unable to load booking details right now.';
       debugPrint('Error loading booking details: $e');

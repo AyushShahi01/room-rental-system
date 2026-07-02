@@ -6,6 +6,7 @@ import 'landlord_dashboard.dart';
 import 'landlord_rooms_view.dart';
 import 'landlord_bookings_view.dart';
 import 'landlord_messages_view.dart';
+import 'landlord_maintenance_view.dart';
 
 class LandlordMainView extends StatelessWidget {
   const LandlordMainView({super.key});
@@ -25,14 +26,14 @@ class LandlordMainView extends StatelessWidget {
     return Scaffold(
       body: Obx(
         () => IndexedStack(
-          index: controller.selectedIndex.value,
+          index: controller.selectedIndex.value < pages.length ? controller.selectedIndex.value : 0,
           children: pages,
         ),
       ),
       bottomNavigationBar: Obx(
         () => BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
-          currentIndex: controller.selectedIndex.value,
+          currentIndex: controller.selectedIndex.value < pages.length ? controller.selectedIndex.value : 0,
           onTap: controller.onItemTapped,
           selectedItemColor: Colors.indigo.shade700,
           unselectedItemColor: Colors.grey.shade500,

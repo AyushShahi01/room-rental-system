@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../services/room_service.dart';
+import '../../controllers/room_controller.dart';
 
 class RoomImagesView extends StatefulWidget {
   const RoomImagesView({super.key, required this.roomId});
@@ -16,51 +16,20 @@ class RoomImagesView extends StatefulWidget {
 }
 
 class _RoomImagesViewState extends State<RoomImagesView> {
-  final RoomService _roomService = RoomService();
+  final RoomController _roomController = Get.put(RoomController());
   final ImagePicker _picker = ImagePicker();
-  bool _isLoading = true;
-  List<dynamic> _images = [];
 
   @override
   void initState() {
     super.initState();
-    _loadImages();
-  }
-
-  Future<void> _loadImages() async {
-    try {
-      final response = await _roomService.getRoomImages(widget.roomId);
-      if (mounted) setState(() => _images = response.results);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to load images: $e')));
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    _roomController.loadRoomDetail(widget.roomId);
   }
 
   Future<void> _pickAndUpload() async {
     final picked = await _picker.pickImage(source: ImageSource.gallery);
     if (picked == null) return;
 
-    try {
-      await _roomService.uploadRoomImage(widget.roomId, File(picked.path));
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image uploaded successfully')),
-        );
-        _loadImages();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
-      }
-    }
+    await _roomController.uploadRoomImage(widget.roomId, File(picked.path));
   }
 
   @override
@@ -78,29 +47,38 @@ class _RoomImagesViewState extends State<RoomImagesView> {
         icon: const Icon(Icons.add_photo_alternate_outlined),
         label: const Text('Add Image'),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _images.isEmpty
-          ? const Center(child: Text('No images uploaded yet.'))
-          : GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-              ),
-              itemCount: _images.length,
-              itemBuilder: (context, index) {
-                final image = _images[index];
-                final url = image.image?.toString() ?? '';
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: url.startsWith('http')
-                      ? Image.network(url, fit: BoxFit.cover)
-                      : const SizedBox.shrink(),
-                );
-              },
-            ),
+      body: Obx(() {
+        if (_roomController.isRoomDetailLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final _room = _roomController.currentRoomDetail.value;
+        if (_room == null || _room.id != widget.roomId) {
+          return const Center(child: Text('Room not found'));
+        }
+        final _images = _room.images;
+        if (_images.isEmpty) {
+          return const Center(child: Text('No images uploaded yet.'));
+        }
+        return GridView.builder(
+          padding: const EdgeInsets.all(16),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+          ),
+          itemCount: _images.length,
+          itemBuilder: (context, index) {
+            final image = _images[index];
+            final url = image.image?.toString() ?? '';
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: url.startsWith('http')
+                  ? Image.network('$url?roomId=${widget.roomId}&imageId=${image.id}', fit: BoxFit.cover)
+                  : const SizedBox.shrink(),
+            );
+          },
+        );
+      }),
     );
   }
 }

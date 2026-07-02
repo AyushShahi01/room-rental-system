@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../controllers/booking_controller.dart';
 import '../../models/booking/bookinglist_model.dart';
+import '../../models/room/landlord_model.dart';
 import '../../models/room/room_detail_model.dart' as room_detail;
 import '../../services/room_service.dart';
 import '../booking_view.dart';
@@ -221,36 +222,14 @@ class _BookingCard extends StatefulWidget {
 }
 
 class _BookingCardState extends State<_BookingCard> {
-  final RoomService _roomService = RoomService();
-  room_detail.RoomDetailModel? _room;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadRoom();
-  }
-
-  Future<void> _loadRoom() async {
-    final roomId = widget.booking.room;
-    if (roomId == null) {
-      return;
-    }
-
-    try {
-      final result = await _roomService.getRoom(roomId);
-      if (mounted) {
-        setState(() => _room = result);
-      }
-    } catch (_) {}
-  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final statusColor = _statusColor(widget.booking.status ?? '', colorScheme);
-    final roomTitle = _room?.title ?? 'Room ${widget.booking.room ?? ''}';
-    final landlordLabel = _displayName(_room?.landlord);
-    final imageUrl = _extractImageUrl(_room?.images);
+    final roomTitle = widget.booking.roomTitle ?? 'Room #${widget.booking.roomId ?? ''}';
+    final landlordLabel = widget.booking.landlordName ?? 'Landlord';
+    final imageUrl = widget.booking.roomImages.isNotEmpty ? widget.booking.roomImages.first : '';
 
     return Card(
       elevation: 0,
@@ -270,7 +249,7 @@ class _BookingCardState extends State<_BookingCard> {
                   height: 96,
                   child: imageUrl.isNotEmpty
                       ? Image.network(
-                          imageUrl,
+                          '$imageUrl?roomId=${widget.booking.roomId}',
                           fit: BoxFit.cover,
                           errorBuilder: (_, _, _) => _fallbackImage(),
                         )
@@ -357,7 +336,7 @@ class _BookingCardState extends State<_BookingCard> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          _room?.price ?? 'Price available soon',
+                          widget.booking.roomPrice ?? 'Price available soon',
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(fontWeight: FontWeight.w600),
                         ),
@@ -386,27 +365,9 @@ class _BookingCardState extends State<_BookingCard> {
     );
   }
 
-  String _displayName(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Landlord';
-    }
-    final trimmed = value.trim();
-    if (RegExp(
-          r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-        ).hasMatch(trimmed) ||
-        RegExp(r'^\d+$').hasMatch(trimmed)) {
-      return 'Landlord';
-    }
-    return trimmed;
-  }
 
-  String _extractImageUrl(List<room_detail.Image>? images) {
-    if (images == null || images.isEmpty) return '';
-    for (final image in images) {
-      if (image.image != null && image.image!.isNotEmpty) return image.image!;
-    }
-    return '';
-  }
+
+
 
   String _statusLabel(String status) {
     switch (status.toLowerCase()) {

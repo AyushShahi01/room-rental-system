@@ -1,3 +1,5 @@
+import 'landlord_model.dart';
+
 class RoomModel {
   RoomModel({
     required this.count,
@@ -46,6 +48,8 @@ class Result {
     required this.waterSupplyAvailable,
     required this.wasteCollectionAvailable,
     required this.isAvailable,
+    required this.latitude,
+    required this.longitude,
     required this.createdAt,
     required this.updatedAt,
     required this.landlord,
@@ -72,9 +76,11 @@ class Result {
   final bool? waterSupplyAvailable;
   final bool? wasteCollectionAvailable;
   final bool? isAvailable;
+  final dynamic latitude;
+  final dynamic longitude;
   final DateTime? createdAt;
   final DateTime? updatedAt;
-  final String? landlord;
+  final LandlordModel? landlord;
 
   factory Result.fromJson(Map<String, dynamic> json) {
     return Result(
@@ -86,14 +92,14 @@ class Result {
           [],
       title: json["title"],
       description: json["description"],
-      price: json["price"],
+      price: json["price"]?.toString(),
       province: json["province"],
       state: json["state"],
       wardNumber: json["ward_number"],
       furnishedStatus: json["furnished_status"],
       areaSqft: json["area_sqft"],
-      securityDeposit: json["security_deposit"],
-      maintenanceCharges: json["maintenance_charges"],
+      securityDeposit: json["security_deposit"]?.toString(),
+      maintenanceCharges: json["maintenance_charges"]?.toString(),
       hasWifi: json["has_wifi"],
       hasAc: json["has_ac"],
       hasAttachedBathroom: json["has_attached_bathroom"],
@@ -103,9 +109,11 @@ class Result {
       waterSupplyAvailable: json["water_supply_available"],
       wasteCollectionAvailable: json["waste_collection_available"],
       isAvailable: json["is_available"],
+      latitude: json["latitude"],
+      longitude: json["longitude"],
       createdAt: DateTime.tryParse(json["created_at"] ?? ""),
       updatedAt: DateTime.tryParse(json["updated_at"] ?? ""),
-      landlord: json["landlord"],
+      landlord: json["landlord"] == null ? null : LandlordModel.fromJson(json["landlord"]),
     );
   }
 }

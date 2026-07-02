@@ -5,6 +5,7 @@ import '../../controllers/auth_controller.dart';
 import '../../models/room/room_model.dart' as room_model;
 import '../../routes/app_routes.dart';
 import '../room/room_detail_view.dart';
+import 'tenant_maintenance_view.dart';
 
 class TenantDashboard extends StatelessWidget {
   const TenantDashboard({super.key});
@@ -171,6 +172,83 @@ class TenantDashboard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Quick Actions
+                        Text(
+                          'Quick Actions',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => Get.to(() => const TenantMaintenanceView()),
+                                borderRadius: BorderRadius.circular(14),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blueAccent.shade700,
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.blue.withOpacity(0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      const Icon(Icons.build, color: Colors.white, size: 28),
+                                      const SizedBox(height: 8),
+                                      const Text(
+                                        'Maintenance',
+                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => controller.selectedIndex.value = 2, // Go to bookings
+                                borderRadius: BorderRadius.circular(14),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.04),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Icon(Icons.calendar_today, color: Colors.indigo.shade700, size: 28),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'My Bookings',
+                                        style: TextStyle(color: Colors.indigo.shade700, fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        
                         Text(
                           'Available Rooms',
                           style: TextStyle(

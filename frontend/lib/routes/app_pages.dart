@@ -12,6 +12,7 @@ import '../views/notifications_view.dart';
 import '../views/profile_view.dart';
 import '../views/edit_profile_view.dart';
 import '../views/change_password_view.dart';
+import '../bindings/notification_binding.dart';
 
 class AppPages {
   static final pages = [
@@ -31,6 +32,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.notifications,
       page: () => const NotificationsView(),
+      binding: NotificationBinding(),
     ),
     GetPage(
       name: AppRoutes.profile,

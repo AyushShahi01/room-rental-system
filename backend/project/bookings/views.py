@@ -8,6 +8,9 @@ from django.shortcuts import get_object_or_404
 
 
 def _booking_for_user_or_404(user, pk):
+    from rest_framework.exceptions import PermissionDenied
+    if user.role != 'landlord':
+        raise PermissionDenied("Only landlords can approve or reject booking requests.")
     return get_object_or_404(
         Booking,
         pk=pk,
@@ -19,9 +22,15 @@ class BookingListCreateView(generics.ListCreateAPIView):
     serializer_class = BookingSerializer
 
     def get_queryset(self):
-        return Booking.objects.filter(tenant=self.request.user)
+        user = self.request.user
+        if user.role == 'landlord':
+            return Booking.objects.filter(room__landlord=user)
+        return Booking.objects.filter(tenant=user)
 
     def perform_create(self, serializer):
+        from rest_framework.exceptions import PermissionDenied
+        if self.request.user.role != 'tenant':
+            raise PermissionDenied("Only tenants can create bookings.")
         serializer.save(tenant=self.request.user, status=Booking.STATUS_PENDING)
 
 class BookingDetailView(generics.RetrieveAPIView):
@@ -30,7 +39,9 @@ class BookingDetailView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Booking.objects.filter(tenant=user) | Booking.objects.filter(room__landlord=user)
+        if user.role == 'landlord':
+            return Booking.objects.filter(room__landlord=user)
+        return Booking.objects.filter(tenant=user)
 
 class BookingApproveView(APIView):
     permission_classes = [IsAuthenticated]
@@ -66,6 +77,8 @@ class BookingCancelView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
+        if request.user.role != 'tenant':
+            return Response({'error': 'Only tenants can cancel bookings.'}, status=status.HTTP_403_FORBIDDEN)
         booking = get_object_or_404(Booking, pk=pk, tenant=request.user)
         if booking.status not in (Booking.STATUS_PENDING, Booking.STATUS_APPROVED):
             return Response({'error': 'Only pending or approved bookings can be cancelled.'}, status=status.HTTP_400_BAD_REQUEST)

@@ -98,36 +98,13 @@ class _BookingCard extends StatefulWidget {
 }
 
 class _BookingCardState extends State<_BookingCard> {
-  final RoomService _roomService = RoomService();
-  room_detail.RoomDetailModel? _room;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadRoom();
-  }
-
-  Future<void> _loadRoom() async {
-    final roomId = widget.booking.room;
-    if (roomId == null) {
-      return;
-    }
-
-    try {
-      final result = await _roomService.getRoom(roomId);
-      if (mounted) {
-        setState(() => _room = result);
-      }
-    } catch (_) {}
-  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final statusColor = _statusColor(widget.booking.status ?? '', colorScheme);
-    final roomTitle = _room?.title ?? 'Room ${widget.booking.room ?? ''}';
-    final tenantLabel = _displayName(widget.booking.tenant);
-    final imageUrl = _extractImageUrl(_room?.images);
+    final roomTitle = widget.booking.roomTitle ?? 'Room #${widget.booking.roomId ?? ''}';
+    final imageUrl = widget.booking.roomImages.isNotEmpty ? widget.booking.roomImages.first : '';
 
     return Card(
       elevation: 0,
@@ -149,7 +126,7 @@ class _BookingCardState extends State<_BookingCard> {
                       height: 88,
                       child: imageUrl.isNotEmpty
                           ? Image.network(
-                              imageUrl,
+                              '$imageUrl?roomId=${widget.booking.roomId}',
                               fit: BoxFit.cover,
                               errorBuilder: (_, _, _) => _fallbackImage(),
                             )
@@ -204,7 +181,26 @@ class _BookingCardState extends State<_BookingCard> {
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
-                                tenantLabel,
+                                widget.booking.tenantName ?? 'Tenant name unavailable',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_today_outlined,
+                              size: 16,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                widget.booking.createdAt != null
+                                    ? widget.booking.createdAt!.toLocal().toString().split(' ')[0]
+                                    : 'Date not available',
                                 style: Theme.of(context).textTheme.bodyMedium,
                               ),
                             ),
@@ -220,7 +216,7 @@ class _BookingCardState extends State<_BookingCard> {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              _room?.price ?? 'Price available soon',
+                              widget.booking.roomPrice ?? 'Price available soon',
                               style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(fontWeight: FontWeight.w600),
                             ),
@@ -291,27 +287,9 @@ class _BookingCardState extends State<_BookingCard> {
     );
   }
 
-  String _displayName(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Tenant';
-    }
-    final trimmed = value.trim();
-    if (RegExp(
-          r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-        ).hasMatch(trimmed) ||
-        RegExp(r'^\d+$').hasMatch(trimmed)) {
-      return 'Tenant';
-    }
-    return trimmed;
-  }
 
-  String _extractImageUrl(List<room_detail.Image>? images) {
-    if (images == null || images.isEmpty) return '';
-    for (final image in images) {
-      if (image.image != null && image.image!.isNotEmpty) return image.image!;
-    }
-    return '';
-  }
+
+
 
   Color _statusColor(String status, ColorScheme colorScheme) {
     switch (status.toLowerCase()) {

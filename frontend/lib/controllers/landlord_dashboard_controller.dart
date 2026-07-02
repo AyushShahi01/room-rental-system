@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import '../models/auth_model/landlord_dash_model.dart';
 import '../services/room_service.dart';
 import '../services/booking_service.dart';
+import '../services/maintenance_service.dart';
 
 class LandlordDashboardController extends GetxController {
   final AuthService _authService = AuthService();
@@ -23,7 +24,7 @@ class LandlordDashboardController extends GetxController {
   final RxInt pendingBookings = 0.obs;
   final RxInt totalPayments = 0.obs;
   final RxInt maintenanceRequests = 0.obs;
-  final RxList<dynamic> recentActivities = <dynamic>[].obs;
+  final RxList<ActivityItem> recentActivities = <ActivityItem>[].obs;
 
   @override
   void onInit() {
@@ -36,6 +37,9 @@ class LandlordDashboardController extends GetxController {
   }
 
   Future<void> loadDashboardData() async {
+    List<ActivityItem> activities = [];
+    List<dynamic> localUsers = [];
+    List<dynamic> localRooms = [];
     try {
       isLoading.value = true;
       errorMessage.value = '';
@@ -49,13 +53,17 @@ class LandlordDashboardController extends GetxController {
               'Welcome! Total users: ${dashData['total_users'] ?? 0}, '
               'Active: ${dashData['active_users'] ?? 0}.',
         );
-
-        // GET /api/auth/admin/users/ → {count, results: [...]}
-        final usersData = await _authService.getLandlordUsers();
-        if (usersData['results'] != null) {
-          users.assignAll(usersData['results'] as List);
-        } else {
-          users.clear();
+        try {
+          // GET /api/auth/admin/users/ → {count, results: [...]}
+          final usersData = await _authService.getLandlordUsers();
+          if (usersData['results'] != null) {
+            localUsers = usersData['results'] as List;
+            users.assignAll(localUsers);
+          } else {
+            users.clear();
+          }
+        } catch (e) {
+          debugPrint('Failed to load admin stats: $e');
         }
       } catch (e) {
         debugPrint('Failed to load admin stats: $e');
@@ -65,7 +73,18 @@ class LandlordDashboardController extends GetxController {
       try {
         final roomService = RoomService();
         final roomsRes = await roomService.getMyRooms();
-        totalRooms.value = roomsRes.results.length;
+        localRooms = roomsRes.results;
+        totalRooms.value = localRooms.length;
+
+        for (var room in localRooms) {
+          activities.add(ActivityItem(
+            title: 'Room Posted: ${room.title ?? 'Unknown'}',
+            subtitle: 'Price: ₹${room.price ?? '0'}',
+            date: room.createdAt ?? DateTime.now().subtract(const Duration(days: 30)),
+            type: 'room',
+            data: room,
+          ));
+        }
       } catch (e) {
         debugPrint('Failed to load rooms count: $e');
       }
@@ -74,14 +93,64 @@ class LandlordDashboardController extends GetxController {
         final bookingService = BookingService();
         final bookingsRes = await bookingService.getIncomingBookings();
         pendingBookings.value = bookingsRes.results.where((b) => b.status == 'pending').length;
+
+        for (var b in bookingsRes.results) {
+          // b.tenant is a UUID string after the resilient parsing fix
+          String tenantName = 'Unknown Tenant';
+          if (b.tenant != null) {
+            dynamic userObj;
+            try {
+              userObj = localUsers.firstWhere((u) => u['id'] == b.tenant);
+            } catch (_) {}
+            if (userObj != null) {
+              tenantName = userObj['username'] ?? userObj['first_name'] ?? b.tenant!;
+            } else {
+              tenantName = b.tenant!;
+            }
+          }
+
+          String roomName = b.room != null ? 'Room #${b.room}' : 'Unknown Room';
+          try {
+            final roomObj = localRooms.firstWhere((r) => r.id == b.room);
+            roomName = roomObj.title ?? roomName;
+          } catch (_) {}
+
+          activities.add(ActivityItem(
+            title: 'Booking Request',
+            subtitle: '$tenantName requested $roomName',
+            date: DateTime.now(), // Bookings API lacks date right now
+            type: 'booking',
+            data: b,
+          ));
+        }
       } catch (e) {
         debugPrint('Failed to load bookings count: $e');
+      }
+
+      try {
+        final maintenanceService = MaintenanceService();
+        final maintenanceRes = await maintenanceService.getAllMaintenance();
+        maintenanceRequests.value = maintenanceRes.results.where((m) => m.status == 'pending').length;
+
+        for (var m in maintenanceRes.results) {
+          activities.add(ActivityItem(
+            title: 'Maintenance: ${m.status?.toUpperCase() ?? 'PENDING'}',
+            subtitle: 'Room ${m.room ?? ''} — ${m.tenantDisplay} — ${m.description ?? ''}',
+            date: m.createdAt ?? DateTime.now(),
+            type: 'maintenance',
+            data: m,
+          ));
+        }
+      } catch (e) {
+        debugPrint('Failed to load maintenance count: $e');
       }
 
     } catch (e) {
       errorMessage.value = 'Failed to load dashboard: ${e.toString()}';
       debugPrint('Error loading landlord dashboard: $e');
     } finally {
+      activities.sort((a, b) => b.date.compareTo(a.date));
+      recentActivities.assignAll(activities.take(15).toList());
       isLoading.value = false;
     }
   }
@@ -127,4 +196,20 @@ class LandlordDashboardController extends GetxController {
       snackPosition: SnackPosition.BOTTOM,
     );
   }
+}
+
+class ActivityItem {
+  final String title;
+  final String subtitle;
+  final DateTime date;
+  final String type; 
+  final dynamic data;
+
+  ActivityItem({
+    required this.title,
+    required this.subtitle,
+    required this.date,
+    required this.type,
+    this.data,
+  });
 }

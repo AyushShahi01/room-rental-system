@@ -6,6 +6,7 @@ import 'tenant_dashboard.dart';
 import 'tenant_rooms_view.dart';
 import 'tenant_bookings_view.dart';
 import 'tenant_messages_view.dart';
+import 'tenant_maintenance_view.dart';
 
 class TenantMainView extends StatelessWidget {
   const TenantMainView({super.key});
@@ -25,14 +26,14 @@ class TenantMainView extends StatelessWidget {
     return Scaffold(
       body: Obx(
         () => IndexedStack(
-          index: controller.selectedIndex.value,
+          index: controller.selectedIndex.value < pages.length ? controller.selectedIndex.value : 0,
           children: pages,
         ),
       ),
       bottomNavigationBar: Obx(
         () => BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
-          currentIndex: controller.selectedIndex.value,
+          currentIndex: controller.selectedIndex.value < pages.length ? controller.selectedIndex.value : 0,
           onTap: controller.onItemTapped,
           selectedItemColor: Colors.blueAccent.shade700,
           unselectedItemColor: Colors.grey.shade500,
