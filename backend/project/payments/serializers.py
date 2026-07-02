@@ -17,6 +17,12 @@ class PaymentSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('id', 'status', 'transaction_token', 'gateway_response', 'created_at')
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        from bookings.serializers import BookingSerializer
+        representation['booking'] = BookingSerializer(instance.booking, context=self.context).data
+        return representation
+
     def validate(self, attrs):
         request = self.context.get('request')
         user = getattr(request, 'user', None)

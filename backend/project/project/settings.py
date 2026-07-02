@@ -62,6 +62,7 @@ INSTALLED_APPS = [
 
     # Local apps
     'users',
+    'maps',
 ]
 
 # ─── Custom User Model ─────────────────────────────────────────────────────────
@@ -262,6 +263,11 @@ SIMPLE_JWT = {
 
 # ─── OTP Configuration ─────────────────────────────────────────────────────────
 OTP_EXPIRY_MINUTES = int(os.environ.get('OTP_EXPIRY_MINUTES', 10))
+
+# ─── Maps / OSM Configuration ───────────────────────────────────────────────────
+# City name used by osmnx to download the OSM road graph at startup.
+# Override via OSM_CITY env var if deploying to a different region.
+OSM_CITY = os.environ.get('OSM_CITY', 'Kathmandu, Nepal')
 
 # Payment Gateway Configuration
 KHALTI_SECRET_KEY = os.environ.get('KHALTI_SECRET_KEY', '')

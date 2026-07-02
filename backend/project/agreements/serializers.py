@@ -12,6 +12,12 @@ class AgreementSerializer(serializers.ModelSerializer):
             'content': {'required': False, 'allow_blank': True},
         }
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        from bookings.serializers import BookingSerializer
+        representation['booking'] = BookingSerializer(instance.booking, context=self.context).data
+        return representation
+
     def validate_booking(self, booking):
         request = self.context.get('request')
         user = getattr(request, 'user', None)

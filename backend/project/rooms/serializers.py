@@ -41,6 +41,12 @@ class RoomSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('landlord', 'created_at', 'updated_at')
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        from users.serializers import UserSerializer
+        representation['landlord'] = UserSerializer(instance.landlord, context=self.context).data
+        return representation
+
     def validate_price(self, value):
         if value <= 0:
             raise serializers.ValidationError('Price must be greater than zero.')
