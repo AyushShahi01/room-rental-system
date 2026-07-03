@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-<<<<<<< HEAD:frontend/lib/features/home/views/home_content_view.dart
-import 'package:room_rental_system/core/widgets/header_widget.dart';
-=======
 import '../widgets/header_widget.dart';
->>>>>>> origin/anuska_frontend:frontend/lib/views/home_content_view.dart
 
 class HomeContentView extends StatelessWidget {
   const HomeContentView({super.key});

@@ -1,11 +1,6 @@
 import 'package:get/get.dart';
-<<<<<<< HEAD:frontend/lib/features/settings/controllers/settings_controller.dart
-import 'package:room_rental_system/core/routes/app_routes.dart';
-import 'package:room_rental_system/features/auth/controllers/auth_controller.dart';
-=======
 import 'package:room_rental_system/routes/app_routes.dart';
 import 'auth_controller.dart';
->>>>>>> origin/anuska_frontend:frontend/lib/controllers/settings_controller.dart
 
 /// Controller for the Settings page.
 /// Manages toggle states for notification/visibility preferences.

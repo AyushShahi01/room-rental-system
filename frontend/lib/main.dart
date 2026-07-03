@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:room_rental_system/core/routes/app_pages.dart';
-import 'package:room_rental_system/features/splash/views/splash_view.dart';
-import 'package:room_rental_system/bindings/controller_bindings.dart';
+import 'routes/app_pages.dart';
+import 'views/splash_view.dart';
+import 'bindings/controller_bindings.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
   await GetStorage.init();
   runApp(const MyApp());
 }
