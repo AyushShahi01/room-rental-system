@@ -1,0 +1,121 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Room Booking Activity Flow" id="page-2">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="start" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#2a2a2a;strokeColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="380" y="40" width="40" height="40"/>
+        </mxCell>
+        <mxCell id="search" value="Search &amp; Filter Rooms" style="rounded=1;whiteSpace=wrap;html=1;arcSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="330" y="120" width="140" height="50"/>
+        </mxCell>
+        <mxCell id="select" value="Select Room &amp; View Details" style="rounded=1;whiteSpace=wrap;html=1;arcSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="330" y="210" width="140" height="50"/>
+        </mxCell>
+        <mxCell id="submit" value="Submit Booking Request" style="rounded=1;whiteSpace=wrap;html=1;arcSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="330" y="300" width="140" height="50"/>
+        </mxCell>
+        <mxCell id="decide" value="Landlord approves?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="350" y="390" width="100" height="100"/>
+        </mxCell>
+        <mxCell id="reject_notify" value="Notify Tenant of Rejection" style="rounded=1;whiteSpace=wrap;html=1;arcSize=30;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="160" y="415" width="130" height="50"/>
+        </mxCell>
+        <mxCell id="end_reject" value="" style="ellipse;html=1;shape=endState;fillColor=#2a2a2a;strokeColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="60" y="420" width="40" height="40"/>
+        </mxCell>
+        <mxCell id="approve_status" value="Update Status to Approved" style="rounded=1;whiteSpace=wrap;html=1;arcSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="330" y="530" width="140" height="50"/>
+        </mxCell>
+        <mxCell id="notify_tenant_pay" value="Notify Tenant &amp; Request Payment" style="rounded=1;whiteSpace=wrap;html=1;arcSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="330" y="620" width="140" height="50"/>
+        </mxCell>
+        <mxCell id="pay" value="Make Payment (Khalti/eSewa)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="330" y="710" width="140" height="50"/>
+        </mxCell>
+        <mxCell id="pay_decide" value="Payment success?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="350" y="800" width="100" height="100"/>
+        </mxCell>
+        <mxCell id="pay_fail_notify" value="Show Failure Alert &amp; Notify" style="rounded=1;whiteSpace=wrap;html=1;arcSize=30;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="160" y="825" width="130" height="50"/>
+        </mxCell>
+        <mxCell id="end_pay_fail" value="" style="ellipse;html=1;shape=endState;fillColor=#2a2a2a;strokeColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="60" y="830" width="40" height="40"/>
+        </mxCell>
+        <mxCell id="generate_agreement" value="Generate Digital Rental Agreement" style="rounded=1;whiteSpace=wrap;html=1;arcSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="330" y="940" width="140" height="50"/>
+        </mxCell>
+        <mxCell id="sign_agreement" value="Landlord &amp; Tenant Sign digitally" style="rounded=1;whiteSpace=wrap;html=1;arcSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="330" y="1030" width="140" height="50"/>
+        </mxCell>
+        <mxCell id="reserve_room" value="Activate Booking &amp; Block Room availability" style="rounded=1;whiteSpace=wrap;html=1;arcSize=30;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="330" y="1120" width="140" height="50"/>
+        </mxCell>
+        <mxCell id="end_success" value="" style="ellipse;html=1;shape=endState;fillColor=#2a2a2a;strokeColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="380" y="1210" width="40" height="40"/>
+        </mxCell>
+        <mxCell id="e1" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="start" target="search" parent="1">
+          <mxGeometry as="geometry" relative="1"/>
+        </mxCell>
+        <mxCell id="e2" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="search" target="select" parent="1">
+          <mxGeometry as="geometry" relative="1"/>
+        </mxCell>
+        <mxCell id="e3" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="select" target="submit" parent="1">
+          <mxGeometry as="geometry" relative="1"/>
+        </mxCell>
+        <mxCell id="e4" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="submit" target="decide" parent="1">
+          <mxGeometry as="geometry" relative="1"/>
+        </mxCell>
+        <mxCell id="e5" style="exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" source="decide" target="reject_notify" parent="1">
+          <mxGeometry as="geometry" relative="1"/>
+        </mxCell>
+        <mxCell id="e5_label" value="Rejected" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=11;" vertex="1" connectable="0" parent="e5">
+          <mxGeometry as="geometry" x="-0.1" relative="1"/>
+        </mxCell>
+        <mxCell id="e6" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="reject_notify" target="end_reject" parent="1">
+          <mxGeometry as="geometry" relative="1"/>
+        </mxCell>
+        <mxCell id="e7" style="exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="decide" target="approve_status" parent="1">
+          <mxGeometry as="geometry" relative="1"/>
+        </mxCell>
+        <mxCell id="e7_label" value="Approved" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=11;" vertex="1" connectable="0" parent="e7">
+          <mxGeometry as="geometry" x="-0.1" relative="1"/>
+        </mxCell>
+        <mxCell id="e8" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="approve_status" target="notify_tenant_pay" parent="1">
+          <mxGeometry as="geometry" relative="1"/>
+        </mxCell>
+        <mxCell id="e9" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="notify_tenant_pay" target="pay" parent="1">
+          <mxGeometry as="geometry" relative="1"/>
+        </mxCell>
+        <mxCell id="e10" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="pay" target="pay_decide" parent="1">
+          <mxGeometry as="geometry" relative="1"/>
+        </mxCell>
+        <mxCell id="e11" style="exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" source="pay_decide" target="pay_fail_notify" parent="1">
+          <mxGeometry as="geometry" relative="1"/>
+        </mxCell>
+        <mxCell id="e11_label" value="No" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=11;" vertex="1" connectable="0" parent="e11">
+          <mxGeometry as="geometry" x="-0.1" relative="1"/>
+        </mxCell>
+        <mxCell id="e12" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="pay_fail_notify" target="end_pay_fail" parent="1">
+          <mxGeometry as="geometry" relative="1"/>
+        </mxCell>
+        <mxCell id="e13" style="exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="pay_decide" target="generate_agreement" parent="1">
+          <mxGeometry as="geometry" relative="1"/>
+        </mxCell>
+        <mxCell id="e13_label" value="Yes" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=11;" vertex="1" connectable="0" parent="e13">
+          <mxGeometry as="geometry" x="-0.1" relative="1"/>
+        </mxCell>
+        <mxCell id="e14" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="generate_agreement" target="sign_agreement" parent="1">
+          <mxGeometry as="geometry" relative="1"/>
+        </mxCell>
+        <mxCell id="e15" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="sign_agreement" target="reserve_room" parent="1">
+          <mxGeometry as="geometry" relative="1"/>
+        </mxCell>
+        <mxCell id="e16" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="reserve_room" target="end_success" parent="1">
+          <mxGeometry as="geometry" relative="1"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
