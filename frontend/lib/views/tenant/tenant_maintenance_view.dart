@@ -1,7 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../../controllers/maintenance_controller.dart';
 import '../../../models/room/room_model.dart';
 
@@ -63,23 +61,24 @@ class TenantMaintenanceView extends StatelessWidget {
           const SizedBox(height: 16),
           
           Obx(() {
+            final bool hasRooms = controller.myRooms.isNotEmpty;
             return DropdownButtonFormField<Result>(
               decoration: InputDecoration(
-                labelText: 'Select Room',
+                labelText: hasRooms ? 'Select Room' : 'No approved rooms available',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 filled: true,
                 fillColor: Colors.grey.shade50,
               ),
-              value: controller.selectedRoom.value,
+              value: hasRooms ? controller.selectedRoom.value : null,
               items: controller.myRooms.map((room) {
                 return DropdownMenuItem(
                   value: room,
                   child: Text(room.title ?? 'Unknown Room'),
                 );
               }).toList(),
-              onChanged: (val) {
+              onChanged: hasRooms ? (val) {
                 if (val != null) controller.selectedRoom.value = val;
-              },
+              } : null,
             );
           }),
           
@@ -131,51 +130,7 @@ class TenantMaintenanceView extends StatelessWidget {
           
           const SizedBox(height: 16),
           
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => controller.pickImage(ImageSource.camera),
-                  icon: const Icon(Icons.camera_alt),
-                  label: const Text('Camera'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => controller.pickImage(ImageSource.gallery),
-                  icon: const Icon(Icons.photo_library),
-                  label: const Text('Gallery'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          
-          Obx(() {
-            if (controller.imagePath.value.isNotEmpty) {
-              return Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(
-                    File(controller.imagePath.value),
-                    height: 120,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              );
-            }
-            return const SizedBox.shrink();
-          }),
+          // Image picking has been removed per requirements.
           
           const SizedBox(height: 24),
           

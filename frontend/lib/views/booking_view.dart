@@ -3,7 +3,10 @@ import 'package:get/get.dart';
 import 'package:room_rental_system/controllers/auth_controller.dart';
 
 import '../controllers/booking_controller.dart';
+import '../models/booking/booking_model.dart';
 import '../models/room/room_detail_model.dart' as room_detail;
+import 'agreement_view.dart';
+import 'payement_view.dart';
 
 class BookingDetailsView extends StatefulWidget {
   const BookingDetailsView({super.key, required this.bookingId});
@@ -23,6 +26,13 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.loadBookingDetails(widget.bookingId);
     });
+  }
+
+  /// Reload booking details whenever this page is resumed (e.g. after returning
+  /// from AgreementDetailsView or PaymentView) so that agreement / payment
+  /// status badges update without a full app restart.
+  Future<void> _reloadOnReturn() async {
+    await controller.loadBookingDetails(widget.bookingId);
   }
 
   @override
@@ -65,7 +75,15 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
         final room = controller.selectedBookingRoom.value;
         final status = booking.status?.toLowerCase() ?? 'pending';
         final statusColor = _statusColor(status, colorScheme);
-        final roomImage = _extractImageUrl(room?.images);
+        final resolvedTenantName = controller.tenantName.value.isNotEmpty
+            ? controller.tenantName.value
+            : (booking.tenantName ?? 'Tenant');
+        final resolvedLandlordName = controller.landlordName.value.isNotEmpty
+            ? controller.landlordName.value
+            : (booking.landlordName ?? 'Landlord');
+        final resolvedRoomTitle =
+            booking.roomTitle ?? room?.title ?? 'Booking details';
+        final roomImage = _resolveRoomImage(room, booking);
 
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -174,16 +192,24 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
                       _InfoRow(
                         icon: Icons.person_outline,
                         label: 'Tenant',
-                        value: controller.tenantName.value.isNotEmpty
-                            ? controller.tenantName.value
-                            : booking.tenantName,
+                        value: resolvedTenantName,
                       ),
                       _InfoRow(
                         icon: Icons.person_pin_circle_outlined,
                         label: 'Landlord',
-                        value: controller.landlordName.value.isNotEmpty
-                            ? controller.landlordName.value
-                            : booking.landlordName,
+                        value: resolvedLandlordName,
+                      ),
+                      const SizedBox(height: 12),
+                      _InfoRow(
+                        icon: Icons.payment,
+                        label: 'Payment Status',
+                        value: controller.paymentStatus.value.toUpperCase(),
+                        color: _statusColor(controller.paymentStatus.value, colorScheme),
+                      ),
+                      _InfoRow(
+                        icon: Icons.description_outlined,
+                        label: 'Agreement Status',
+                        value: controller.agreementStatus.value.toUpperCase(),
                       ),
                     ],
                   ),
@@ -239,6 +265,7 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
 
                 final role = Get.find<AuthController>().selectedRole.value.toLowerCase();
                 final isLandlord = role == 'landlord' || role == 'admin';
+                final innerHasAgreement = controller.agreementExists.value;
 
                 return Wrap(
                   spacing: 12,
@@ -257,7 +284,64 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
                         icon: const Icon(Icons.block_outlined),
                         label: const Text('Reject'),
                       ),
+                      if (status == 'approved' && !innerHasAgreement)
+                        FilledButton.icon(
+                          onPressed: () => _openAgreementDetails(
+                            bookingId: booking.id ?? widget.bookingId,
+                            roomName: resolvedRoomTitle,
+                            roomImage: roomImage,
+                            landlordName: resolvedLandlordName,
+                            tenantName: resolvedTenantName,
+                          ),
+                          icon: const Icon(Icons.add_card),
+                          label: const Text('Create Agreement'),
+                        ),
+                      if (status == 'approved' && innerHasAgreement)
+                        OutlinedButton.icon(
+                          onPressed: () => _openAgreementDetails(
+                            bookingId: booking.id ?? widget.bookingId,
+                            roomName: resolvedRoomTitle,
+                            roomImage: roomImage,
+                            landlordName: resolvedLandlordName,
+                            tenantName: resolvedTenantName,
+                          ),
+                          icon: const Icon(Icons.description_outlined),
+                          label: const Text('View Agreement'),
+                        ),
                     ] else ...[
+                      if (status == 'approved' && controller.paymentStatus.value.toLowerCase() == 'pending')
+                        FilledButton.icon(
+                          onPressed: () {
+                            Get.to(() => PaymentView(
+                                  bookingId: booking.id ?? widget.bookingId,
+                                  roomName: resolvedRoomTitle,
+                                  amount: booking.roomPrice ?? room?.price ?? '0',
+                                  paymentStatus: controller.paymentStatus.value,
+                                ));
+                          },
+                          icon: const Icon(Icons.payment_outlined),
+                          label: const Text('Pay Rent'),
+                        ),
+                      if (status == 'approved' && innerHasAgreement) ...[
+                        OutlinedButton.icon(
+                          onPressed: () => _openAgreementDetails(
+                            bookingId: booking.id ?? widget.bookingId,
+                            roomName: resolvedRoomTitle,
+                            roomImage: roomImage,
+                            landlordName: resolvedLandlordName,
+                            tenantName: resolvedTenantName,
+                          ),
+                          icon: const Icon(Icons.description_outlined),
+                          label: const Text('View Agreement'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            Get.snackbar('Info', 'Contacting Landlord...');
+                          },
+                          icon: const Icon(Icons.chat_bubble_outline),
+                          label: const Text('Contact Landlord'),
+                        ),
+                      ],
                       TextButton.icon(
                         onPressed: () =>
                             controller.cancelBooking(widget.bookingId),
@@ -291,6 +375,41 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
         );
       }),
     );
+  }
+
+  Future<void> _openAgreementDetails({
+    required int bookingId,
+    required String roomName,
+    required String roomImage,
+    required String landlordName,
+    required String tenantName,
+  }) async {
+    await Get.to(
+      () => AgreementDetailsView(
+        bookingId: bookingId,
+        roomName: roomName,
+        roomImage: roomImage,
+        landlordName: landlordName,
+        tenantName: tenantName,
+      ),
+    );
+    // Reload booking details so the agreement status (and button label) updates
+    // immediately when the user returns from the agreement screen.
+    await _reloadOnReturn();
+  }
+
+  String _resolveRoomImage(
+    room_detail.RoomDetailModel? room,
+    BookingModel booking,
+  ) {
+    if (room != null && room.images.isNotEmpty) {
+      final url = _extractImageUrl(room.images);
+      if (url.isNotEmpty) return url;
+    }
+    if (booking.roomImages.isNotEmpty) {
+      return booking.roomImages.first;
+    }
+    return '';
   }
 
   String? _formatLocation(String? province, String? state) {
@@ -372,14 +491,17 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
 
 class _InfoRow extends StatelessWidget {
   const _InfoRow({
+    super.key,
     required this.icon,
     required this.label,
     required this.value,
+    this.color,
   });
 
   final IconData icon;
   final String label;
   final String? value;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -397,7 +519,13 @@ class _InfoRow extends StatelessWidget {
             ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           Expanded(
-            child: Text(value!, style: Theme.of(context).textTheme.bodyMedium),
+            child: Text(
+              value!, 
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: color,
+                fontWeight: color != null ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
           ),
         ],
       ),

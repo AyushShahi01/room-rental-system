@@ -22,12 +22,17 @@ class MaintenanceService {
     };
 
     if (imagePath != null && imagePath.isNotEmpty) {
-      data['image'] = await MultipartFile.fromFile(imagePath);
+      final fileName = imagePath.split('/').last.split('\\').last;
+      data['image'] = await MultipartFile.fromFile(imagePath, filename: fileName);
     }
 
     final formData = FormData.fromMap(data);
 
-    final response = await _dio.post('maintenance/', data: formData);
+    final response = await _dio.post(
+      'maintenance/',
+      data: formData,
+      options: Options(contentType: 'multipart/form-data'),
+    );
     return MaintenanceModel.fromJson(response.data as Map<String, dynamic>);
   }
 

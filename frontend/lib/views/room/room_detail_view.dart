@@ -82,7 +82,7 @@ class _RoomDetailViewState extends State<RoomDetailView> {
                     height: 220,
                     width: double.infinity,
                     child: Image.network(
-                      '${_room.images.first.image ?? ''}?roomId=${_room.id}',
+                      _room.images.first.image ?? '',
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) => _fallbackImage(),
                     ),

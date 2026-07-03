@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -7,6 +8,8 @@ import '../models/room/room_detail_model.dart' as room_detail;
 import '../services/booking_service.dart';
 import '../services/room_service.dart';
 import '../services/auth_service.dart';
+import '../services/payement_service.dart';
+import '../services/agreement_service.dart';
 
 class BookingController extends GetxController {
   final BookingService _service = BookingService();
@@ -21,13 +24,23 @@ class BookingController extends GetxController {
   final Rxn<room_detail.RoomDetailModel> selectedBookingRoom = Rxn<room_detail.RoomDetailModel>();
   final RxString tenantName = ''.obs;
   final RxString landlordName = ''.obs;
+  final RxString paymentStatus = 'pending'.obs;
+
+  // ── Agreement state ──────────────────────────────────────────────────────
+  // agreementExists: true  → backend confirmed an agreement exists (HTTP 200)
+  // agreementExists: false → no agreement yet (HTTP 404 or empty results)
+  final RxBool agreementExists = false.obs;
+
+  // Keep agreementStatus for display in the info row ("NOT GENERATED" / "GENERATED" / "SIGNED")
+  final RxString agreementStatus = 'not generated'.obs;
+
   final TextEditingController roomIdController = TextEditingController();
+
+  // ── Tenant Bookings ───────────────────────────────────────────────────────
 
   Future<void> loadTenantBookings({bool showLoading = true}) async {
     try {
-      if (showLoading) {
-        isLoading.value = true;
-      }
+      if (showLoading) isLoading.value = true;
       errorMessage.value = '';
       final data = await _service.getMyBookings();
       tenantBookings.assignAll(data.results);
@@ -35,17 +48,15 @@ class BookingController extends GetxController {
       errorMessage.value = 'Unable to load your bookings right now.';
       debugPrint('Error loading tenant bookings: $e');
     } finally {
-      if (showLoading) {
-        isLoading.value = false;
-      }
+      if (showLoading) isLoading.value = false;
     }
   }
 
+  // ── Incoming Bookings (landlord) ──────────────────────────────────────────
+
   Future<void> loadIncomingBookings({bool showLoading = true}) async {
     try {
-      if (showLoading) {
-        isLoading.value = true;
-      }
+      if (showLoading) isLoading.value = true;
       errorMessage.value = '';
       final data = await _service.getIncomingBookings();
       incomingBookings.assignAll(data.results);
@@ -53,11 +64,11 @@ class BookingController extends GetxController {
       errorMessage.value = 'Unable to load incoming bookings right now.';
       debugPrint('Error loading incoming bookings: $e');
     } finally {
-      if (showLoading) {
-        isLoading.value = false;
-      }
+      if (showLoading) isLoading.value = false;
     }
   }
+
+  // ── Booking Details ───────────────────────────────────────────────────────
 
   Future<void> loadBookingDetails(int bookingId) async {
     try {
@@ -67,9 +78,16 @@ class BookingController extends GetxController {
       selectedBookingRoom.value = null;
       tenantName.value = '';
       landlordName.value = '';
+      paymentStatus.value = 'pending';
+      // Reset agreement state before every fresh load — never use stale cache.
+      agreementExists.value = false;
+      agreementStatus.value = 'not generated';
+
+      debugPrint('[BookingController] Loading booking details for ID: $bookingId');
 
       final booking = await _service.getBooking(bookingId);
       selectedBooking.value = booking;
+      debugPrint('[BookingController] Booking ID from API: ${booking.id}');
 
       // 1. Fetch Room Detail
       if (booking.roomId != null) {
@@ -77,11 +95,11 @@ class BookingController extends GetxController {
           final roomService = RoomService();
           selectedBookingRoom.value = await roomService.getRoom(booking.roomId!);
         } catch (e) {
-          debugPrint('Error loading room for booking: $e');
+          debugPrint('[BookingController] Error loading room: $e');
         }
       }
 
-      // 2. Fetch/Determine Landlord and Tenant names
+      // 2. Resolve tenant / landlord names
       if (booking.tenantName != null) {
         tenantName.value = booking.tenantName!;
       } else if (booking.tenantId != null) {
@@ -90,9 +108,13 @@ class BookingController extends GetxController {
           final usersData = await authService.getLandlordUsers();
           if (usersData['results'] != null) {
             final List users = usersData['results'];
-            final t = users.firstWhere((u) => u['id'] == booking.tenantId, orElse: () => null);
+            final t = users.firstWhere(
+              (u) => u['id'] == booking.tenantId,
+              orElse: () => null,
+            );
             if (t != null) {
-              tenantName.value = t['username'] ?? t['first_name'] ?? booking.tenantId!;
+              tenantName.value =
+                  t['username'] ?? t['first_name'] ?? booking.tenantId!;
             } else {
               tenantName.value = booking.tenantId!;
             }
@@ -105,22 +127,78 @@ class BookingController extends GetxController {
       } else {
         final landlord = selectedBookingRoom.value?.landlord;
         if (landlord != null) {
-          landlordName.value = landlord.username
-              ?? ((landlord.firstName?.isNotEmpty == true)
+          landlordName.value = landlord.username ??
+              ((landlord.firstName?.isNotEmpty == true)
                   ? '${landlord.firstName} ${landlord.lastName ?? ''}'.trim()
-                  : null)
-              ?? landlord.id
-              ?? 'Landlord';
+                  : null) ??
+              landlord.id ??
+              'Landlord';
         }
       }
 
+      // 3. Fetch Payment Status
+      try {
+        final paymentService = PaymentService();
+        final payments = await paymentService.getPaymentsByBooking(bookingId);
+        if (payments.results.isNotEmpty) {
+          final paidPayment = payments.results.firstWhere(
+            (p) =>
+                p.status?.toLowerCase() == 'paid' ||
+                p.status?.toLowerCase() == 'completed',
+            orElse: () => payments.results.last,
+          );
+          paymentStatus.value = paidPayment.status?.toLowerCase() ?? 'pending';
+        }
+      } catch (e) {
+        debugPrint('[BookingController] Error loading payments: $e');
+      }
+
+      // 4. Fetch Agreement Status — ALWAYS hit the API, never assume.
+      await refreshAgreementStatus(bookingId);
+
     } catch (e) {
       errorMessage.value = 'Unable to load booking details right now.';
-      debugPrint('Error loading booking details: $e');
+      debugPrint('[BookingController] Error loading booking details: $e');
     } finally {
       isLoading.value = false;
     }
   }
+
+  /// Hits GET /agreements/booking/{bookingId}/ and updates [agreementExists] +
+  /// [agreementStatus]. HTTP 200 with parsed agreement → exists. HTTP 404 → not found.
+  Future<void> refreshAgreementStatus(int bookingId) async {
+    debugPrint('[BookingController] Booking ID: $bookingId');
+    try {
+      final agreementService = AgreementService();
+      final agreement = await agreementService.getAgreementByBooking(bookingId);
+
+      if (agreement != null && agreement.id != null) {
+        agreementExists.value = true;
+        agreementStatus.value =
+            agreement.isSigned == true ? 'signed' : 'generated';
+        debugPrint(
+          '[BookingController] agreementExists=true, Agreement ID: ${agreement.id}, status: ${agreementStatus.value}',
+        );
+      } else {
+        agreementExists.value = false;
+        agreementStatus.value = 'not generated';
+        debugPrint('[BookingController] agreementExists=false (empty response)');
+      }
+    } on DioException catch (e) {
+      debugPrint('[BookingController] HTTP Status: ${e.response?.statusCode}');
+      if (e.response?.statusCode == 404) {
+        agreementExists.value = false;
+        agreementStatus.value = 'not generated';
+        debugPrint('[BookingController] agreementExists=false (404)');
+      } else {
+        debugPrint('[BookingController] Agreement API error: $e');
+      }
+    } catch (e) {
+      debugPrint('[BookingController] Unexpected error fetching agreement: $e');
+    }
+  }
+
+  // ── Booking Actions ───────────────────────────────────────────────────────
 
   Future<void> createBooking() async {
     final roomId = int.tryParse(roomIdController.text.trim());
@@ -147,7 +225,7 @@ class BookingController extends GetxController {
       );
     } catch (e) {
       errorMessage.value = 'Unable to create a booking request right now.';
-      debugPrint('Error creating booking: $e');
+      debugPrint('[BookingController] Error creating booking: $e');
     } finally {
       isSubmitting.value = false;
     }
@@ -171,7 +249,7 @@ class BookingController extends GetxController {
       );
     } catch (e) {
       errorMessage.value = 'Unable to approve this booking.';
-      debugPrint('Error approving booking: $e');
+      debugPrint('[BookingController] Error approving booking: $e');
     } finally {
       isSubmitting.value = false;
     }
@@ -195,7 +273,7 @@ class BookingController extends GetxController {
       );
     } catch (e) {
       errorMessage.value = 'Unable to reject this booking.';
-      debugPrint('Error rejecting booking: $e');
+      debugPrint('[BookingController] Error rejecting booking: $e');
     } finally {
       isSubmitting.value = false;
     }
@@ -220,7 +298,7 @@ class BookingController extends GetxController {
       );
     } catch (e) {
       errorMessage.value = 'Unable to cancel this booking.';
-      debugPrint('Error cancelling booking: $e');
+      debugPrint('[BookingController] Error cancelling booking: $e');
     } finally {
       isSubmitting.value = false;
     }

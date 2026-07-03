@@ -116,6 +116,15 @@ class Result {
       landlord: json["landlord"] == null ? null : LandlordModel.fromJson(json["landlord"]),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Result && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class RoomImage {

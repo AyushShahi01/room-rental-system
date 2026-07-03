@@ -160,7 +160,7 @@ class _RoomCard extends StatelessWidget {
                 width: double.infinity,
                 child: imageUrl != null && imageUrl.isNotEmpty
                     ? Image.network(
-                        '$imageUrl?roomId=${room.id}',
+                        imageUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (_, _, _) => SizedBox(
                           height: 140,
@@ -286,7 +286,7 @@ class _RecommendationCard extends StatelessWidget {
                 width: double.infinity,
                 child: imageUrl != null && imageUrl.isNotEmpty
                     ? Image.network(
-                        '$imageUrl?roomId=${room.id}',
+                        imageUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (_, _, _) => SizedBox(
                           height: 140,

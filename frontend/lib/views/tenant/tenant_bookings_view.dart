@@ -249,7 +249,7 @@ class _BookingCardState extends State<_BookingCard> {
                   height: 96,
                   child: imageUrl.isNotEmpty
                       ? Image.network(
-                          '$imageUrl?roomId=${widget.booking.roomId}',
+                          imageUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (_, _, _) => _fallbackImage(),
                         )

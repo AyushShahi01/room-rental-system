@@ -73,7 +73,7 @@ class _RoomImagesViewState extends State<RoomImagesView> {
             return ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: url.startsWith('http')
-                  ? Image.network('$url?roomId=${widget.roomId}&imageId=${image.id}', fit: BoxFit.cover)
+                  ? Image.network(url, fit: BoxFit.cover)
                   : const SizedBox.shrink(),
             );
           },

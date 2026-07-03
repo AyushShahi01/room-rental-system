@@ -12,6 +12,7 @@ class BookingModel {
     required this.tenantName,
     required this.landlordId,
     required this.landlordName,
+    required this.roomImages,
   });
 
   final int? id;
@@ -23,6 +24,7 @@ class BookingModel {
   final String? roomPrice;
   final String? roomProvince;
   final String? roomState;
+  final List<String> roomImages;
 
   final String? tenantId;
   final String? tenantName;
@@ -40,14 +42,35 @@ class BookingModel {
     String? roomProvince = json['room_province'] as String?;
     String? roomState = json['room_state'] as String?;
 
+    List<String> parsedImages = [];
     if (roomRaw is Map) {
       roomId = roomRaw['id'] as int?;
       roomTitle ??= roomRaw['title']?.toString();
       roomPrice ??= roomRaw['price']?.toString();
       roomProvince ??= roomRaw['province']?.toString();
       roomState ??= roomRaw['state']?.toString();
+      
+      if (roomRaw['images'] != null && roomRaw['images'] is List) {
+        for (var img in roomRaw['images']) {
+          if (img is Map && img['image'] != null) {
+            String url = img['image'].toString();
+            if (!url.startsWith('http')) {
+              url = 'https://room-rental-system-f5x8.onrender.com' + (url.startsWith('/') ? '' : '/') + url;
+            }
+            parsedImages.add(url);
+          } else if (img is String) {
+            String url = img;
+            if (!url.startsWith('http')) {
+              url = 'https://room-rental-system-f5x8.onrender.com' + (url.startsWith('/') ? '' : '/') + url;
+            }
+            parsedImages.add(url);
+          }
+        }
+      }
+    } else if (roomRaw != null) {
+      roomId = roomRaw is int ? roomRaw : int.tryParse(roomRaw.toString());
     } else {
-      roomId = roomRaw is int ? roomRaw : int.tryParse(roomRaw?.toString() ?? '');
+      roomId = json['room_id'] as int?;
     }
 
     final tenantRaw = json['tenant'];
@@ -81,6 +104,7 @@ class BookingModel {
       tenantName: tenantName,
       landlordId: landlordId,
       landlordName: landlordName,
+      roomImages: parsedImages,
     );
   }
 }

@@ -120,7 +120,7 @@ class _LandlordRoomsViewState extends State<LandlordRoomsView> {
                       borderRadius: BorderRadius.circular(10),
                       child: room.images.isNotEmpty && room.images.first.image != null && room.images.first.image!.isNotEmpty
                           ? Image.network(
-                              '${room.images.first.image!}?roomId=${room.id}',
+                              room.images.first.image!,
                               width: 60,
                               height: 60,
                               fit: BoxFit.cover,
