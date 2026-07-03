@@ -7,7 +7,6 @@ import '../views/register_view.dart';
 import '../views/login_view.dart';
 import '../views/home_view.dart';
 import '../views/settings_view.dart';
-import '../views/notifications_view.dart';
 import '../views/profile_view.dart';
 
 class AppPages {
