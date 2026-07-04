@@ -165,15 +165,11 @@ class MessageController extends GetxController {
     try {
       if (!silent) isLoadingMessages.value = true;
       final list = await _messageService.getMessages(partnerId);
+      messages.assignAll(list);
       
-      if (list.length != messages.length || 
-          (list.isNotEmpty && messages.isNotEmpty && list.last.id != messages.last.id)) {
-        messages.assignAll(list);
-        
-        for (var msg in list) {
-          if (!msg.isRead && msg.sender?.id == partnerId && msg.id != null) {
-            markMessageAsRead(msg.id!);
-          }
+      for (var msg in list) {
+        if (!msg.isRead && msg.sender?.id == partnerId && msg.id != null) {
+          markMessageAsRead(msg.id!);
         }
       }
     } catch (e) {
@@ -238,11 +234,13 @@ class MessageController extends GetxController {
 
   void startChatSession(String partnerId) {
     _activePartnerId = partnerId;
+    messages.clear();
     connectWebSocket();
-    fetchMessages(partnerId, silent: true);
+    fetchMessages(partnerId, silent: false);
   }
 
   void stopChatSession() {
     _activePartnerId = null;
+    messages.clear();
   }
 }

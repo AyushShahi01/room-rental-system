@@ -21,7 +21,8 @@ class MaintenanceListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return MaintenanceRequest.objects.filter(tenant=user) | MaintenanceRequest.objects.filter(room__landlord=user)
+        return (MaintenanceRequest.objects.select_related('room', 'tenant').filter(tenant=user) | 
+                MaintenanceRequest.objects.select_related('room', 'tenant').filter(room__landlord=user))
 
     def perform_create(self, serializer):
         maintenance = serializer.save(tenant=self.request.user, status=MaintenanceRequest.STATUS_PENDING)
@@ -33,7 +34,8 @@ class MaintenanceDetailView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return MaintenanceRequest.objects.filter(tenant=user) | MaintenanceRequest.objects.filter(room__landlord=user)
+        return (MaintenanceRequest.objects.select_related('room', 'tenant').filter(tenant=user) | 
+                MaintenanceRequest.objects.select_related('room', 'tenant').filter(room__landlord=user))
 
 class MaintenanceStatusUpdateView(APIView):
     permission_classes = [IsAuthenticated, IsLandlord]
@@ -87,10 +89,11 @@ class MaintenanceImageUploadView(APIView):
 class MyMaintenanceView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsTenant]
     serializer_class = MaintenanceSerializer
-    def get_queryset(self): return MaintenanceRequest.objects.filter(tenant=self.request.user)
+    def get_queryset(self):
+        return MaintenanceRequest.objects.select_related('room', 'tenant').filter(tenant=self.request.user)
 
 class RoomMaintenanceView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsLandlord]
     serializer_class = MaintenanceSerializer
     def get_queryset(self):
-        return MaintenanceRequest.objects.filter(room_id=self.kwargs['room_id'], room__landlord=self.request.user)
+        return MaintenanceRequest.objects.select_related('room', 'tenant').filter(room_id=self.kwargs['room_id'], room__landlord=self.request.user)
