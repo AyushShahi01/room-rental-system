@@ -11,8 +11,10 @@ class TenantMessagesView extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<MessageController>();
 
-    // Reload conversations on view render
-    controller.fetchConversations();
+    // Reload conversations on view render post-frame to avoid build-phase state updates
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.fetchConversations();
+    });
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8FA),

@@ -1,4 +1,5 @@
 import '../../utils/dio_connection.dart';
+import '../auth_model/user_model.dart';
 
 class BookingModel {
   BookingModel({
@@ -15,6 +16,7 @@ class BookingModel {
     required this.landlordId,
     required this.landlordName,
     required this.roomImages,
+    this.landlord,
   });
 
   final int? id;
@@ -32,6 +34,7 @@ class BookingModel {
   final String? tenantName;
   final String? landlordId;
   final String? landlordName;
+  final UserModel? landlord;
 
   int? get room => roomId;
   String? get tenant => tenantId;
@@ -85,13 +88,35 @@ class BookingModel {
       tenantId = tenantRaw?.toString();
     }
 
-    final landlordRaw = json['landlord'];
+    var landlordRaw = json['landlord'];
+    if (landlordRaw == null && roomRaw is Map) {
+      landlordRaw = roomRaw['landlord'];
+    }
     String? landlordId = json['landlord_id']?.toString();
     String? landlordName = json['landlord_name'] as String?;
     if (landlordRaw is Map) {
       landlordId ??= landlordRaw['id']?.toString();
       landlordName ??= landlordRaw['username']?.toString() ?? landlordRaw['first_name']?.toString();
     }
+
+    final landlordUser = landlordRaw != null
+        ? UserModel.fromJson(Map<String, dynamic>.from(landlordRaw as Map))
+        : (landlordId != null
+            ? UserModel(
+                id: landlordId,
+                username: landlordName ?? 'Landlord',
+                email: '',
+                firstName: landlordName ?? 'Landlord',
+                lastName: '',
+                role: 'landlord',
+                tenantId: null,
+                landlordId: landlordId,
+                province: null,
+                district: null,
+                city: null,
+                ward: null,
+              )
+            : null);
 
     return BookingModel(
       id: json['id'] as int?,
@@ -107,6 +132,7 @@ class BookingModel {
       landlordId: landlordId,
       landlordName: landlordName,
       roomImages: parsedImages,
+      landlord: landlordUser,
     );
   }
 }

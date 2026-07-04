@@ -7,6 +7,7 @@ import '../controllers/booking_controller.dart';
 import '../models/auth_model/user_model.dart';
 import 'payement_view.dart';
 import 'message/chat_detail_view.dart';
+import '../models/payement/rent_record_model.dart';
 
 class PaymentHistoryView extends StatefulWidget {
   const PaymentHistoryView({super.key});
@@ -47,6 +48,13 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
     } else {
       await _paymentController.loadMyPayments();
       await _bookingController.loadTenantBookings();
+      final tenantId = _authController.currentUser.value?.id;
+      if (tenantId != null) {
+        await _paymentController.loadRentRecords(
+          showLoading: false,
+          params: {'tenant': tenantId},
+        );
+      }
     }
   }
 
@@ -199,15 +207,15 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
         );
       } else {
         // Tenant Rent Reminders Panel
-        final activeBookings = _bookingController.tenantBookings
-            .where((b) => b.status?.toLowerCase() == 'approved')
+        final unpaidRecords = _paymentController.rentRecords
+            .where((r) => r.status != 'paid')
             .toList();
 
-        if (activeBookings.isEmpty) {
+        if (unpaidRecords.isEmpty) {
           return _buildEmptyState(
-            icon: Icons.receipt_long_outlined,
-            title: 'No Rent Due',
-            subtitle: 'Approved bookings will generate monthly reminders here.',
+            icon: Icons.check_circle_outline,
+            title: 'All Rent Paid',
+            subtitle: 'You have no pending or overdue rent records. Great job!',
           );
         }
 
@@ -215,31 +223,16 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
           onRefresh: _refreshData,
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: activeBookings.length,
+            itemCount: unpaidRecords.length,
             itemBuilder: (context, index) {
-              final booking = activeBookings[index];
-              
-              // Calculate payment status
-              final myVerifiedPayments = _paymentController.myPayments
-                  .where((p) => p.booking?.id == booking.id && p.status?.toLowerCase() == 'verified')
-                  .toList();
-              
-              myVerifiedPayments.sort((a, b) => (b.createdAt ?? DateTime.now()).compareTo(a.createdAt ?? DateTime.now()));
-
-              DateTime nextDueDate = booking.createdAt ?? DateTime.now();
-              if (myVerifiedPayments.isNotEmpty && myVerifiedPayments.first.createdAt != null) {
-                nextDueDate = myVerifiedPayments.first.createdAt!.add(const Duration(days: 30));
-              } else {
-                nextDueDate = nextDueDate.add(const Duration(days: 30));
-              }
-
-              final isOverdue = DateTime.now().isAfter(nextDueDate);
-              final String statusText = isOverdue ? 'RENT DUE' : 'RENT PAID';
-              final Color statusColor = isOverdue ? Colors.orange.shade800 : Colors.green.shade700;
+              final record = unpaidRecords[index];
+              final isOverdue = record.status == 'overdue';
+              final statusColor = isOverdue ? Colors.red.shade700 : Colors.orange.shade800;
 
               return Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                margin: const EdgeInsets.only(bottom: 12),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -250,55 +243,53 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
                         children: [
                           Expanded(
                             child: Text(
-                              booking.roomTitle ?? 'My Room',
+                              record.room.title,
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                             ),
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.1),
+                              color: statusColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              statusText,
+                              record.status.replaceAll('_', ' ').toUpperCase(),
                               style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
                       ),
                       const Divider(height: 24),
-                      _buildInfoText('Landlord', booking.landlordName ?? 'Host'),
+                      _buildInfoText('Billing Month', '${_getMonthName(record.billingMonth)} ${record.billingYear}'),
                       const SizedBox(height: 6),
-                      _buildInfoText('Monthly Rent', '₹${booking.roomPrice ?? "0"}'),
+                      _buildInfoText('Monthly Rent', '₹${record.amount}'),
                       const SizedBox(height: 6),
                       _buildInfoText(
                         'Rent Due Date', 
-                        DateFormat('yMMMMd').format(nextDueDate),
+                        record.dueDate,
                         valueColor: isOverdue ? Colors.red.shade700 : null,
                       ),
-                      if (isOverdue) ...[
-                        const SizedBox(height: 20),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 48,
-                          child: FilledButton.icon(
-                            onPressed: () {
-                              Get.to(() => PaymentView(
-                                    bookingId: booking.id!,
-                                    roomName: booking.roomTitle ?? 'Room',
-                                    amount: booking.roomPrice ?? '0',
-                                    paymentStatus: 'pending',
-                                  ));
-                            },
-                            icon: const Icon(Icons.payment_rounded),
-                            label: const Text('Log Rent Payment', style: TextStyle(fontWeight: FontWeight.bold)),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: Colors.blueAccent.shade700,
-                            ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: FilledButton.icon(
+                          onPressed: () {
+                            Get.to(() => PaymentView(
+                                  bookingId: record.id,
+                                  roomName: record.room.title,
+                                  amount: record.amount,
+                                  paymentStatus: 'pending',
+                                ));
+                          },
+                          icon: const Icon(Icons.payment_rounded),
+                          label: const Text('Pay Rent Now', style: TextStyle(fontWeight: FontWeight.bold)),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.teal.shade700,
                           ),
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 ),
@@ -308,6 +299,15 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
         );
       }
     });
+  }
+
+  String _getMonthName(int monthNum) {
+    try {
+      final date = DateTime(2026, monthNum, 1);
+      return DateFormat('MMMM').format(date);
+    } catch (_) {
+      return 'Month $monthNum';
+    }
   }
 
   // ── PENDING APPROVALS TAB (LANDLORD) ─────────────────────────────────────────

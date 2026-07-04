@@ -82,9 +82,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def save_message(self, receiver_id, content, booking_id=None):
         try:
+            try:
+                receiver_id = int(receiver_id)
+            except (ValueError, TypeError):
+                pass
+            
             receiver = User.objects.get(id=receiver_id)
             if receiver == self.user:
                 return None
+            
+            if booking_id is not None:
+                try:
+                    booking_id = int(booking_id)
+                except (ValueError, TypeError):
+                    booking_id = None
+
             message = Message.objects.create(
                 sender=self.user,
                 receiver=receiver,
@@ -97,7 +109,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             except Exception:
                 pass
             return message
-        except Exception:
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
             return None
 
     @database_sync_to_async

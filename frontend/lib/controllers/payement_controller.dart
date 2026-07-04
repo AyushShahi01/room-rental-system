@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../models/payement/payement_model.dart';
+import '../models/payement/rent_record_model.dart';
+import '../models/payement/rent_dashboard_model.dart';
 import '../services/payement_service.dart';
 import 'booking_controller.dart';
 import 'room_controller.dart';
@@ -18,6 +20,11 @@ class PaymentController extends GetxController {
   
   final RxList<dynamic> myPayments = <dynamic>[].obs;
   final RxList<dynamic> paymentHistory = <dynamic>[].obs;
+
+  // Rent Records & Dashboard states
+  final Rxn<RentDashboardModel> rentDashboard = Rxn<RentDashboardModel>();
+  final RxList<RentRecordModel> rentRecords = <RentRecordModel>[].obs;
+
   
   Future<void> loadMyPayments({bool showLoading = true}) async {
     try {
@@ -128,6 +135,34 @@ class PaymentController extends GetxController {
       );
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> loadRentDashboard({bool showLoading = true}) async {
+    try {
+      if (showLoading) isLoading.value = true;
+      errorMessage.value = '';
+      final data = await _service.getRentDashboard();
+      rentDashboard.value = data;
+    } catch (e) {
+      errorMessage.value = 'Failed to load rent dashboard.';
+      debugPrint('Error loading rent dashboard: $e');
+    } finally {
+      if (showLoading) isLoading.value = false;
+    }
+  }
+
+  Future<void> loadRentRecords({bool showLoading = true, Map<String, dynamic>? params}) async {
+    try {
+      if (showLoading) isLoading.value = true;
+      errorMessage.value = '';
+      final data = await _service.getRentRecords(params: params);
+      rentRecords.assignAll(data);
+    } catch (e) {
+      errorMessage.value = 'Failed to load rent records.';
+      debugPrint('Error loading rent records: $e');
+    } finally {
+      if (showLoading) isLoading.value = false;
     }
   }
 }

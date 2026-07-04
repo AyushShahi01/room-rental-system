@@ -30,8 +30,9 @@ class RoomController extends GetxController {
     try {
       final response = await _roomService.getRooms();
       final recommendations = await _roomService.getRecommendations({});
-      rooms.value = response.results;
-      recommendedRooms.value = recommendations.results;
+      // Filter out rooms that are not available (booked)
+      rooms.value = response.results.where((r) => r.isAvailable == true).toList();
+      recommendedRooms.value = recommendations.results.where((r) => r.room?.isAvailable == true).toList();
     } catch (e) {
       Get.snackbar('Error', 'Failed to load rooms: $e');
     } finally {

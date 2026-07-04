@@ -22,12 +22,12 @@ class RentRecordListCreateView(generics.ListCreateAPIView):
 
         user = self.request.user
         if user.role == 'admin':
-            qs = RentRecord.objects.all()
+            qs = RentRecord.objects.select_related('room', 'tenant').all()
         elif user.role == 'landlord':
-            qs = RentRecord.objects.filter(room__landlord=user)
+            qs = RentRecord.objects.select_related('room', 'tenant').filter(room__landlord=user)
         else:
             # Tenant
-            qs = RentRecord.objects.filter(tenant=user)
+            qs = RentRecord.objects.select_related('room', 'tenant').filter(tenant=user)
 
         # Filters
         month = self.request.query_params.get('month')
@@ -71,11 +71,11 @@ class RentRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
 
         user = self.request.user
         if user.role == 'admin':
-            return RentRecord.objects.all()
+            return RentRecord.objects.select_related('room', 'tenant').all()
         elif user.role == 'landlord':
-            return RentRecord.objects.filter(room__landlord=user)
+            return RentRecord.objects.select_related('room', 'tenant').filter(room__landlord=user)
         else:
-            return RentRecord.objects.filter(tenant=user)
+            return RentRecord.objects.select_related('room', 'tenant').filter(tenant=user)
 
     def check_object_permissions(self, request, obj):
         super().check_object_permissions(request, obj)
@@ -87,6 +87,44 @@ class RentRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
                 raise PermissionDenied("Only landlords and administrators can modify rent records.")
             if user.role == 'landlord' and obj.room.landlord_id != user.id:
                 raise PermissionDenied("You can only modify rent records for rooms that you own.")
+
+    def perform_update(self, serializer):
+        old_instance = self.get_object()
+        old_status = old_instance.status
+        instance = serializer.save()
+
+        if old_status != RentRecord.STATUS_PAID and instance.status == RentRecord.STATUS_PAID:
+            try:
+                from notifications.helpers import create_notification
+                create_notification(
+                    instance.tenant,
+                    f"Rent for {instance.room.title} ({instance.billing_month}/{instance.billing_year}) has been marked as paid!"
+                )
+
+                from messaging.models import Message as ChatMessage
+                from messaging.serializers import MessageSerializer
+                from channels.layers import get_channel_layer
+                from asgiref.sync import async_to_sync
+
+                chat_message = ChatMessage.objects.create(
+                    sender=instance.room.landlord,
+                    receiver=instance.tenant,
+                    content=f"✅ Rent payment of Rs. {instance.amount} for Room '{instance.room.title}' ({instance.billing_month}/{instance.billing_year}) has been marked as paid. Thank you!"
+                )
+
+                channel_layer = get_channel_layer()
+                if channel_layer:
+                    serialized_msg = MessageSerializer(chat_message).data
+                    group_msg = {
+                        "type": "chat_message",
+                        "message": serialized_msg
+                    }
+                    async_to_sync(channel_layer.group_send)(f"user_{instance.tenant.id}", group_msg)
+                    async_to_sync(channel_layer.group_send)(f"user_{instance.room.landlord.id}", group_msg)
+            except BaseException as e:
+                import logging
+                logging.getLogger(__name__).error(f"Failed to send rent payment confirmation: {e}")
+
 
 
 class RentDashboardView(APIView):

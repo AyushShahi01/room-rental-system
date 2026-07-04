@@ -45,8 +45,9 @@ class TenantDashboardController extends GetxController {
       errorMessage.value = '';
       final data = await _roomService.getRooms();
       dashboardData.value = data;
-      allProperties.assignAll(data.results);
-      featuredProperties.assignAll(data.results.take(3).toList());
+      final filteredResults = data.results.where((r) => r.isAvailable == true).toList();
+      allProperties.assignAll(filteredResults);
+      featuredProperties.assignAll(filteredResults.take(3).toList());
     } catch (e) {
       errorMessage.value = 'Failed to load rooms: ${e.toString()}';
       debugPrint('Error loading tenant dashboard rooms: $e');
@@ -62,7 +63,18 @@ class TenantDashboardController extends GetxController {
       searchResults.clear();
     } else {
       isSearchMode.value = true;
-      searchResults.clear();
+      final queryLower = searchQuery.value.toLowerCase();
+      final filtered = allProperties.where((room) {
+        final title = (room.title as String? ?? '').toLowerCase();
+        final description = (room.description as String? ?? '').toLowerCase();
+        final province = (room.province as String? ?? '').toLowerCase();
+        final state = (room.state as String? ?? '').toLowerCase();
+        return title.contains(queryLower) ||
+               description.contains(queryLower) ||
+               province.contains(queryLower) ||
+               state.contains(queryLower);
+      }).toList();
+      searchResults.assignAll(filtered);
     }
   }
 }

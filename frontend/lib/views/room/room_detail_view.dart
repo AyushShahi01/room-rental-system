@@ -10,8 +10,7 @@ import '../message/chat_detail_view.dart';
 import 'room_images_view.dart';
 import 'room_form_view.dart';
 import '../route_map_view.dart';
-import '../agreement_view.dart';
-import '../payment_history_view.dart';
+import '../tenant/booking_success_view.dart';
 
 class RoomDetailView extends StatefulWidget {
   const RoomDetailView({super.key, required this.roomId});
@@ -28,35 +27,132 @@ class _RoomDetailViewState extends State<RoomDetailView> {
       ? Get.find<BookingController>()
       : Get.put(BookingController());
 
+  int _currentImageIndex = 0;
+
   @override
   void initState() {
     super.initState();
     _roomController.loadRoomDetail(widget.roomId);
     
-    // Automatically load incoming bookings for landlord to inspect active bookings/tenants
-    if (Get.find<AuthController>().currentUser.value?.role?.toLowerCase() == 'landlord') {
+    final role = Get.find<AuthController>().currentUser.value?.role?.toLowerCase();
+    if (role == 'landlord') {
       _bookingController.loadIncomingBookings(showLoading: false);
+    } else if (role == 'tenant') {
+      _bookingController.loadTenantBookings(showLoading: false);
     }
   }
 
   Future<void> _bookNow() async {
-    final bookingController = Get.isRegistered<BookingController>()
-        ? Get.find<BookingController>()
-        : Get.put(BookingController());
-    bookingController.roomIdController.text = widget.roomId.toString();
-    await bookingController.createBooking();
-    if (!mounted) return;
-    if (bookingController.successMessage.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Booking request submitted successfully.'),
-        ),
-      );
-    } else if (bookingController.errorMessage.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(bookingController.errorMessage.value)),
-      );
+    final _room = _roomController.currentRoomDetail.value;
+    if (_room == null) return;
+
+    try {
+      _bookingController.roomIdController.text = _room.id.toString();
+      await _bookingController.createBooking();
+      
+      final booking = _bookingController.selectedBooking.value;
+      if (booking != null) {
+        Get.to(() => BookingSuccessView(booking: booking));
+      }
+    } catch (e) {
+      debugPrint('Error booking room: $e');
     }
+  }
+
+  Widget _specCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required ColorScheme colorScheme,
+  }) {
+    return Container(
+      width: 120,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 24, color: colorScheme.primary),
+          const SizedBox(height: 12),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _amenityChip(String label, IconData icon, ColorScheme colorScheme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: colorScheme.primary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: colorScheme.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _fallbackImage({double height = 220}) {
+    return Container(
+      height: height,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.indigo.shade50,
+      ),
+      child: Center(
+        child: Icon(
+          Icons.home_work_outlined,
+          size: 48,
+          color: Colors.indigo.shade700,
+        ),
+      ),
+    );
+  }
+
+  String _displayName(LandlordModel? landlord) {
+    if (landlord == null) return 'Not available';
+    if (landlord.username != null && landlord.username!.isNotEmpty) {
+      return landlord.username!;
+    }
+    if (landlord.firstName != null && landlord.firstName!.isNotEmpty) {
+      return '${landlord.firstName} ${landlord.lastName ?? ''}'.trim();
+    }
+    return 'Shared host';
   }
 
   @override
@@ -64,17 +160,34 @@ class _RoomDetailViewState extends State<RoomDetailView> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerHighest.withValues(
-        alpha: 0.2,
-      ),
+      extendBodyBehindAppBar: true,
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text(
-          'Room Details',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16.0, top: 8.0, bottom: 8.0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.9),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              icon: Icon(Icons.arrow_back_rounded, color: colorScheme.onSurface),
+              onPressed: () => Get.back(),
+            ),
+          ),
         ),
-        backgroundColor: colorScheme.surface,
-        foregroundColor: colorScheme.onSurface,
-        elevation: 0.5,
       ),
       body: Obx(() {
         if (_roomController.isRoomDetailLoading.value) {
@@ -84,49 +197,244 @@ class _RoomDetailViewState extends State<RoomDetailView> {
         if (_room == null) {
           return const Center(child: Text('Room not found'));
         }
+
+        final isOwnRoom = _room.landlord?.id == Get.find<AuthController>().currentUser.value?.id;
+
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (_room.images.isNotEmpty)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: SizedBox(
-                    height: 220,
+              // Swipable Image Carousel
+              Stack(
+                children: [
+                  SizedBox(
+                    height: 300,
                     width: double.infinity,
-                    child: Image.network(
-                      _room.images.first.image ?? '',
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => _fallbackImage(),
+                    child: _room.images.isNotEmpty
+                        ? PageView.builder(
+                            itemCount: _room.images.length,
+                            onPageChanged: (index) {
+                              setState(() {
+                                _currentImageIndex = index;
+                              });
+                            },
+                            itemBuilder: (context, index) {
+                              return Image.network(
+                                _room.images[index].image ?? '',
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => _fallbackImage(height: 300),
+                              );
+                            },
+                          )
+                        : _fallbackImage(height: 300),
+                  ),
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 90,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.black.withValues(alpha: 0.35),
+                            Colors.transparent,
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
                     ),
                   ),
-                )
-              else
-                _fallbackImage(height: 220),
-              const SizedBox(height: 16),
-              Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(18),
+                  if (_room.images.length > 1)
+                    Positioned(
+                      bottom: 32,
+                      left: 0,
+                      right: 0,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(_room.images.length, (index) {
+                          final isSelected = _currentImageIndex == index;
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            height: 8,
+                            width: isSelected ? 24 : 8,
+                            decoration: BoxDecoration(
+                              color: isSelected ? colorScheme.primary : Colors.white.withValues(alpha: 0.7),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                ],
+              ),
+
+              // Details Panel
+              Transform.translate(
+                offset: const Offset(0, -20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -4),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        _room.title ?? 'Untitled Room',
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                      // Header title + price
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _room.title ?? 'Untitled Room',
+                                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: colorScheme.onSurface,
+                                      ),
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Icon(Icons.location_on_outlined, size: 16, color: colorScheme.primary),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${_room.province ?? ''}, ${_room.state ?? ''}'.trim(),
+                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '₹${_room.price ?? "0"}',
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.w900,
+                                      color: colorScheme.primary,
+                                      fontSize: 22,
+                                    ),
+                              ),
+                              Text(
+                                '/ month',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 16),
+                      // Availability indicator
+                      Obx(() {
+                        final hasBooking = _bookingController.tenantBookings.any(
+                          (b) => b.roomId == widget.roomId && (b.status?.toLowerCase() == 'pending' || b.status?.toLowerCase() == 'approved')
+                        );
+                        final isBooked = _room.isAvailable == false || hasBooking;
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isBooked ? Colors.red.shade50 : Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isBooked ? Colors.red.shade200 : Colors.green.shade200,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isBooked ? Icons.block : Icons.check_circle,
+                                size: 16,
+                                color: isBooked ? Colors.red.shade800 : Colors.green.shade800,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                isBooked ? 'Already Booked' : 'Available for Booking',
+                                style: TextStyle(
+                                  color: isBooked ? Colors.red.shade800 : Colors.green.shade800,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 24),
+
+                      // Room Specs Grid
                       Text(
-                        _room.description ?? 'No description available.',
-                        style: Theme.of(context).textTheme.bodyLarge
-                            ?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                              height: 1.5,
+                        'Room Overview',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _specCard(
+                              icon: Icons.chair_outlined,
+                              label: 'Furnishing',
+                              value: _room.furnishedStatus == true ? 'Furnished' : 'Unfurnished',
+                              colorScheme: colorScheme,
+                            ),
+                            const SizedBox(width: 12),
+                            _specCard(
+                              icon: Icons.square_foot_rounded,
+                              label: 'Area',
+                              value: _room.areaSqft != null ? '${_room.areaSqft} sqft' : 'N/A',
+                              colorScheme: colorScheme,
+                            ),
+                            const SizedBox(width: 12),
+                            _specCard(
+                              icon: Icons.security_rounded,
+                              label: 'Deposit',
+                              value: _room.securityDeposit != null ? '₹${_room.securityDeposit}' : 'N/A',
+                              colorScheme: colorScheme,
+                            ),
+                            const SizedBox(width: 12),
+                            _specCard(
+                              icon: Icons.build_circle_outlined,
+                              label: 'Maintenance',
+                              value: _room.maintenanceCharges != null ? '₹${_room.maintenanceCharges}' : '₹0',
+                              colorScheme: colorScheme,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Amenities chips
+                      Text(
+                        'Amenities',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
                             ),
                       ),
                       const SizedBox(height: 12),
@@ -134,274 +442,374 @@ class _RoomDetailViewState extends State<RoomDetailView> {
                         spacing: 8,
                         runSpacing: 8,
                         children: [
-                          _pill(
-                            '₹${_room.price ?? "0"}',
-                            Icons.attach_money_rounded,
-                            colorScheme,
-                          ),
-                          _pill(
-                            _room.isAvailable == true
-                                ? 'Available'
-                                : 'Booked',
-                            _room.isAvailable == true
-                                ? Icons.check_circle
-                                : Icons.block,
-                            colorScheme,
-                          ),
-                          _pill(
-                            '${_room.province ?? ''}, ${_room.state ?? ''}'
-                                .trim(),
-                            Icons.location_on_outlined,
-                            colorScheme,
-                          ),
+                          if (_room.hasWifi == true) _amenityChip('Wi-Fi', Icons.wifi, colorScheme),
+                          if (_room.hasAc == true) _amenityChip('AC', Icons.ac_unit, colorScheme),
+                          if (_room.hasAttachedBathroom == true) _amenityChip('Attached Bath', Icons.bathtub_outlined, colorScheme),
+                          if (_room.parkingAvailable == true) _amenityChip('Parking', Icons.local_parking, colorScheme),
+                          if (_room.foodAvailable == true) _amenityChip('Food', Icons.restaurant, colorScheme),
+                          if (_room.waterSupplyAvailable == true) _amenityChip('Water Supply', Icons.water_drop_outlined, colorScheme),
+                          if (_room.wasteCollectionAvailable == true) _amenityChip('Waste Collection', Icons.delete_outline, colorScheme),
+                          if (_room.furnishedStatus == true) _amenityChip('Furnished', Icons.chair, colorScheme),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      _InfoRow(
-                        icon: Icons.person_outline,
-                        label: 'Landlord',
-                        value: _displayName(_room.landlord),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Amenities',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          if (_room.hasWifi == true) _chip('Wi-Fi'),
-                          if (_room.hasAc == true) _chip('AC'),
-                          if (_room.hasAttachedBathroom == true)
-                            _chip('Attached Bathroom'),
-                          if (_room.parkingAvailable == true)
-                            _chip('Parking'),
-                          if (_room.foodAvailable == true) _chip('Food'),
-                          if (_room.waterSupplyAvailable == true)
-                            _chip('Water'),
-                          if (_room.wasteCollectionAvailable == true)
-                            _chip('Waste Collection'),
-                          if (_room.furnishedStatus == true)
-                            _chip('Furnished'),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Obx(() {
-                final isOwnRoom = _room.landlord?.id == Get.find<AuthController>().currentUser.value?.id;
-                
-                if (isOwnRoom) {
-                  final activeBooking = _bookingController.incomingBookings.firstWhereOrNull(
-                    (b) => b.roomId == widget.roomId && b.status?.toLowerCase() == 'approved',
-                  );
+                      const SizedBox(height: 24),
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Card(
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(18),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Room Administration',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                              const SizedBox(height: 14),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: ElevatedButton.icon(
-                                      onPressed: () async {
-                                        await Get.to(
-                                          () => RoomFormView(
-                                            isEditing: true,
-                                            initialRoom: _room,
-                                            onSubmit: (data) => _roomController.updateRoom(_room.id ?? 0, data),
-                                          ),
-                                        );
-                                        _roomController.loadRoomDetail(widget.roomId);
-                                      },
-                                      icon: const Icon(Icons.edit_outlined),
-                                      label: const Text('Edit Details'),
-                                      style: ElevatedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(vertical: 12),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: OutlinedButton.icon(
-                                      onPressed: () => Get.to(() => RoomImagesView(roomId: _room.id ?? 0)),
-                                      icon: const Icon(Icons.photo_library_outlined),
-                                      label: const Text('Manage Images'),
-                                      style: OutlinedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(vertical: 12),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
+                      // Description
+                      Text(
+                        'About this Room',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                            ),
                       ),
-                      const SizedBox(height: 16),
-                      if (activeBooking != null)
+                      const SizedBox(height: 8),
+                      Text(
+                        _room.description ?? 'No description available.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              height: 1.5,
+                            ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Hosted by details card (only for tenants)
+                      if (!isOwnRoom) ...[
                         Card(
                           elevation: 0,
+                          color: colorScheme.surfaceContainerLow,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
+                            borderRadius: BorderRadius.circular(20),
+                            side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(18),
+                            padding: const EdgeInsets.all(16),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'Tenant Details (Rented)',
-                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.green.shade800,
-                                          ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.green.shade50,
-                                        borderRadius: BorderRadius.circular(999),
+                                Text(
+                                  'Hosted By',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                        fontWeight: FontWeight.w600,
                                       ),
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: colorScheme.primaryContainer,
+                                      foregroundColor: colorScheme.onPrimaryContainer,
+                                      radius: 24,
                                       child: Text(
-                                        'Active Rent',
-                                        style: TextStyle(
-                                          color: Colors.green.shade800,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                        _displayName(_room.landlord).isNotEmpty
+                                            ? _displayName(_room.landlord)[0].toUpperCase()
+                                            : 'L',
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            _displayName(_room.landlord),
+                                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: colorScheme.onSurface,
+                                                ),
+                                          ),
+                                          Text(
+                                            'Host Landlord',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: colorScheme.onSurfaceVariant,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 16),
-                                _InfoRow(
-                                  icon: Icons.person_outline,
-                                  label: 'Name',
-                                  value: activeBooking.tenantName ?? 'N/A',
-                                ),
-                                if (activeBooking.tenantUser?.email != null)
-                                  _InfoRow(
-                                    icon: Icons.email_outlined,
-                                    label: 'Email',
-                                    value: activeBooking.tenantUser!.email!,
-                                  ),
-                                if (activeBooking.tenantUser?.city != null)
-                                  _InfoRow(
-                                    icon: Icons.location_city_outlined,
-                                    label: 'Address',
-                                    value: '${activeBooking.tenantUser?.city}, ${activeBooking.tenantUser?.province} (Ward ${activeBooking.tenantUser?.ward})',
-                                  ),
-                                const SizedBox(height: 16),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: ElevatedButton.icon(
-                                        onPressed: () {
-                                          Get.to(() => AgreementDetailsView(
-                                                bookingId: activeBooking.id ?? 0,
-                                                roomName: _room.title ?? 'Room',
-                                                roomImage: _room.images.isNotEmpty ? _room.images.first.image ?? '' : '',
-                                                landlordName: activeBooking.landlordName ?? 'Landlord',
-                                                tenantName: activeBooking.tenantName ?? 'Tenant',
-                                              ));
-                                        },
-                                        icon: const Icon(Icons.description_outlined),
-                                        label: const Text('Agreement'),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: colorScheme.primaryContainer,
-                                          foregroundColor: colorScheme.onPrimaryContainer,
-                                          elevation: 0,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: OutlinedButton.icon(
-                                        onPressed: () {
-                                          Get.to(() => const PaymentHistoryView());
-                                        },
-                                        icon: const Icon(Icons.receipt_long_outlined),
-                                        label: const Text('Payment Logs'),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
                                 SizedBox(
                                   width: double.infinity,
-                                  child: OutlinedButton.icon(
+                                  child: ElevatedButton.icon(
                                     onPressed: () {
-                                      final tenantUserModel = UserModel(
-                                        id: activeBooking.tenantUser?.id ?? activeBooking.tenantId,
-                                        username: activeBooking.tenantName ?? 'Tenant',
-                                        email: activeBooking.tenantUser?.email,
-                                        firstName: activeBooking.tenantUser?.firstName,
-                                        lastName: activeBooking.tenantUser?.lastName,
-                                        role: 'tenant',
-                                        tenantId: activeBooking.tenantId,
-                                        landlordId: null,
-                                        province: activeBooking.tenantUser?.province,
-                                        district: activeBooking.tenantUser?.district,
-                                        city: activeBooking.tenantUser?.city,
-                                        ward: activeBooking.tenantUser?.ward,
+                                      final landlordUser = UserModel(
+                                        id: _room.landlord?.id,
+                                        username: _room.landlord?.username,
+                                        email: _room.landlord?.email,
+                                        firstName: _room.landlord?.firstName,
+                                        lastName: _room.landlord?.lastName,
+                                        role: _room.landlord?.role ?? 'landlord',
+                                        tenantId: null,
+                                        landlordId: _room.landlord?.landlordId,
+                                        province: _room.landlord?.province,
+                                        district: _room.landlord?.district,
+                                        city: _room.landlord?.city,
+                                        ward: _room.landlord?.ward,
                                       );
-                                      Get.to(() => ChatDetailView(partner: tenantUserModel));
+                                      Get.to(() => ChatDetailView(partner: landlordUser));
                                     },
                                     icon: const Icon(Icons.chat_bubble_outline_rounded),
-                                    label: const Text('Chat with Tenant'),
+                                    label: const Text('Message Landlord'),
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: colorScheme.primary,
+                                      elevation: 0,
+                                      side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.4)),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        )
-                      else
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+
+                      // Location details card
+                      Text(
+                        'Location & Directions',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+                      Card(
+                        elevation: 0,
+                        color: colorScheme.surfaceContainerLow,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.primaryContainer,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Icon(Icons.map_outlined, color: colorScheme.primary),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${_room.state ?? ""}, ${_room.province ?? ""}',
+                                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: colorScheme.onSurface,
+                                              ),
+                                        ),
+                                        Text(
+                                          'Ward Number: ${_room.wardNumber ?? "N/A"}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (_room.latitude != null && _room.longitude != null &&
+                                  double.tryParse(_room.latitude.toString()) != 0.0 &&
+                                  double.tryParse(_room.longitude.toString()) != 0.0) ...[
+                                const SizedBox(height: 16),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () {
+                                      final lat = double.tryParse(_room.latitude.toString()) ?? 0.0;
+                                      final lng = double.tryParse(_room.longitude.toString()) ?? 0.0;
+                                      Get.to(() => RouteMapView(
+                                            roomLat: lat,
+                                            roomLng: lng,
+                                            roomTitle: _room.title ?? 'Room',
+                                          ));
+                                    },
+                                    icon: const Icon(Icons.directions_outlined),
+                                    label: const Text('Get Directions (Map)'),
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      backgroundColor: colorScheme.secondaryContainer,
+                                      foregroundColor: colorScheme.onSecondaryContainer,
+                                      elevation: 0,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Administration / booking actions card
+                      if (isOwnRoom) ...[
                         Card(
                           elevation: 0,
+                          color: colorScheme.surfaceContainerLow,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
+                            borderRadius: BorderRadius.circular(20),
+                            side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(18),
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Room Administration',
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                ),
+                                const SizedBox(height: 14),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ElevatedButton.icon(
+                                        onPressed: () async {
+                                          await Get.to(
+                                            () => RoomFormView(
+                                              isEditing: true,
+                                              initialRoom: _room,
+                                              onSubmit: (data) => _roomController.updateRoom(_room.id ?? 0, data),
+                                            ),
+                                          );
+                                          _roomController.loadRoomDetail(widget.roomId);
+                                        },
+                                        icon: const Icon(Icons.edit_outlined),
+                                        label: const Text('Edit Details'),
+                                        style: ElevatedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: OutlinedButton.icon(
+                                        onPressed: () => Get.to(() => RoomImagesView(roomId: _room.id ?? 0)),
+                                        icon: const Icon(Icons.photo_library_outlined),
+                                        label: const Text('Manage Images'),
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Obx(() {
+                          final activeBooking = _bookingController.incomingBookings.firstWhereOrNull(
+                            (b) => b.roomId == widget.roomId && b.status?.toLowerCase() == 'approved',
+                          );
+                          if (activeBooking == null) return const SizedBox.shrink();
+                          return Card(
+                            elevation: 0,
+                            color: Colors.green.shade50,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(color: Colors.green.shade200),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Tenant Details (Rented)',
+                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.green.shade800,
+                                            ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.shade700,
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: const Text(
+                                          'ACTIVE',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _InfoRow(
+                                    icon: Icons.person_outline,
+                                    label: 'Name',
+                                    value: activeBooking.tenantUser != null
+                                        ? '${activeBooking.tenantUser!.firstName ?? ""} ${activeBooking.tenantUser!.lastName ?? ""}'.trim()
+                                        : (activeBooking.tenantName ?? 'Tenant'),
+                                  ),
+                                  _InfoRow(
+                                    icon: Icons.location_city_outlined,
+                                    label: 'Address',
+                                    value: activeBooking.tenantUser?.city != null
+                                        ? '${activeBooking.tenantUser!.city}, ${activeBooking.tenantUser!.province ?? ""}'.trim()
+                                        : 'N/A',
+                                  ),
+                                  _InfoRow(
+                                    icon: Icons.email_outlined,
+                                    label: 'Email',
+                                    value: activeBooking.tenantUser?.email ?? 'N/A',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                      ] else ...[
+                        // Rent policy & agreement card (tenants)
+                        Card(
+                          elevation: 0,
+                          color: colorScheme.surfaceContainerLow,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -425,161 +833,40 @@ class _RoomDetailViewState extends State<RoomDetailView> {
                             ),
                           ),
                         ),
-                    ],
-                  );
-                } else {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: _bookNow,
-                          icon: const Icon(Icons.calendar_month_outlined),
-                          label: const Text('Book Now'),
-                          style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                          ),
-                        ),
-                      ),
-                      if (_room.latitude != null && _room.longitude != null &&
-                          double.tryParse(_room.latitude.toString()) != 0.0 &&
-                          double.tryParse(_room.longitude.toString()) != 0.0) ...[
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 24),
+                        // Book Now button
                         SizedBox(
                           width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              final lat = double.tryParse(_room.latitude.toString()) ?? 0.0;
-                              final lng = double.tryParse(_room.longitude.toString()) ?? 0.0;
-                              Get.to(() => RouteMapView(
-                                    roomLat: lat,
-                                    roomLng: lng,
-                                    roomTitle: _room.title ?? 'Room',
-                                  ));
-                            },
-                            icon: const Icon(Icons.map_outlined),
-                            label: const Text('Get Directions (Map)'),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              backgroundColor: colorScheme.secondaryContainer,
-                              foregroundColor: colorScheme.onSecondaryContainer,
-                              elevation: 0,
-                            ),
-                          ),
+                          child: Obx(() {
+                            final hasBooking = _bookingController.tenantBookings.any(
+                              (b) => b.roomId == widget.roomId && (b.status?.toLowerCase() == 'pending' || b.status?.toLowerCase() == 'approved')
+                            );
+                            final isBooked = _room.isAvailable == false || hasBooking;
+
+                            return FilledButton.icon(
+                              onPressed: isBooked ? null : _bookNow,
+                              icon: Icon(isBooked ? Icons.block : Icons.calendar_month_outlined),
+                              label: Text(isBooked ? 'Already Booked' : 'Book Now'),
+                              style: FilledButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                backgroundColor: isBooked ? colorScheme.outlineVariant.withValues(alpha: 0.3) : colorScheme.primary,
+                                foregroundColor: isBooked ? colorScheme.onSurfaceVariant : colorScheme.onPrimary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            );
+                          }),
                         ),
                       ],
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            final landlordUser = UserModel(
-                              id: _room.landlord?.id,
-                              username: _room.landlord?.username,
-                              email: _room.landlord?.email,
-                              firstName: _room.landlord?.firstName,
-                              lastName: _room.landlord?.lastName,
-                              role: _room.landlord?.role ?? 'landlord',
-                              tenantId: null,
-                              landlordId: _room.landlord?.landlordId,
-                              province: _room.landlord?.province,
-                              district: _room.landlord?.district,
-                              city: _room.landlord?.city,
-                              ward: _room.landlord?.ward,
-                            );
-                            Get.to(() => ChatDetailView(partner: landlordUser));
-                          },
-                          icon: const Icon(Icons.chat_bubble_outline_rounded),
-                          label: const Text('Message Landlord'),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            backgroundColor: Colors.white,
-                            foregroundColor: colorScheme.primary,
-                            elevation: 0,
-                            side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.4)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          onPressed: () =>
-                              Get.to(() => RoomImagesView(roomId: widget.roomId)),
-                          icon: const Icon(Icons.photo_library_outlined),
-                          label: const Text('View Images'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                          ),
-                        ),
-                      ),
                     ],
-                  );
-                }
-              }),
+                  ),
+                ),
+              ),
             ],
           ),
         );
       }),
-    );
-  }
-
-  Widget _fallbackImage({double height = 140}) {
-    return Container(
-      height: height,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.indigo.shade50,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Center(
-        child: Icon(
-          Icons.home_work_outlined,
-          size: 42,
-          color: Colors.indigo.shade700,
-        ),
-      ),
-    );
-  }
-
-  String _displayName(LandlordModel? landlord) {
-    if (landlord == null) return 'Not available';
-    if (landlord.username != null && landlord.username!.isNotEmpty) {
-      return landlord.username!;
-    }
-    if (landlord.firstName != null && landlord.firstName!.isNotEmpty) {
-      return '${landlord.firstName} ${landlord.lastName ?? ''}'.trim();
-    }
-    return 'Shared host';
-  }
-
-  Widget _pill(String label, IconData icon, ColorScheme colorScheme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: colorScheme.primary),
-          const SizedBox(width: 6),
-          Text(label),
-        ],
-      ),
-    );
-  }
-
-  Widget _chip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
     );
   }
 }
@@ -605,9 +892,7 @@ class _InfoRow extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '$label: ',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           Expanded(
             child: Text(value, style: Theme.of(context).textTheme.bodyMedium),

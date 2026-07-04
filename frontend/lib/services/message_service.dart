@@ -6,7 +6,7 @@ class MessageService {
   final _dio = DioConnection.dio;
 
   Future<List<ConversationModel>> getConversations() async {
-    final response = await _dio.get('messaging/conversations/');
+    final response = await _dio.get('messages/conversations/');
     final data = response.data as Map<String, dynamic>;
     final list = data['results'] as List<dynamic>? ?? [];
     return list
@@ -16,10 +16,16 @@ class MessageService {
 
   Future<List<MessageChatModel>> getMessages(String partnerId) async {
     final response = await _dio.get(
-      'messaging/',
+      'messages/',
       queryParameters: {'recipient_id': partnerId},
     );
-    final list = response.data as List<dynamic>? ?? [];
+    final data = response.data;
+    List<dynamic> list = [];
+    if (data is Map<String, dynamic> && data['results'] != null) {
+      list = data['results'] as List<dynamic>;
+    } else if (data is List) {
+      list = data;
+    }
     return list
         .map((e) => MessageChatModel.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -35,11 +41,11 @@ class MessageService {
       'content': content,
       if (bookingId != null) 'booking_id': bookingId,
     };
-    final response = await _dio.post('messaging/', data: payload);
+    final response = await _dio.post('messages/', data: payload);
     return MessageChatModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<void> markAsRead(int messageId) async {
-    await _dio.patch('messaging/$messageId/read/');
+    await _dio.patch('messages/$messageId/read/');
   }
 }

@@ -3,10 +3,8 @@ import 'package:get/get.dart';
 
 import '../../controllers/booking_controller.dart';
 import '../../models/booking/bookinglist_model.dart';
-import '../../models/room/landlord_model.dart';
-import '../../models/room/room_detail_model.dart' as room_detail;
-import '../../services/room_service.dart';
 import '../booking_view.dart';
+import 'booking_success_view.dart';
 
 class TenantBookingsView extends StatefulWidget {
   const TenantBookingsView({super.key});
@@ -187,6 +185,10 @@ class _CreateBookingSheet extends StatelessWidget {
                   if (!context.mounted) return;
                   if (controller.successMessage.isNotEmpty) {
                     Navigator.pop(context);
+                    final createdBooking = controller.selectedBooking.value;
+                    if (createdBooking != null) {
+                      Get.to(() => BookingSuccessView(booking: createdBooking));
+                    }
                   }
                 },
                 icon: const Icon(Icons.send_rounded),

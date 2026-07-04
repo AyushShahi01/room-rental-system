@@ -5,6 +5,7 @@ import '../models/auth_model/landlord_dash_model.dart';
 import '../services/room_service.dart';
 import '../services/booking_service.dart';
 import '../services/maintenance_service.dart';
+import 'payement_controller.dart';
 
 class LandlordDashboardController extends GetxController {
   final AuthService _authService = AuthService();
@@ -24,6 +25,9 @@ class LandlordDashboardController extends GetxController {
   final RxInt pendingBookings = 0.obs;
   final RxInt totalPayments = 0.obs;
   final RxInt maintenanceRequests = 0.obs;
+  final RxDouble totalRentCollected = 0.0.obs;
+  final RxDouble totalPendingRent = 0.0.obs;
+  final RxInt overdueTenantsCount = 0.obs;
   final RxList<ActivityItem> recentActivities = <ActivityItem>[].obs;
 
   @override
@@ -143,6 +147,31 @@ class LandlordDashboardController extends GetxController {
         }
       } catch (e) {
         debugPrint('Failed to load maintenance count: $e');
+      }
+
+      try {
+        final paymentController = Get.isRegistered<PaymentController>()
+            ? Get.find<PaymentController>()
+            : Get.put(PaymentController());
+        await paymentController.loadRentDashboard(showLoading: false);
+        final dash = paymentController.rentDashboard.value;
+        if (dash != null) {
+          totalRentCollected.value = dash.totalRentCollected;
+          totalPendingRent.value = dash.totalPendingRent;
+          overdueTenantsCount.value = dash.overdueTenants.length;
+          totalPayments.value = dash.overdueTenants.length;
+          for (var record in dash.overdueTenants) {
+            activities.add(ActivityItem(
+              title: 'Overdue Rent: ${record.tenant.username ?? 'Tenant'}',
+              subtitle: '${record.room.title} — ₹${record.amount} is unpaid',
+              date: record.createdAt,
+              type: 'rent',
+              data: record,
+            ));
+          }
+        }
+      } catch (e) {
+        debugPrint('Failed to load rent dashboard stats: $e');
       }
 
     } catch (e) {

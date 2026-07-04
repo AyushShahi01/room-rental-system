@@ -43,6 +43,34 @@ class BookingListCreateView(generics.ListCreateAPIView):
             f'New booking request from {booking.tenant.username} for {booking.room.title}.',
         )
 
+        # Create an automatic chat message connecting them
+        from messaging.models import Message as ChatMessage
+        from messaging.serializers import MessageSerializer
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+
+        chat_message = ChatMessage.objects.create(
+            sender=self.request.user,
+            receiver=booking.room.landlord,
+            content=f"Hello, I have submitted a booking request for your room: '{booking.room.title}'.",
+            booking_id=booking.id
+        )
+
+        # Broadcast the message to both user groups via WebSockets
+        try:
+            channel_layer = get_channel_layer()
+            if channel_layer:
+                serialized_msg = MessageSerializer(chat_message).data
+                group_msg = {
+                    "type": "chat_message",
+                    "message": serialized_msg
+                }
+                async_to_sync(channel_layer.group_send)(f"user_{booking.tenant.id}", group_msg)
+                async_to_sync(channel_layer.group_send)(f"user_{booking.room.landlord.id}", group_msg)
+        except BaseException as e:
+            import logging
+            logging.getLogger(__name__).error(f"Failed to broadcast booking message: {e}")
+
 class BookingDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = BookingSerializer

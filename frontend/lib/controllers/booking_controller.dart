@@ -216,13 +216,6 @@ class BookingController extends GetxController {
       roomIdController.clear();
       await loadTenantBookings(showLoading: false);
       successMessage.value = 'Booking request submitted successfully.';
-      Get.snackbar(
-        'Booking created',
-        'Your request is now pending review.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.shade700,
-        colorText: Colors.white,
-      );
     } catch (e) {
       errorMessage.value = 'Unable to create a booking request right now.';
       debugPrint('[BookingController] Error creating booking: $e');

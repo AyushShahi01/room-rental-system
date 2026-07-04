@@ -65,7 +65,7 @@ class LandlordDashboard extends StatelessWidget {
                       final displayName =
                           user?.firstName ?? authController.userName.value;
                       return Text(
-                        'Welcome, $displayName 🏠',
+                        'Welcome, $displayName ',
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -140,16 +140,44 @@ class LandlordDashboard extends StatelessWidget {
                           ),
                         ],
                       ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildMetricCard(
+                              title: 'Rent Collected',
+                              value:
+                                  '₹${controller.totalRentCollected.value.toStringAsFixed(0)}',
+                              icon: Icons.monetization_on,
+                              color: Colors.green.shade600,
+                              onTap: () =>
+                                  Get.to(() => const PaymentHistoryView()),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildMetricCard(
+                              title: 'Pending Rent',
+                              value:
+                                  '₹${controller.totalPendingRent.value.toStringAsFixed(0)}',
+                              icon: Icons.hourglass_empty,
+                              color: Colors.orange.shade700,
+                              onTap: () =>
+                                  Get.to(() => const PaymentHistoryView()),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 16),
                       Row(
                         children: [
                           Expanded(
                             child: _buildMetricCard(
-                              title: 'Payments',
-                              value: '${controller.totalPayments.value}',
-                              icon: Icons.monetization_on,
-                              color: Colors.green.shade600,
-                              onTap: () => Get.to(() => const PaymentHistoryView()),
+                              title: 'Overdue Rent Accounts',
+                              value: '${controller.overdueTenantsCount.value}',
+                              icon: Icons.warning_amber_rounded,
+                              color: Colors.red.shade700,
+                              onTap: () =>
+                                  Get.to(() => const PaymentHistoryView()),
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -159,7 +187,8 @@ class LandlordDashboard extends StatelessWidget {
                               value: '${controller.maintenanceRequests.value}',
                               icon: Icons.build,
                               color: Colors.purple.shade600,
-                              onTap: () => Get.to(() => const LandlordMaintenanceView()),
+                              onTap: () =>
+                                  Get.to(() => const LandlordMaintenanceView()),
                             ),
                           ),
                         ],
@@ -261,6 +290,9 @@ class LandlordDashboard extends StatelessWidget {
                       } else if (activity.type == 'maintenance') {
                         iconData = Icons.build;
                         iconColor = Colors.purple.shade600;
+                      } else if (activity.type == 'rent') {
+                        iconData = Icons.warning_rounded;
+                        iconColor = Colors.red.shade700;
                       } else {
                         iconData = Icons.bookmark;
                         iconColor = Colors.orange.shade700;
@@ -291,12 +323,17 @@ class LandlordDashboard extends StatelessWidget {
                                     color: iconColor.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: Icon(iconData, color: iconColor, size: 24),
+                                  child: Icon(
+                                    iconData,
+                                    color: iconColor,
+                                    size: 24,
+                                  ),
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         activity.title,
@@ -318,7 +355,9 @@ class LandlordDashboard extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            if (activity.type == 'booking' && activity.data != null && activity.data.status == 'pending')
+                            if (activity.type == 'booking' &&
+                                activity.data != null &&
+                                activity.data.status == 'pending')
                               Padding(
                                 padding: const EdgeInsets.only(top: 16.0),
                                 child: Row(
@@ -327,13 +366,18 @@ class LandlordDashboard extends StatelessWidget {
                                     OutlinedButton(
                                       style: OutlinedButton.styleFrom(
                                         foregroundColor: Colors.red,
-                                        side: const BorderSide(color: Colors.red),
+                                        side: const BorderSide(
+                                          color: Colors.red,
+                                        ),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                       ),
-                                      onPressed: () =>
-                                          controller.rejectBooking(activity.data.id as int),
+                                      onPressed: () => controller.rejectBooking(
+                                        activity.data.id as int,
+                                      ),
                                       child: const Text('Reject'),
                                     ),
                                     const SizedBox(width: 12),
@@ -343,11 +387,15 @@ class LandlordDashboard extends StatelessWidget {
                                         foregroundColor: Colors.white,
                                         elevation: 0,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                       ),
                                       onPressed: () =>
-                                          controller.approveBooking(activity.data.id as int),
+                                          controller.approveBooking(
+                                            activity.data.id as int,
+                                          ),
                                       child: const Text('Approve'),
                                     ),
                                   ],
@@ -390,43 +438,43 @@ class LandlordDashboard extends StatelessWidget {
           ],
         ),
         child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 28),
             ),
-            child: Icon(icon, color: color, size: 28),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade500,
-                    fontWeight: FontWeight.w500,
+                  const SizedBox(height: 2),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade500,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
     );
   }
 

@@ -159,14 +159,6 @@ class SettingsView extends StatelessWidget {
                   title: 'Change Password',
                   onTap: () => Get.toNamed(AppRoutes.changePassword),
                 ),
-                const _Divider(),
-                SettingsTile(
-                  icon: Icons.security_outlined,
-                  iconColor: Colors.deepPurple,
-                  title: 'Security',
-                  subtitle: 'Two-factor authentication',
-                  onTap: () {},
-                ),
               ],
             ),
 
@@ -199,46 +191,8 @@ class SettingsView extends StatelessWidget {
                       trailingLabel: settingsCtrl.profileVisibility.value,
                       onTap: settingsCtrl.toggleProfileVisibility,
                     ),
-                    const _Divider(),
-                    SettingsTile(
-                      icon: Icons.language_outlined,
-                      iconColor: Colors.green,
-                      title: 'Language',
-                      trailingLabel: settingsCtrl.language.value,
-                      onTap: () {},
-                    ),
                   ],
                 )),
-
-            const SizedBox(height: 16),
-
-            // ─── SUPPORT & LEGAL ───────────────────────────────────────────
-            _SectionCard(
-              title: 'SUPPORT & LEGAL',
-              children: [
-                SettingsTile(
-                  icon: Icons.help_outline,
-                  iconColor: Colors.blueGrey,
-                  title: 'Help Center',
-                  onTap: () {},
-                ),
-                const _Divider(),
-                SettingsTile(
-                  icon: Icons.headset_mic_outlined,
-                  iconColor: Colors.cyan,
-                  title: 'Contact Us',
-                  onTap: () {},
-                ),
-                const _Divider(),
-                SettingsTile(
-                  icon: Icons.info_outline,
-                  iconColor: Colors.amber,
-                  title: 'About Smart Room',
-                  subtitle: 'Version 1.0.0',
-                  onTap: () {},
-                ),
-              ],
-            ),
 
             const SizedBox(height: 28),
 

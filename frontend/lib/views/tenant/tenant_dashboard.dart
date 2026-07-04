@@ -6,6 +6,7 @@ import '../../models/room/room_model.dart' as room_model;
 import '../../routes/app_routes.dart';
 import '../room/room_detail_view.dart';
 import 'tenant_maintenance_view.dart';
+import 'tenant_rent_ledger_view.dart';
 
 class TenantDashboard extends StatelessWidget {
   const TenantDashboard({super.key});
@@ -98,8 +99,6 @@ class TenantDashboard extends StatelessWidget {
                       controller: controller.searchController,
                       onChanged: (val) {
                         controller.performSearch(val);
-                        controller.selectedIndex.value =
-                            1; // switch to search tab
                       },
                       decoration: InputDecoration(
                         hintText: 'Search city, state or room name...',
@@ -152,10 +151,11 @@ class TenantDashboard extends StatelessWidget {
                     );
                   }
 
-                  final rooms =
-                      controller.dashboardData.value?.results ??
-                      <room_model.Result>[];
-                  if (rooms.isEmpty) {
+                  final isSearch = controller.isSearchMode.value;
+                  final rooms = isSearch
+                      ? controller.searchResults.cast<room_model.Result>()
+                      : (controller.dashboardData.value?.results ?? <room_model.Result>[]);
+                  if (rooms.isEmpty && !isSearch) {
                     return Padding(
                       padding: const EdgeInsets.all(24.0),
                       child: Center(
@@ -207,14 +207,14 @@ class TenantDashboard extends StatelessWidget {
                                       const SizedBox(height: 8),
                                       const Text(
                                         'Maintenance',
-                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 12),
                             Expanded(
                               child: InkWell(
                                 onTap: () => controller.selectedIndex.value = 2, // Go to bookings
@@ -238,7 +238,38 @@ class TenantDashboard extends StatelessWidget {
                                       const SizedBox(height: 8),
                                       Text(
                                         'My Bookings',
-                                        style: TextStyle(color: Colors.indigo.shade700, fontWeight: FontWeight.bold),
+                                        style: TextStyle(color: Colors.indigo.shade700, fontWeight: FontWeight.bold, fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => Get.to(() => const TenantRentLedgerView()),
+                                borderRadius: BorderRadius.circular(14),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.teal.shade700,
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.teal.withOpacity(0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      const Icon(Icons.receipt_long, color: Colors.white, size: 28),
+                                      const SizedBox(height: 8),
+                                      const Text(
+                                        'Rent Ledger',
+                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                                       ),
                                     ],
                                   ),
@@ -250,25 +281,36 @@ class TenantDashboard extends StatelessWidget {
                         const SizedBox(height: 24),
                         
                         Text(
-                          'Available Rooms',
-                          style: TextStyle(
+                          isSearch ? 'Search Results' : 'Available Rooms',
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.black87,
                           ),
                         ),
                         const SizedBox(height: 12),
-                        ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: rooms.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (context, index) {
-                            final room = rooms[index];
-                            return _RoomCard(room: room, context: context);
-                          },
-                        ),
+                        if (rooms.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            child: Center(
+                              child: Text(
+                                'No rooms match your search query.',
+                                style: TextStyle(color: Colors.grey.shade500),
+                              ),
+                            ),
+                          )
+                        else
+                          ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: rooms.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final room = rooms[index];
+                              return _RoomCard(room: room, context: context);
+                            },
+                          ),
                       ],
                     ),
                   );
