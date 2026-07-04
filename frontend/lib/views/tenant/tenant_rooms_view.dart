@@ -6,6 +6,7 @@ import '../../models/room/room_model.dart';
 import '../../models/room/recommendation_model.dart' as rec_model;
 import '../../utils/dio_connection.dart';
 import '../room/room_detail_view.dart';
+import '../explore_map_view.dart';
 
 class TenantRoomsView extends StatefulWidget {
   const TenantRoomsView({super.key});
@@ -39,6 +40,13 @@ class _TenantRoomsViewState extends State<TenantRoomsView> {
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
         elevation: 0.5,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.map_outlined),
+            tooltip: 'View on Map',
+            onPressed: () => Get.to(() => const ExploreMapView()),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _roomController.loadRooms,

@@ -109,6 +109,12 @@ def load_graph() -> None:
         except Exception as e:
             logger.warning(f"[Maps] Failed to cache graph: {e}")
 
+    # ── Filter to largest strongly connected component ────────────────────────
+    logger.info("[Maps] Filtering road graph to the largest strongly connected component...")
+    largest_scc = max(nx.strongly_connected_components(_graph), key=len)
+    _graph = _graph.subgraph(largest_scc).copy()
+    logger.info(f"[Maps] Filtered graph has {len(_graph.nodes)} nodes, {len(_graph.edges)} edges.")
+
     # ── Build adjacency + coordinate lookups ─────────────────────────────────
     _adj, _node_coords = _build_adj(_graph)
     logger.info("[Maps] Graph ready. Adjacency dict built.")

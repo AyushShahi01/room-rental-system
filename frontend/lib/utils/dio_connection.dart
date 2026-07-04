@@ -93,6 +93,7 @@ class _AuthInterceptor extends QueuedInterceptorsWrapper {
       );
 
       final newAccess = response.data['access'] as String?;
+      final newRefresh = response.data['refresh'] as String?;
       if (newAccess == null) {
         await _handleLogout();
         handler.next(err);
@@ -100,6 +101,9 @@ class _AuthInterceptor extends QueuedInterceptorsWrapper {
       }
 
       await TokenStorage.saveAccessToken(newAccess);
+      if (newRefresh != null) {
+        await TokenStorage.saveRefreshToken(newRefresh);
+      }
 
       final retryOptions = err.requestOptions;
       retryOptions.headers['Authorization'] = 'Bearer $newAccess';

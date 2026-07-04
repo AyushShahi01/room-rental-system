@@ -1,9 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../models/room/room_detail_model.dart';
 import '../../utils/api_error.dart';
+import 'location_picker_view.dart';
 
 class RoomFormView extends StatefulWidget {
   const RoomFormView({
@@ -44,6 +46,8 @@ class _RoomFormViewState extends State<RoomFormView> {
   bool _available = true;
   String _gender = 'any';
   bool _isSubmitting = false;
+  double? _latitude;
+  double? _longitude;
 
   @override
   void initState() {
@@ -69,6 +73,8 @@ class _RoomFormViewState extends State<RoomFormView> {
       _waste = room.wasteCollectionAvailable ?? false;
       _available = room.isAvailable ?? true;
       _gender = room.genderPreference ?? 'any';
+      _latitude = double.tryParse(room.latitude?.toString() ?? '');
+      _longitude = double.tryParse(room.longitude?.toString() ?? '');
     }
   }
 
@@ -171,7 +177,38 @@ class _RoomFormViewState extends State<RoomFormView> {
                     onChanged: (value) =>
                         setState(() => _gender = value ?? 'any'),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Coordinates (GPS)',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _latitude != null && _longitude != null
+                                  ? 'Lat: ${_latitude!.toStringAsFixed(5)}, Lng: ${_longitude!.toStringAsFixed(5)}'
+                                  : 'No location selected',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: _pickLocation,
+                        icon: const Icon(Icons.map_outlined),
+                        label: const Text('Set Map Location'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   SwitchListTile.adaptive(
                     value: _available,
                     title: const Text('Available for rent'),
@@ -362,6 +399,13 @@ class _RoomFormViewState extends State<RoomFormView> {
       'is_available': _available,
     };
 
+    if (_latitude != null) {
+      data['latitude'] = _latitude;
+    }
+    if (_longitude != null) {
+      data['longitude'] = _longitude;
+    }
+
     if (areaValue != null && areaValue > 0) {
       data['area_sqft'] = areaValue;
     }
@@ -393,6 +437,19 @@ class _RoomFormViewState extends State<RoomFormView> {
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  Future<void> _pickLocation() async {
+    final initialLoc = _latitude != null && _longitude != null
+        ? LatLng(_latitude!, _longitude!)
+        : null;
+    final result = await Get.to(() => LocationPickerView(initialLocation: initialLoc));
+    if (result is LatLng) {
+      setState(() {
+        _latitude = result.latitude;
+        _longitude = result.longitude;
+      });
     }
   }
 }

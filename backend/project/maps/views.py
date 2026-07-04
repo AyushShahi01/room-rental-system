@@ -26,7 +26,7 @@ from .serializers import (
     RouteResponseSerializer,
     RoomLocationSerializer,
 )
-from .utils import snap_to_node
+from .utils import snap_to_node, haversine_metres
 
 logger = logging.getLogger(__name__)
 
@@ -146,41 +146,119 @@ class ShortestRouteView(APIView):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
-        # ── Snap GPS coordinates to nearest road nodes ────────────────────────
+        # ── Attempt OSRM Global Routing First (No API Key Required) ───────────
+        import requests
+        try:
+            osrm_url = (
+                f"http://router.project-osrm.org/route/v1/driving/"
+                f"{origin_lng},{origin_lat};{dest_lng},{dest_lat}"
+                f"?geometries=geojson&overview=full"
+            )
+            response = requests.get(osrm_url, timeout=4)
+            if response.status_code == 200:
+                res_data = response.json()
+                if res_data.get("code") == "Ok" and res_data.get("routes"):
+                    route = res_data["routes"][0]
+                    coordinates = route["geometry"]["coordinates"]
+                    distance_meters = float(route["distance"])
+                    
+                    # Convert GeoJSON [lng, lat] to our format [{"lat": y, "lng": x}, ...]
+                    path_coords = [{"lat": coord[1], "lng": coord[0]} for coord in coordinates]
+                    
+                    logger.info(
+                        f"[Maps] Route successfully resolved via OSRM: {distance_meters:.1f} m, {len(path_coords)} points"
+                    )
+                    return Response(
+                        {
+                            "path": path_coords,
+                            "distance_meters": round(distance_meters, 2),
+                            "node_count": len(path_coords),
+                            "algorithm": "osrm_global_routing",
+                            "origin_node": 0,
+                            "destination_node": 0,
+                        },
+                        status=status.HTTP_200_OK,
+                    )
+        except Exception as e:
+            logger.warning(f"[Maps] OSRM routing failed or timed out: {e}. Falling back to local Dijkstra...")
+
+        # ── Offline Fallback: Local Bidirectional Dijkstra (Kathmandu only) ─────
         source_node = snap_to_node(origin_lat, origin_lng)
         target_node = snap_to_node(dest_lat, dest_lng)
 
+        source_lat, source_lng = node_coords[source_node]
+        target_lat, target_lng = node_coords[target_node]
+
+        dist_to_source = haversine_metres(origin_lat, origin_lng, source_lat, source_lng)
+        dist_to_target = haversine_metres(dest_lat, dest_lng, target_lat, target_lng)
+
+        # Threshold distance to switch to straight-line fallback (e.g. 10.0 km)
+        MAX_SNAP_DISTANCE = 10000.0
+
+        if dist_to_source > MAX_SNAP_DISTANCE or dist_to_target > MAX_SNAP_DISTANCE:
+            # Selected point is too far from Kathmandu road graph (fallback straight line)
+            straight_distance = haversine_metres(origin_lat, origin_lng, dest_lat, dest_lng)
+            path_coords = [
+                {"lat": origin_lat, "lng": origin_lng},
+                {"lat": dest_lat, "lng": dest_lng}
+            ]
+            return Response(
+                {
+                    "path": path_coords,
+                    "distance_meters": round(straight_distance, 2),
+                    "node_count": 2,
+                    "algorithm": "straight_line_fallback",
+                    "origin_node": source_node,
+                    "destination_node": target_node,
+                },
+                status=status.HTTP_200_OK,
+            )
+
         logger.info(
-            f"[Maps] Route request: ({origin_lat},{origin_lng}) → ({dest_lat},{dest_lng}) "
+            f"[Maps] Running local Dijkstra: ({origin_lat},{origin_lng}) → ({dest_lat},{dest_lng}) "
             f"| nodes: {source_node} → {target_node}"
         )
 
-        # ── Run Bidirectional Dijkstra ─────────────────────────────────────────
         result = bidirectional_dijkstra(adj, node_coords, source_node, target_node)
 
         if result is None:
+            # Dijkstra failed inside the graph, fallback to straight line
+            straight_distance = haversine_metres(origin_lat, origin_lng, dest_lat, dest_lng)
+            path_coords = [
+                {"lat": origin_lat, "lng": origin_lng},
+                {"lat": dest_lat, "lng": dest_lng}
+            ]
             return Response(
                 {
-                    "detail": (
-                        "No path found between the given coordinates. "
-                        "The points may be in disconnected road segments."
-                    )
+                    "path": path_coords,
+                    "distance_meters": round(straight_distance, 2),
+                    "node_count": 2,
+                    "algorithm": "straight_line_fallback",
+                    "origin_node": source_node,
+                    "destination_node": target_node,
                 },
-                status=status.HTTP_404_NOT_FOUND,
+                status=status.HTTP_200_OK,
             )
 
         path_nodes, total_distance = result
         path_coords = path_to_coordinates(path_nodes, node_coords)
 
+        # Prepend actual starting position and append actual destination to remove visual gaps
+        path_coords.insert(0, {"lat": origin_lat, "lng": origin_lng})
+        path_coords.append({"lat": dest_lat, "lng": dest_lng})
+
+        # Add the off-road access segment distances to the total path distance
+        total_distance += dist_to_source + dist_to_target
+
         logger.info(
-            f"[Maps] Route found: {len(path_nodes)} nodes, {total_distance:.1f} m"
+            f"[Maps] Route found via local Dijkstra: {len(path_nodes)} nodes (plus start/end pins), {total_distance:.1f} m"
         )
 
         return Response(
             {
                 "path": path_coords,
                 "distance_meters": round(total_distance, 2),
-                "node_count": len(path_nodes),
+                "node_count": len(path_nodes) + 2,
                 "algorithm": "bidirectional_dijkstra",
                 "origin_node": source_node,
                 "destination_node": target_node,

@@ -25,6 +25,10 @@ class TokenStorage {
     await _box.write(_accessKey, accessToken);
   }
 
+  static Future<void> saveRefreshToken(String refreshToken) async {
+    await _box.write(_refreshKey, refreshToken);
+  }
+
   static Future<void> clearAll() async {
     await _box.remove(_accessKey);
     await _box.remove(_refreshKey);

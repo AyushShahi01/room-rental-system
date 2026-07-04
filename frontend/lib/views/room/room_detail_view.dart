@@ -5,10 +5,10 @@ import '../../controllers/booking_controller.dart';
 import '../../controllers/room_controller.dart';
 import '../../controllers/auth_controller.dart';
 import '../../models/room/landlord_model.dart';
-import '../../models/room/room_detail_model.dart' as room_detail;
 import '../../models/auth_model/user_model.dart';
 import '../message/chat_detail_view.dart';
 import 'room_images_view.dart';
+import '../route_map_view.dart';
 
 class RoomDetailView extends StatefulWidget {
   const RoomDetailView({super.key, required this.roomId});
@@ -207,6 +207,33 @@ class _RoomDetailViewState extends State<RoomDetailView> {
                   ),
                 ),
               ),
+              if (_room.latitude != null && _room.longitude != null &&
+                  double.tryParse(_room.latitude.toString()) != 0.0 &&
+                  double.tryParse(_room.longitude.toString()) != 0.0) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      final lat = double.tryParse(_room.latitude.toString()) ?? 0.0;
+                      final lng = double.tryParse(_room.longitude.toString()) ?? 0.0;
+                      Get.to(() => RouteMapView(
+                            roomLat: lat,
+                            roomLng: lng,
+                            roomTitle: _room.title ?? 'Room',
+                          ));
+                    },
+                    icon: const Icon(Icons.map_outlined),
+                    label: const Text('Get Directions (Map)'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: colorScheme.secondaryContainer,
+                      foregroundColor: colorScheme.onSecondaryContainer,
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 12),
               if (_room.landlord?.id != Get.find<AuthController>().currentUser.value?.id) ...[
                 SizedBox(
