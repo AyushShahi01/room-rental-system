@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../controllers/room_controller.dart';
 import '../../models/room/room_model.dart';
 import '../../models/room/recommendation_model.dart' as rec_model;
+import '../../utils/dio_connection.dart';
 import '../room/room_detail_view.dart';
 
 class TenantRoomsView extends StatefulWidget {
@@ -254,7 +255,7 @@ class _RecommendationCard extends StatelessWidget {
     
     if (imageUrl != null && !imageUrl.startsWith('http')) {
       final prefix = imageUrl.startsWith('/') ? '' : '/';
-      imageUrl = 'https://room-rental-system-f5x8.onrender.com$prefix$imageUrl';
+      imageUrl = '${DioConnection.baseDomain}$prefix$imageUrl';
     }
 
     return InkWell(

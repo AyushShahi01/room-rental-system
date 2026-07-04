@@ -1,3 +1,5 @@
+import '../../utils/dio_connection.dart';
+
 class RoomImageModel {
     RoomImageModel({
         required this.count,
@@ -38,7 +40,7 @@ class Result {
     factory Result.fromJson(Map<String, dynamic> json){ 
         String? imgUrl = json["image"]?.toString();
         if (imgUrl != null && !imgUrl.startsWith('http')) {
-          imgUrl = 'https://room-rental-system-f5x8.onrender.com' + (imgUrl.startsWith('/') ? '' : '/') + imgUrl;
+          imgUrl = DioConnection.baseDomain + (imgUrl.startsWith('/') ? '' : '/') + imgUrl;
         }
         return Result(
             id: json["id"],

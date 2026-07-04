@@ -3,8 +3,11 @@ import 'package:get/get.dart';
 
 import '../../controllers/booking_controller.dart';
 import '../../controllers/room_controller.dart';
+import '../../controllers/auth_controller.dart';
 import '../../models/room/landlord_model.dart';
 import '../../models/room/room_detail_model.dart' as room_detail;
+import '../../models/auth_model/user_model.dart';
+import '../message/chat_detail_view.dart';
 import 'room_images_view.dart';
 
 class RoomDetailView extends StatefulWidget {
@@ -205,6 +208,40 @@ class _RoomDetailViewState extends State<RoomDetailView> {
                 ),
               ),
               const SizedBox(height: 12),
+              if (_room.landlord?.id != Get.find<AuthController>().currentUser.value?.id) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      final landlordUser = UserModel(
+                        id: _room.landlord?.id,
+                        username: _room.landlord?.username,
+                        email: _room.landlord?.email,
+                        firstName: _room.landlord?.firstName,
+                        lastName: _room.landlord?.lastName,
+                        role: _room.landlord?.role ?? 'landlord',
+                        tenantId: null,
+                        landlordId: _room.landlord?.landlordId,
+                        province: _room.landlord?.province,
+                        district: _room.landlord?.district,
+                        city: _room.landlord?.city,
+                        ward: _room.landlord?.ward,
+                      );
+                      Get.to(() => ChatDetailView(partner: landlordUser));
+                    },
+                    icon: const Icon(Icons.chat_bubble_outline_rounded),
+                    label: const Text('Message Landlord'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: Colors.white,
+                      foregroundColor: colorScheme.primary,
+                      elevation: 0,
+                      side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.4)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(

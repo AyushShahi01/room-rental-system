@@ -1,12 +1,21 @@
 from django.contrib import admin
+from .models import RentRecord
 
-from .models import Payment
 
-
-@admin.register(Payment)
-class PaymentAdmin(admin.ModelAdmin):
-	list_display = ('id', 'booking', 'amount', 'status')
-	list_filter = ('status',)
-	search_fields = ('booking__id', 'status')
-	ordering = ('id',)
-	list_select_related = ('booking',)
+@admin.register(RentRecord)
+class RentRecordAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'tenant',
+        'room',
+        'amount',
+        'amount_paid',
+        'billing_month',
+        'billing_year',
+        'status',
+        'due_date',
+    )
+    list_filter = ('status', 'billing_year', 'billing_month')
+    search_fields = ('tenant__username', 'room__title', 'status')
+    ordering = ('-billing_year', '-billing_month', 'id')
+    list_select_related = ('tenant', 'room')

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../utils/token_storage.dart';
 import '../routes/app_routes.dart';
+import 'payment_history_view.dart';
 
 class ProfileView extends StatelessWidget {
   /// Set to true when navigated as a standalone route (e.g. from Settings).
@@ -290,6 +291,26 @@ class ProfileView extends StatelessWidget {
                   //     ),
                   //   ),
                   // ),
+                  const SizedBox(height: 12),
+                  ElevatedButton.icon(
+                    onPressed: () => Get.to(() => const PaymentHistoryView()),
+                    icon: const Icon(Icons.payment_outlined),
+                    label: const Text('Rent Payments'),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black87,
+                      elevation: 1,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      side: BorderSide(color: Colors.grey.shade300),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Obx(
                     () => ElevatedButton.icon(

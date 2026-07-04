@@ -1,118 +1,179 @@
-from unittest.mock import patch
-
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
+from django.utils import timezone
+from datetime import timedelta
 
-from bookings.models import Booking
 from rooms.models import Room
 from users.models import CustomUser
-from .models import Payment
+from .models import RentRecord
 
 
-class PaymentTests(APITestCase):
+class RentTrackerTests(APITestCase):
     def setUp(self):
         self.tenant = CustomUser.objects.create_user(username='tenant', password='password', role='tenant')
-        self.other_tenant = CustomUser.objects.create_user(username='other', password='password', role='tenant')
+        self.other_tenant = CustomUser.objects.create_user(username='other_tenant', password='password', role='tenant')
         self.landlord = CustomUser.objects.create_user(username='landlord', password='password', role='landlord')
+        self.other_landlord = CustomUser.objects.create_user(username='other_landlord', password='password', role='landlord')
+        
         self.room = Room.objects.create(
             landlord=self.landlord,
-            title='Room',
-            description='Desc',
-            price='100.00',
+            title='Cozy Room',
+            description='A cozy room',
+            price='12000.00',
             province='Bagmati',
             state='Kathmandu',
             ward_number=7,
         )
-        self.booking = Booking.objects.create(tenant=self.tenant, room=self.room, status=Booking.STATUS_APPROVED)
+        self.other_room = Room.objects.create(
+            landlord=self.other_landlord,
+            title='Luxury Room',
+            description='A luxury room',
+            price='20000.00',
+            province='Bagmati',
+            state='Kathmandu',
+            ward_number=8,
+        )
 
-    def test_create_payment(self):
-        self.client.force_authenticate(user=self.tenant)
-        response = self.client.post(reverse('payment-list-create'), {'booking': self.booking.id, 'amount': '100.00'})
-
+    def test_create_rent_record_by_landlord(self):
+        self.client.force_authenticate(user=self.landlord)
+        due_date = timezone.now().date() + timedelta(days=5)
+        response = self.client.post(reverse('rent-list-create'), {
+            'tenant': self.tenant.id,
+            'room': self.room.id,
+            'amount': '12000.00',
+            'billing_month': 7,
+            'billing_year': 2026,
+            'due_date': due_date.isoformat(),
+        })
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['payment_gateway'], Payment.GATEWAY_MANUAL)
-        self.assertEqual(self.landlord.notification_set.count(), 1)
+        self.assertEqual(response.data['status'], RentRecord.STATUS_UNPAID)
+        self.assertEqual(response.data['amount_paid'], '0.00')
 
-    @patch('payments.views.lookup_payment')
-    def test_khalti_verify_success(self, lookup_payment):
-        lookup_payment.return_value = {
-            'pidx': 'abc',
-            'total_amount': 10000,
-            'status': 'Completed',
-            'transaction_id': 'txn-1',
-        }
+    def test_create_rent_record_by_tenant_forbidden(self):
         self.client.force_authenticate(user=self.tenant)
-        response = self.client.post(reverse('khalti-verify'), {
-            'pidx': 'abc',
-            'amount': '100.00',
-            'booking_id': self.booking.id,
+        due_date = timezone.now().date() + timedelta(days=5)
+        response = self.client.post(reverse('rent-list-create'), {
+            'tenant': self.tenant.id,
+            'room': self.room.id,
+            'amount': '12000.00',
+            'billing_month': 7,
+            'billing_year': 2026,
+            'due_date': due_date.isoformat(),
         })
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_create_rent_record_for_other_landlord_room_forbidden(self):
+        self.client.force_authenticate(user=self.landlord)
+        due_date = timezone.now().date() + timedelta(days=5)
+        response = self.client.post(reverse('rent-list-create'), {
+            'tenant': self.tenant.id,
+            'room': self.other_room.id,
+            'amount': '20000.00',
+            'billing_month': 7,
+            'billing_year': 2026,
+            'due_date': due_date.isoformat(),
+        })
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_auto_paid_status_on_creation(self):
+        self.client.force_authenticate(user=self.landlord)
+        due_date = timezone.now().date() + timedelta(days=5)
+        response = self.client.post(reverse('rent-list-create'), {
+            'tenant': self.tenant.id,
+            'room': self.room.id,
+            'amount': '12000.00',
+            'amount_paid': '12000.00',
+            'billing_month': 7,
+            'billing_year': 2026,
+            'due_date': due_date.isoformat(),
+        })
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['status'], RentRecord.STATUS_PAID)
+        self.assertIsNotNone(response.data['payment_date'])
+
+    def test_auto_overdue_status_on_due_date_passed(self):
+        # Create an unpaid record in the past
+        past_due = timezone.now().date() - timedelta(days=2)
+        record = RentRecord.objects.create(
+            tenant=self.tenant,
+            room=self.room,
+            amount='12000.00',
+            amount_paid='0.00',
+            billing_month=6,
+            billing_year=2026,
+            due_date=past_due,
+            status=RentRecord.STATUS_UNPAID
+        )
+        
+        # When querying listing, it should automatically trigger status update to overdue
+        self.client.force_authenticate(user=self.landlord)
+        response = self.client.get(reverse('rent-list-create'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        payment = Payment.objects.get(transaction_token='abc')
-        self.assertEqual(payment.status, Payment.STATUS_VERIFIED)
-        self.assertEqual(payment.payment_gateway, Payment.GATEWAY_KHALTI)
+        
+        record.refresh_from_db()
+        self.assertEqual(record.status, RentRecord.STATUS_OVERDUE)
 
-    @patch('payments.views.lookup_payment')
-    def test_khalti_amount_mismatch_fails(self, lookup_payment):
-        lookup_payment.return_value = {'pidx': 'abc', 'total_amount': 5000, 'status': 'Completed'}
-        self.client.force_authenticate(user=self.tenant)
-        response = self.client.post(reverse('khalti-verify'), {
-            'pidx': 'abc',
-            'amount': '100.00',
-            'booking_id': self.booking.id,
+    def test_partial_payment_updates_status(self):
+        due_date = timezone.now().date() + timedelta(days=5)
+        record = RentRecord.objects.create(
+            tenant=self.tenant,
+            room=self.room,
+            amount='12000.00',
+            amount_paid='0.00',
+            billing_month=7,
+            billing_year=2026,
+            due_date=due_date,
+            status=RentRecord.STATUS_UNPAID
+        )
+        
+        self.client.force_authenticate(user=self.landlord)
+        response = self.client.patch(reverse('rent-detail', kwargs={'pk': record.id}), {
+            'amount_paid': '5000.00'
         })
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(Payment.objects.get(transaction_token='abc').status, Payment.STATUS_FAILED)
-
-    @patch('payments.views.check_transaction_status')
-    def test_esewa_verify_success(self, check_transaction_status):
-        check_transaction_status.return_value = {
-            'product_code': 'EPAYTEST',
-            'transaction_uuid': 'uuid-1',
-            'total_amount': 100.0,
-            'status': 'COMPLETE',
-            'ref_id': 'ref-1',
-        }
-        self.client.force_authenticate(user=self.tenant)
-        response = self.client.post(reverse('esewa-verify'), {
-            'transaction_uuid': 'uuid-1',
-            'amount': '100.00',
-            'booking_id': self.booking.id,
-        })
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        payment = Payment.objects.get(transaction_token='uuid-1')
-        self.assertEqual(payment.status, Payment.STATUS_VERIFIED)
-        self.assertEqual(payment.payment_gateway, Payment.GATEWAY_ESEWA)
+        self.assertEqual(response.data['status'], RentRecord.STATUS_PARTIALLY_PAID)
 
-    @patch('payments.views.check_transaction_status')
-    def test_esewa_pending_creates_failed_payment(self, check_transaction_status):
-        check_transaction_status.return_value = {
-            'transaction_uuid': 'uuid-1',
-            'total_amount': 100.0,
-            'status': 'PENDING',
-        }
-        self.client.force_authenticate(user=self.tenant)
-        response = self.client.post(reverse('esewa-verify'), {
-            'transaction_uuid': 'uuid-1',
-            'amount': '100.00',
-            'booking_id': self.booking.id,
-        })
+    def test_landlord_dashboard_stats(self):
+        due_date = timezone.now().date() + timedelta(days=5)
+        
+        # 1 paid record
+        RentRecord.objects.create(
+            tenant=self.tenant,
+            room=self.room,
+            amount='10000.00',
+            amount_paid='10000.00',
+            billing_month=5,
+            billing_year=2026,
+            due_date=due_date,
+            status=RentRecord.STATUS_PAID,
+            payment_date=timezone.now().date()
+        )
+        # 1 partially paid record
+        RentRecord.objects.create(
+            tenant=self.tenant,
+            room=self.room,
+            amount='10000.00',
+            amount_paid='3000.00',
+            billing_month=6,
+            billing_year=2026,
+            due_date=due_date,
+            status=RentRecord.STATUS_PARTIALLY_PAID
+        )
+        
+        # Room is occupied
+        self.room.is_available = False
+        self.room.save()
 
+        self.client.force_authenticate(user=self.landlord)
+        response = self.client.get(reverse('rent-dashboard'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(Payment.objects.get(transaction_token='uuid-1').status, Payment.STATUS_FAILED)
-
-    @patch('payments.views.lookup_payment')
-    def test_gateway_verify_requires_booking_owner(self, lookup_payment):
-        self.client.force_authenticate(user=self.other_tenant)
-        response = self.client.post(reverse('khalti-verify'), {
-            'pidx': 'abc',
-            'amount': '100.00',
-            'booking_id': self.booking.id,
-        })
-
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        lookup_payment.assert_not_called()
+        
+        self.assertEqual(float(response.data['total_rent_collected']), 13000.00)
+        self.assertEqual(float(response.data['total_pending_rent']), 7000.00)
+        self.assertEqual(response.data['occupied_rooms_count'], 1)
+        self.assertEqual(response.data['vacant_rooms_count'], 0)
+        
+        # Verify dashboard structures
+        self.assertEqual(len(response.data['monthly_rent_collection']), 2)
+        self.assertEqual(len(response.data['room_wise_rent_collection']), 1)

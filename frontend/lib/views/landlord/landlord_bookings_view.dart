@@ -4,8 +4,10 @@ import 'package:get/get.dart';
 import '../../controllers/booking_controller.dart';
 import '../../models/booking/bookinglist_model.dart';
 import '../../models/room/room_detail_model.dart' as room_detail;
+import '../../models/auth_model/user_model.dart';
 import '../../services/room_service.dart';
 import '../booking_view.dart';
+import '../message/chat_detail_view.dart';
 
 class LandlordBookingsView extends StatefulWidget {
   const LandlordBookingsView({super.key});
@@ -264,6 +266,32 @@ class _BookingCardState extends State<_BookingCard> {
                           },
                     icon: const Icon(Icons.cancel_outlined),
                     label: const Text('Cancel'),
+                  ),
+                  TextButton.icon(
+                    onPressed: widget.booking.tenantId == null
+                        ? null
+                        : () {
+                            final tenantUser = UserModel(
+                              id: widget.booking.tenantId,
+                              username: widget.booking.tenantName,
+                              email: '',
+                              firstName: widget.booking.tenantName,
+                              lastName: '',
+                              role: 'tenant',
+                              tenantId: widget.booking.tenantId,
+                              landlordId: null,
+                              province: null,
+                              district: null,
+                              city: null,
+                              ward: null,
+                            );
+                            Get.to(() => ChatDetailView(
+                                  partner: tenantUser,
+                                  bookingId: widget.booking.id,
+                                ));
+                          },
+                    icon: const Icon(Icons.chat_bubble_outline_rounded),
+                    label: const Text('Chat'),
                   ),
                 ],
               ),

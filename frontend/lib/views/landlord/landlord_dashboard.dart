@@ -4,6 +4,7 @@ import '../../controllers/landlord_dashboard_controller.dart';
 import '../../controllers/auth_controller.dart';
 import '../../routes/app_routes.dart';
 import 'landlord_maintenance_view.dart';
+import '../payment_history_view.dart';
 
 class LandlordDashboard extends StatelessWidget {
   const LandlordDashboard({super.key});
@@ -148,7 +149,7 @@ class LandlordDashboard extends StatelessWidget {
                               value: '${controller.totalPayments.value}',
                               icon: Icons.monetization_on,
                               color: Colors.green.shade600,
-                              onTap: () => Get.snackbar('Payments', 'Payments API is pending'),
+                              onTap: () => Get.to(() => const PaymentHistoryView()),
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -196,9 +197,7 @@ class LandlordDashboard extends StatelessWidget {
                         label: 'Verify Payments',
                         icon: Icons.check_circle_outline,
                         color: Colors.teal,
-                        onTap: () {
-                          controller.selectedIndex.value = 2;
-                        },
+                        onTap: () => Get.to(() => const PaymentHistoryView()),
                       ),
                     ),
                   ],

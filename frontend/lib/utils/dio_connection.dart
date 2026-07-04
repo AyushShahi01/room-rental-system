@@ -4,11 +4,14 @@ import '../routes/app_routes.dart';
 import 'token_storage.dart';
 
 class DioConnection {
+  static const String baseDomain = 'http://192.168.18.20:8000';
+  static const String apiBaseUrl = '$baseDomain/api/';
+
   static final Dio dio = _buildDio();
 
   static final Dio _refreshDio = Dio(
     BaseOptions(
-      baseUrl: 'https://room-rental-system-f5x8.onrender.com/api/',
+      baseUrl: apiBaseUrl,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -21,7 +24,7 @@ class DioConnection {
   static Dio _buildDio() {
     final dio = Dio(
       BaseOptions(
-        baseUrl: 'https://room-rental-system-f5x8.onrender.com/api/',
+        baseUrl: apiBaseUrl,
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',

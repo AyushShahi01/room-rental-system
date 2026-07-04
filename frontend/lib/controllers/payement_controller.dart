@@ -51,6 +51,7 @@ class PaymentController extends GetxController {
     required int bookingId,
     required String amount,
     required String gateway,
+    String? referenceNote,
   }) async {
     try {
       isSubmitting.value = true;
@@ -58,20 +59,26 @@ class PaymentController extends GetxController {
       isSuccess.value = false;
       successMessage.value = '';
 
-      // 1. Create Payment Record
+      // Create Manual/Pending Payment Record
       final paymentData = {
         'booking': bookingId,
         'amount': amount,
         'payment_gateway': gateway,
+        'transaction_token': referenceNote ?? '',
       };
       
       final payment = await _service.createPayment(paymentData);
       
-      // Gateway initialization is missing on the backend.
-      // We cannot securely obtain the pidx (Khalti) or transaction_uuid (eSewa).
-      throw Exception(
-          'Missing Backend Gateway Initialization endpoint (e.g., POST /payments/${gateway.toLowerCase()}/initiate/). '
-          'The frontend cannot securely obtain the pidx/transaction_uuid required for verification.');
+      if (gateway == 'manual') {
+        isSuccess.value = true;
+        successMessage.value = 'Payment logged successfully. Landlord has been notified.';
+        loadMyPayments(showLoading: false);
+      } else {
+        // If they attempt automatic gateway, notify it is handled as a manual log for now
+        isSuccess.value = true;
+        successMessage.value = 'Logged payment via $gateway. Pending verification.';
+        loadMyPayments(showLoading: false);
+      }
     } catch (e) {
       String err = 'Payment processing failed. Please try again.';
       if (e is DioException && e.response?.data != null) {
@@ -94,6 +101,33 @@ class PaymentController extends GetxController {
       );
     } finally {
       isSubmitting.value = false;
+    }
+  }
+
+  Future<void> verifyTenantPayment(int paymentId) async {
+    try {
+      isLoading.value = true;
+      await _service.verifyPayment(paymentId);
+      Get.snackbar(
+        'Success',
+        'Payment verified successfully.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+      );
+      // Reload history and dashboard data
+      await loadPaymentHistory(showLoading: false);
+    } catch (e) {
+      debugPrint('Error verifying payment: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to verify payment.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
     }
   }
 }

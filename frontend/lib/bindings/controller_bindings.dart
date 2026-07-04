@@ -5,6 +5,7 @@ import 'package:room_rental_system/controllers/splash_controller.dart';
 import 'package:room_rental_system/controllers/settings_controller.dart';
 import 'package:room_rental_system/controllers/tenant_dashboard_controller.dart';
 import 'package:room_rental_system/controllers/landlord_dashboard_controller.dart';
+import 'package:room_rental_system/controllers/message_controller.dart';
 
 class ControllerBindings extends Bindings {
   @override
@@ -21,5 +22,6 @@ class ControllerBindings extends Bindings {
     Get.put<NavController>(NavController(), permanent: true);
     Get.put<SplashController>(SplashController(), permanent: true);
     Get.put<SettingsController>(SettingsController(), permanent: true);
+    Get.put<MessageController>(MessageController(), permanent: true);
   }
 }

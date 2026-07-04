@@ -1,3 +1,5 @@
+import '../../utils/dio_connection.dart';
+
 class BookingListModel {
     BookingListModel({
         required this.count,
@@ -77,13 +79,13 @@ class Result {
                     if (img is Map && img["image"] != null) {
                         String url = img["image"].toString();
                         if (!url.startsWith('http')) {
-                            url = 'https://room-rental-system-f5x8.onrender.com' + (url.startsWith('/') ? '' : '/') + url;
+                            url = DioConnection.baseDomain + (url.startsWith('/') ? '' : '/') + url;
                         }
                         parsedImages.add(url);
                     } else if (img is String) {
                         String url = img;
                         if (!url.startsWith('http')) {
-                            url = 'https://room-rental-system-f5x8.onrender.com' + (url.startsWith('/') ? '' : '/') + url;
+                            url = DioConnection.baseDomain + (url.startsWith('/') ? '' : '/') + url;
                         }
                         parsedImages.add(url);
                     }

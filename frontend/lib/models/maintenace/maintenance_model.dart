@@ -1,3 +1,5 @@
+import '../../utils/dio_connection.dart';
+
 class MaintenanceModel {
     MaintenanceModel({
         required this.id,
@@ -44,7 +46,7 @@ class MaintenanceModel {
         String? image = json["image"]?.toString();
         if (image != null && image.isNotEmpty && !image.startsWith('http')) {
             final prefix = image.startsWith('/') ? '' : '/';
-            image = 'https://room-rental-system-f5x8.onrender.com$prefix$image';
+            image = '${DioConnection.baseDomain}$prefix$image';
         }
 
         return MaintenanceModel(

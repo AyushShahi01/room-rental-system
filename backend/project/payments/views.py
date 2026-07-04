@@ -1,192 +1,168 @@
 from rest_framework import generics, status
-from .models import Payment
-from .serializers import PaymentSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
-from decimal import Decimal, InvalidOperation
-from bookings.models import Booking
-from notifications.helpers import create_notification
-from .gateways.esewa import EsewaGatewayError, check_transaction_status
-from .gateways.khalti import KhaltiGatewayError, lookup_payment
+from django.db.models import Sum, Value, DecimalField
+from django.db.models.functions import Coalesce
+from django.utils import timezone
+from rooms.models import Room
+from .models import RentRecord
+from .serializers import RentRecordSerializer
 
-class PaymentListCreateView(generics.ListCreateAPIView):
+
+class RentRecordListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = PaymentSerializer
+    serializer_class = RentRecordSerializer
 
     def get_queryset(self):
+        # Automatically update overdue statuses before listing
+        RentRecord.update_overdue()
+
         user = self.request.user
-        return Payment.objects.filter(booking__tenant=user) | Payment.objects.filter(booking__room__landlord=user)
+        if user.role == 'admin':
+            qs = RentRecord.objects.all()
+        elif user.role == 'landlord':
+            qs = RentRecord.objects.filter(room__landlord=user)
+        else:
+            # Tenant
+            qs = RentRecord.objects.filter(tenant=user)
+
+        # Filters
+        month = self.request.query_params.get('month')
+        year = self.request.query_params.get('year')
+        room_id = self.request.query_params.get('room')
+        tenant_id = self.request.query_params.get('tenant')
+        status_param = self.request.query_params.get('status')
+
+        if month:
+            qs = qs.filter(billing_month=month)
+        if year:
+            qs = qs.filter(billing_year=year)
+        if room_id:
+            qs = qs.filter(room_id=room_id)
+        if tenant_id:
+            qs = qs.filter(tenant_id=tenant_id)
+        if status_param:
+            qs = qs.filter(status=status_param)
+
+        return qs
 
     def perform_create(self, serializer):
-        payment = serializer.save(status=Payment.STATUS_PENDING)
-        create_notification(
-            payment.booking.room.landlord,
-            f'Payment of NPR {payment.amount} received for {payment.booking.room.title}.',
-        )
-
-class PaymentDetailView(generics.RetrieveAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = PaymentSerializer
-
-    def get_queryset(self):
         user = self.request.user
-        return Payment.objects.filter(booking__tenant=user) | Payment.objects.filter(booking__room__landlord=user)
+        if user.role not in ['landlord', 'admin']:
+            raise PermissionDenied("Only landlords and administrators can create rent records.")
 
-class MyPaymentsView(generics.ListAPIView):
+        room = serializer.validated_data.get('room')
+        if user.role == 'landlord' and room.landlord_id != user.id:
+            raise PermissionDenied("You can only create rent records for rooms that you own.")
+
+        serializer.save()
+
+
+class RentRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = PaymentSerializer
-    def get_queryset(self):
-        return Payment.objects.filter(booking__tenant=self.request.user)
-
-class BookingPaymentsView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = PaymentSerializer
+    serializer_class = RentRecordSerializer
 
     def get_queryset(self):
+        # Automatically update overdue statuses before detail lookup
+        RentRecord.update_overdue()
+
         user = self.request.user
-        booking_id = self.kwargs['booking_id']
-        return Payment.objects.filter(booking_id=booking_id).filter(booking__tenant=user) | Payment.objects.filter(
-            booking_id=booking_id,
-            booking__room__landlord=user,
-        )
+        if user.role == 'admin':
+            return RentRecord.objects.all()
+        elif user.role == 'landlord':
+            return RentRecord.objects.filter(room__landlord=user)
+        else:
+            return RentRecord.objects.filter(tenant=user)
 
-class VerifyPaymentView(APIView):
+    def check_object_permissions(self, request, obj):
+        super().check_object_permissions(request, obj)
+        user = request.user
+
+        # Write operations are restricted to landlords and admins
+        if request.method not in ['GET', 'HEAD', 'OPTIONS']:
+            if user.role not in ['landlord', 'admin']:
+                raise PermissionDenied("Only landlords and administrators can modify rent records.")
+            if user.role == 'landlord' and obj.room.landlord_id != user.id:
+                raise PermissionDenied("You can only modify rent records for rooms that you own.")
+
+
+class RentDashboardView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def patch(self, request, pk):
-        payment = get_object_or_404(Payment, pk=pk, booking__room__landlord=request.user)
-        if payment.status != Payment.STATUS_PENDING:
-            return Response({'error': 'Only pending payments can be verified.'}, status=status.HTTP_400_BAD_REQUEST)
+    def get(self, request):
+        user = request.user
+        if user.role not in ['landlord', 'admin']:
+            return Response({'error': 'Access denied. Landlord or Admin role required.'}, status=status.HTTP_403_FORBIDDEN)
 
-        payment.status = Payment.STATUS_VERIFIED
-        payment.save(update_fields=['status'])
-        create_notification(payment.booking.tenant, f'Your payment of NPR {payment.amount} has been verified.')
-        return Response({'message': 'Payment verified.'}, status=status.HTTP_200_OK)
+        # Sync overdue records before calculating stats
+        RentRecord.update_overdue()
 
+        # Base filter for rent records
+        if user.role == 'admin':
+            records = RentRecord.objects.all()
+            rooms = Room.objects.all()
+        else:
+            records = RentRecord.objects.filter(room__landlord=user)
+            rooms = Room.objects.filter(landlord=user)
 
-def _parse_amount(value):
-    try:
-        amount = Decimal(str(value))
-    except (InvalidOperation, TypeError):
-        return None
-    if amount <= 0:
-        return None
-    return amount
+        # 1. Total rent collected & total pending rent
+        total_collected = records.aggregate(
+            total=Coalesce(Sum('amount_paid'), Value(0.00), output_field=DecimalField())
+        )['total']
 
+        total_billed = records.aggregate(
+            total=Coalesce(Sum('amount'), Value(0.00), output_field=DecimalField())
+        )['total']
 
-def _gateway_payment_response(payment, message):
-    return Response(
-        {
-            'message': message,
-            'payment': PaymentSerializer(payment).data,
-        },
-        status=status.HTTP_200_OK,
-    )
+        total_pending = total_billed - total_collected
 
+        # 2. Monthly rent collection
+        monthly_stats = records.values('billing_year', 'billing_month').annotate(
+            collected=Coalesce(Sum('amount_paid'), Value(0.00), output_field=DecimalField()),
+            total=Coalesce(Sum('amount'), Value(0.00), output_field=DecimalField())
+        ).order_by('-billing_year', '-billing_month')
 
-class KhaltiVerifyView(APIView):
-    permission_classes = [IsAuthenticated]
+        monthly_rent_collection = []
+        for stat in monthly_stats:
+            monthly_rent_collection.append({
+                'billing_year': stat['billing_year'],
+                'billing_month': stat['billing_month'],
+                'collected': stat['collected'],
+                'pending': stat['total'] - stat['collected']
+            })
 
-    def post(self, request):
-        pidx = request.data.get('pidx')
-        amount = _parse_amount(request.data.get('amount'))
-        booking_id = request.data.get('booking_id')
+        # 3. Room-wise rent collection
+        room_stats = records.values('room__id', 'room__title').annotate(
+            collected=Coalesce(Sum('amount_paid'), Value(0.00), output_field=DecimalField()),
+            total=Coalesce(Sum('amount'), Value(0.00), output_field=DecimalField())
+        ).order_by('-collected')
 
-        if not pidx or amount is None or not booking_id:
-            return Response({'error': 'pidx, amount, and booking_id are required.'}, status=status.HTTP_400_BAD_REQUEST)
+        room_wise_rent_collection = []
+        for stat in room_stats:
+            room_wise_rent_collection.append({
+                'room_id': stat['room__id'],
+                'room_title': stat['room__title'],
+                'collected': stat['collected'],
+                'pending': stat['total'] - stat['collected']
+            })
 
-        booking = get_object_or_404(Booking, pk=booking_id, tenant=request.user)
+        # 4. Occupied and vacant rooms count
+        occupied_rooms_count = rooms.filter(is_available=False).count()
+        vacant_rooms_count = rooms.filter(is_available=True).count()
 
-        try:
-            payload = lookup_payment(pidx)
-        except KhaltiGatewayError as exc:
-            return Response({'error': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        # 5. List of tenants with overdue rent (rent records marked as overdue)
+        overdue_records = records.filter(status=RentRecord.STATUS_OVERDUE)
+        overdue_serializer = RentRecordSerializer(overdue_records, many=True, context={'request': request})
 
-        gateway_amount = payload.get('total_amount')
-        expected_paisa = int(amount * Decimal('100'))
-        if gateway_amount != expected_paisa:
-            payment = Payment.objects.create(
-                booking=booking,
-                amount=amount,
-                status=Payment.STATUS_FAILED,
-                payment_gateway=Payment.GATEWAY_KHALTI,
-                transaction_token=pidx,
-                gateway_response=payload,
-            )
-            return Response(
-                {'error': 'Payment amount mismatch.', 'payment': PaymentSerializer(payment).data},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        gateway_status = payload.get('status')
-        payment_status = Payment.STATUS_VERIFIED if gateway_status == 'Completed' else Payment.STATUS_FAILED
-        payment, _ = Payment.objects.update_or_create(
-            booking=booking,
-            transaction_token=pidx,
-            defaults={
-                'amount': amount,
-                'status': payment_status,
-                'payment_gateway': Payment.GATEWAY_KHALTI,
-                'gateway_response': payload,
-            },
-        )
-
-        if payment.status == Payment.STATUS_VERIFIED:
-            create_notification(booking.tenant, f'Your payment of NPR {payment.amount} has been verified.')
-            return _gateway_payment_response(payment, 'Khalti payment verified.')
-
-        return _gateway_payment_response(payment, 'Khalti payment could not be verified.')
-
-
-class EsewaVerifyView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        transaction_uuid = request.data.get('transaction_uuid')
-        amount = _parse_amount(request.data.get('amount'))
-        booking_id = request.data.get('booking_id')
-
-        if not transaction_uuid or amount is None or not booking_id:
-            return Response({'error': 'transaction_uuid, amount, and booking_id are required.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        booking = get_object_or_404(Booking, pk=booking_id, tenant=request.user)
-
-        try:
-            payload = check_transaction_status(transaction_uuid, str(amount))
-        except EsewaGatewayError as exc:
-            return Response({'error': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
-
-        gateway_amount = _parse_amount(payload.get('total_amount'))
-        if gateway_amount != amount:
-            payment = Payment.objects.create(
-                booking=booking,
-                amount=amount,
-                status=Payment.STATUS_FAILED,
-                payment_gateway=Payment.GATEWAY_ESEWA,
-                transaction_token=transaction_uuid,
-                gateway_response=payload,
-            )
-            return Response(
-                {'error': 'Payment amount mismatch.', 'payment': PaymentSerializer(payment).data},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        payment_status = Payment.STATUS_VERIFIED if payload.get('status') == 'COMPLETE' else Payment.STATUS_FAILED
-        payment, _ = Payment.objects.update_or_create(
-            booking=booking,
-            transaction_token=transaction_uuid,
-            defaults={
-                'amount': amount,
-                'status': payment_status,
-                'payment_gateway': Payment.GATEWAY_ESEWA,
-                'gateway_response': payload,
-            },
-        )
-
-        if payment.status == Payment.STATUS_VERIFIED:
-            create_notification(booking.tenant, f'Your payment of NPR {payment.amount} has been verified.')
-            return _gateway_payment_response(payment, 'eSewa payment verified.')
-
-        return _gateway_payment_response(payment, 'eSewa payment could not be verified.')
+        return Response({
+            'total_rent_collected': total_collected,
+            'total_pending_rent': total_pending,
+            'monthly_rent_collection': monthly_rent_collection,
+            'room_wise_rent_collection': room_wise_rent_collection,
+            'occupied_rooms_count': occupied_rooms_count,
+            'vacant_rooms_count': vacant_rooms_count,
+            'overdue_tenants': overdue_serializer.data
+        }, status=status.HTTP_200_OK)

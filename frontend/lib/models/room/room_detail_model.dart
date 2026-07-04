@@ -1,4 +1,5 @@
 import 'landlord_model.dart';
+import '../../utils/dio_connection.dart';
 
 class RoomDetailModel {
     RoomDetailModel({
@@ -106,7 +107,7 @@ class Image {
     factory Image.fromJson(Map<String, dynamic> json){ 
         String? imgUrl = json["image"]?.toString();
         if (imgUrl != null && !imgUrl.startsWith('http')) {
-          imgUrl = 'https://room-rental-system-f5x8.onrender.com' + (imgUrl.startsWith('/') ? '' : '/') + imgUrl;
+          imgUrl = DioConnection.baseDomain + (imgUrl.startsWith('/') ? '' : '/') + imgUrl;
         }
         return Image(
             id: json["id"],

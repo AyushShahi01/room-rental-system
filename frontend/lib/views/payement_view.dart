@@ -22,7 +22,8 @@ class PaymentView extends StatefulWidget {
 
 class _PaymentViewState extends State<PaymentView> {
   final PaymentController controller = Get.put(PaymentController());
-  String _selectedGateway = 'khalti';
+  String _selectedGateway = 'manual';
+  final TextEditingController _refNoteController = TextEditingController();
 
   @override
   void initState() {
@@ -33,12 +34,18 @@ class _PaymentViewState extends State<PaymentView> {
   }
 
   @override
+  void dispose() {
+    _refNoteController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Payment'),
+        title: const Text('Payment Log'),
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
       ),
@@ -59,10 +66,10 @@ class _PaymentViewState extends State<PaymentView> {
                     child: Icon(Icons.check_circle, color: Colors.green.shade700, size: 80),
                   ),
                   const SizedBox(height: 32),
-                  Text('Payment Successful', 
+                  Text('Payment Logged', 
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.green.shade800)),
                   const SizedBox(height: 16),
-                  Text('Your payment has been successfully processed and your booking is confirmed.', 
+                  Text('Your payment details have been logged. The landlord has been notified and will verify the payment.', 
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade700)),
                   const SizedBox(height: 48),
@@ -71,6 +78,7 @@ class _PaymentViewState extends State<PaymentView> {
                     height: 54,
                     child: FilledButton(
                       onPressed: () {
+                        controller.isSuccess.value = false;
                         Get.back();
                       },
                       style: FilledButton.styleFrom(
@@ -110,24 +118,40 @@ class _PaymentViewState extends State<PaymentView> {
                     color: _getStatusColor(widget.paymentStatus, colorScheme)),
                 const SizedBox(height: 40),
                 Text(
-                  'Select Payment Gateway',
+                  'Log Rent Payment',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                 ),
+                const SizedBox(height: 8),
+                Text(
+                  'Log manual payment (Cash, Bank transfer, or digital wallet transfer) so the landlord can verify it.',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                ),
                 const SizedBox(height: 16),
                 _buildGatewayOption(
-                  value: 'khalti',
-                  title: 'Khalti',
-                  icon: Icons.account_balance_wallet,
-                  color: Colors.purple.shade700,
+                  value: 'manual',
+                  title: 'Manual Payment Log',
+                  icon: Icons.monetization_on_outlined,
+                  color: Colors.blue.shade700,
                 ),
-                const SizedBox(height: 12),
-                _buildGatewayOption(
-                  value: 'esewa',
-                  title: 'eSewa',
-                  icon: Icons.account_balance_wallet_outlined,
-                  color: Colors.green.shade700,
+                const SizedBox(height: 20),
+                Text(
+                  'Transaction Reference / Notes',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _refNoteController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: 'Enter receipt #, transfer screenshot info, cash date, or wallet transaction details...',
+                    hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.all(12),
+                  ),
                 ),
                 const SizedBox(height: 32),
                 SizedBox(
@@ -142,11 +166,12 @@ class _PaymentViewState extends State<PaymentView> {
                         controller.processPayment(
                           bookingId: widget.bookingId,
                           amount: widget.amount,
-                          gateway: _selectedGateway,
+                          gateway: 'manual',
+                          referenceNote: _refNoteController.text,
                         );
                       },
                       child: Text(
-                        'Pay ₹${widget.amount}',
+                        'Log Payment of ₹${widget.amount}',
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     );
@@ -194,20 +219,28 @@ class _PaymentViewState extends State<PaymentView> {
                     itemBuilder: (context, index) {
                       final payment = history[index];
                       final status = payment.status?.toLowerCase() ?? 'pending';
-                      final gateway = payment.paymentGateway?.toUpperCase() ?? 'UNKNOWN';
+                      final gateway = payment.paymentGateway?.toUpperCase() ?? 'MANUAL';
+                      final refToken = payment.transactionToken ?? '';
                       return Card(
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(
                           leading: Icon(
-                            gateway == 'KHALTI' ? Icons.account_balance_wallet : Icons.account_balance_wallet_outlined,
-                            color: gateway == 'KHALTI' ? Colors.purple.shade700 : Colors.green.shade700,
+                            Icons.monetization_on_outlined,
+                            color: Colors.blue.shade700,
                           ),
-                          title: Text('₹${payment.amount ?? '0'} via $gateway'),
-                          subtitle: Text(payment.createdAt != null ? payment.createdAt!.toLocal().toString().split('.')[0] : 'N/A'),
+                          title: Text('₹${payment.amount ?? '0'} ($gateway)'),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (refToken.toString().isNotEmpty)
+                                Text('Ref: $refToken', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                              Text(payment.createdAt != null ? payment.createdAt!.toLocal().toString().split('.')[0] : 'N/A'),
+                            ],
+                          ),
                           trailing: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: _getStatusColor(status, colorScheme).withOpacity(0.1),
+                              color: _getStatusColor(status, colorScheme).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -272,7 +305,7 @@ class _PaymentViewState extends State<PaymentView> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? color.withValues(alpha: 0.1) : Colors.transparent,
           border: Border.all(
             color: isSelected ? color : Colors.grey.shade300,
             width: isSelected ? 2 : 1,
@@ -304,6 +337,7 @@ class _PaymentViewState extends State<PaymentView> {
 
   Color _getStatusColor(String status, ColorScheme colorScheme) {
     switch (status.toLowerCase()) {
+      case 'verified':
       case 'paid':
         return Colors.green.shade700;
       case 'pending':

@@ -1,3 +1,5 @@
+import '../utils/dio_connection.dart';
+
 class PropertyModel {
   final String id;
   final String title;
@@ -28,7 +30,7 @@ class PropertyModel {
       if (img is Map && img['image'] != null) {
         imgUrl = img['image'].toString();
         if (!imgUrl.startsWith('http')) {
-          imgUrl = 'https://room-rental-system-f5x8.onrender.com' + imgUrl;
+          imgUrl = DioConnection.baseDomain + imgUrl;
         }
       }
     }

@@ -56,18 +56,17 @@ class RoomService {
     return RoomImageModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<RoomImageModel> uploadRoomImage(int roomId, File imageFile) async {
+  Future<void> uploadRoomImage(int roomId, File imageFile) async {
     final fileName = imageFile.path.split(Platform.pathSeparator).last;
     final formData = FormData.fromMap({
-      'image': await MultipartFile.fromFile(imageFile.path, filename: fileName),
+      'image_1': await MultipartFile.fromFile(imageFile.path, filename: fileName),
     });
 
-    final response = await _dio.post(
-      'rooms/$roomId/images/',
+    await _dio.post(
+      'rooms/$roomId/images/upload/',
       data: formData,
       options: Options(contentType: 'multipart/form-data'),
     );
-    return RoomImageModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<room_model.RoomModel> getMyRooms() async {

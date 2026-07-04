@@ -317,8 +317,18 @@ class _RoomCard extends StatelessWidget {
               child: SizedBox(
                 width: 110,
                 height: 110,
-                child: imageUrl != null && imageUrl.isNotEmpty
-                    ? Image.network(imageUrl, fit: BoxFit.cover)
+                child: imageUrl != null && imageUrl.isNotEmpty && imageUrl.startsWith('http')
+                    ? Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: Colors.indigo.shade50,
+                          child: Icon(
+                            Icons.home_work_outlined,
+                            color: Colors.indigo.shade700,
+                          ),
+                        ),
+                      )
                     : Container(
                         color: Colors.indigo.shade50,
                         child: Icon(
