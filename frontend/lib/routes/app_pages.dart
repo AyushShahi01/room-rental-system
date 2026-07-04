@@ -11,6 +11,7 @@ import '../views/settings_view.dart';
 import '../views/profile_view.dart';
 import '../views/edit_profile_view.dart';
 import '../views/change_password_view.dart';
+import '../views/notifications_view.dart';
 import '../bindings/notification_binding.dart';
 
 class AppPages {
