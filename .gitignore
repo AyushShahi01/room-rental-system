@@ -4,14 +4,38 @@ venv/
 ENV/
 env/
 
+# Python
+*.pyc
+__pycache__/
+*.egg-info/
+.env
+*.db
+db.sqlite3
+
+# Flutter/Dart
+.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+*.iml
+.gradle/
+
 # IDE/Agent metadata
 .idea/
 .vscode/
 .agents/
+*.swp
+*.swo
 
 # Build/Analysis outputs
 graphify-out/
 build/
+node_modules/
+dist/
+*.apk
+*.aab
+*.app
 
 # Temporary and office files
 ~$*

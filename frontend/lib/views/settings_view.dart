@@ -86,33 +86,50 @@ class SettingsView extends StatelessWidget {
                   const SizedBox(width: 16),
                   // Name & email
                   Expanded(
-                    child: Obx(() => Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              authCtrl.userName.value,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
+                    child: Obx(() {
+                      final user = authCtrl.currentUser.value;
+                      final fullName = (user?.firstName != null || user?.lastName != null)
+                          ? '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim()
+                          : '';
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            fullName.isNotEmpty ? fullName : authCtrl.userName.value,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
                             ),
-                            const SizedBox(height: 3),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            authCtrl.userEmail.value.isEmpty
+                                ? 'No email set'
+                                : authCtrl.userEmail.value,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          if (fullName.isNotEmpty) ...[
+                            const SizedBox(height: 2),
                             Text(
-                              authCtrl.userEmail.value.isEmpty
-                                  ? 'No email set'
-                                  : authCtrl.userEmail.value,
+                              '@${authCtrl.userName.value}',
                               style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey.shade600,
+                                fontSize: 11,
+                                color: Colors.grey.shade500,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
-                        )),
+                        ],
+                      );
+                    }),
                   ),
                   // Edit button
                   OutlinedButton(
-                    onPressed: () => Get.toNamed(AppRoutes.profile),
+                    onPressed: () => Get.toNamed(AppRoutes.editProfile),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.blueAccent,
                       side: const BorderSide(color: Colors.blueAccent),
@@ -140,7 +157,7 @@ class SettingsView extends StatelessWidget {
                   icon: Icons.lock_outline,
                   iconColor: Colors.indigo,
                   title: 'Change Password',
-                  onTap: () {}, // Future implementation
+                  onTap: () => Get.toNamed(AppRoutes.changePassword),
                 ),
                 const _Divider(),
                 SettingsTile(

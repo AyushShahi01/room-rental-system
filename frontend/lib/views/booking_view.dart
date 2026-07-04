@@ -1,14 +1,594 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:room_rental_system/controllers/auth_controller.dart';
 
-class BookingView extends StatelessWidget {
-  const BookingView({super.key});
+import '../controllers/booking_controller.dart';
+import '../models/booking/booking_model.dart';
+import '../models/room/room_detail_model.dart' as room_detail;
+import 'agreement_view.dart';
+import 'payement_view.dart';
+
+class BookingDetailsView extends StatefulWidget {
+  const BookingDetailsView({super.key, required this.bookingId});
+
+  final int bookingId;
+
+  @override
+  State<BookingDetailsView> createState() => _BookingDetailsViewState();
+}
+
+class _BookingDetailsViewState extends State<BookingDetailsView> {
+  final BookingController controller = Get.put(BookingController());
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.loadBookingDetails(widget.bookingId);
+    });
+  }
+
+  /// Reload booking details whenever this page is resumed (e.g. after returning
+  /// from AgreementDetailsView or PaymentView) so that agreement / payment
+  /// status badges update without a full app restart.
+  Future<void> _reloadOnReturn() async {
+    await controller.loadBookingDetails(widget.bookingId);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Booking Page',
-        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Booking Details'),
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
+      ),
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (controller.errorMessage.isNotEmpty &&
+            controller.selectedBooking.value == null) {
+          return _StatePlaceholder(
+            icon: Icons.error_outline_rounded,
+            title: 'Booking unavailable',
+            subtitle: controller.errorMessage.value,
+            actionLabel: 'Try again',
+            onAction: () => controller.loadBookingDetails(widget.bookingId),
+          );
+        }
+
+        final booking = controller.selectedBooking.value;
+        if (booking == null) {
+          return _StatePlaceholder(
+            icon: Icons.info_outline_rounded,
+            title: 'No booking selected',
+            subtitle: 'Select or create a booking to see more details.',
+            actionLabel: 'Go back',
+            onAction: () => Get.back(),
+          );
+        }
+
+        final room = controller.selectedBookingRoom.value;
+        final status = booking.status?.toLowerCase() ?? 'pending';
+        final statusColor = _statusColor(status, colorScheme);
+        final resolvedTenantName = controller.tenantName.value.isNotEmpty
+            ? controller.tenantName.value
+            : (booking.tenantName ?? 'Tenant');
+        final resolvedLandlordName = controller.landlordName.value.isNotEmpty
+            ? controller.landlordName.value
+            : (booking.landlordName ?? 'Landlord');
+        final resolvedRoomTitle =
+            booking.roomTitle ?? room?.title ?? 'Booking details';
+        final roomImage = _resolveRoomImage(room, booking);
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (roomImage.isNotEmpty)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: SizedBox(
+                    height: 220,
+                    width: double.infinity,
+                    child: Image.network(
+                      roomImage,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => _fallbackImage(),
+                    ),
+                  ),
+                )
+              else
+                _fallbackImage(),
+              const SizedBox(height: 16),
+              Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              booking.roomTitle ?? room?.title ?? 'Booking details',
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: statusColor.withValues(alpha: 0.14),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              status.toUpperCase(),
+                              style: TextStyle(
+                                color: statusColor,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (room?.description != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          room!.description!,
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                height: 1.5,
+                              ),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _pill(
+                            '₹${booking.roomPrice ?? room?.price ?? "0"}',
+                            Icons.attach_money_rounded,
+                            colorScheme,
+                          ),
+                          if (room != null)
+                            _pill(
+                              room.isAvailable == true
+                                  ? 'Available'
+                                  : 'Booked',
+                              room.isAvailable == true
+                                  ? Icons.check_circle
+                                  : Icons.block,
+                              colorScheme,
+                            ),
+                          _pill(
+                            _formatLocation(
+                              booking.roomProvince ?? room?.province,
+                              booking.roomState ?? room?.state,
+                            ) ?? 'Location unavailable',
+                            Icons.location_on_outlined,
+                            colorScheme,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _InfoRow(
+                        icon: Icons.person_outline,
+                        label: 'Tenant',
+                        value: resolvedTenantName,
+                      ),
+                      _InfoRow(
+                        icon: Icons.person_pin_circle_outlined,
+                        label: 'Landlord',
+                        value: resolvedLandlordName,
+                      ),
+                      const SizedBox(height: 12),
+                      _InfoRow(
+                        icon: Icons.payment,
+                        label: 'Payment Status',
+                        value: controller.paymentStatus.value.toUpperCase(),
+                        color: _statusColor(controller.paymentStatus.value, colorScheme),
+                      ),
+                      _InfoRow(
+                        icon: Icons.description_outlined,
+                        label: 'Agreement Status',
+                        value: controller.agreementStatus.value.toUpperCase(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (room != null) ...[
+                const SizedBox(height: 16),
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Amenities',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            if (room.hasWifi == true) _chip('Wi-Fi'),
+                            if (room.hasAc == true) _chip('AC'),
+                            if (room.hasAttachedBathroom == true)
+                              _chip('Attached Bathroom'),
+                            if (room.parkingAvailable == true)
+                              _chip('Parking'),
+                            if (room.foodAvailable == true) _chip('Food'),
+                            if (room.waterSupplyAvailable == true)
+                              _chip('Water'),
+                            if (room.wasteCollectionAvailable == true)
+                              _chip('Waste Collection'),
+                            if (room.furnishedStatus == true)
+                              _chip('Furnished'),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Obx(() {
+                if (controller.isSubmitting.value) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final role = Get.find<AuthController>().selectedRole.value.toLowerCase();
+                final isLandlord = role == 'landlord' || role == 'admin';
+                final innerHasAgreement = controller.agreementExists.value;
+
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    if (isLandlord) ...[
+                      FilledButton.icon(
+                        onPressed: () =>
+                            controller.approveBooking(widget.bookingId),
+                        icon: const Icon(Icons.check_circle_outline),
+                        label: const Text('Approve'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () =>
+                            controller.rejectBooking(widget.bookingId),
+                        icon: const Icon(Icons.block_outlined),
+                        label: const Text('Reject'),
+                      ),
+                      if (status == 'approved' && !innerHasAgreement)
+                        FilledButton.icon(
+                          onPressed: () => _openAgreementDetails(
+                            bookingId: booking.id ?? widget.bookingId,
+                            roomName: resolvedRoomTitle,
+                            roomImage: roomImage,
+                            landlordName: resolvedLandlordName,
+                            tenantName: resolvedTenantName,
+                          ),
+                          icon: const Icon(Icons.add_card),
+                          label: const Text('Create Agreement'),
+                        ),
+                      if (status == 'approved' && innerHasAgreement)
+                        OutlinedButton.icon(
+                          onPressed: () => _openAgreementDetails(
+                            bookingId: booking.id ?? widget.bookingId,
+                            roomName: resolvedRoomTitle,
+                            roomImage: roomImage,
+                            landlordName: resolvedLandlordName,
+                            tenantName: resolvedTenantName,
+                          ),
+                          icon: const Icon(Icons.description_outlined),
+                          label: const Text('View Agreement'),
+                        ),
+                    ] else ...[
+                      if (status == 'approved' && controller.paymentStatus.value.toLowerCase() == 'pending')
+                        FilledButton.icon(
+                          onPressed: () {
+                            Get.to(() => PaymentView(
+                                  bookingId: booking.id ?? widget.bookingId,
+                                  roomName: resolvedRoomTitle,
+                                  amount: booking.roomPrice ?? room?.price ?? '0',
+                                  paymentStatus: controller.paymentStatus.value,
+                                ));
+                          },
+                          icon: const Icon(Icons.payment_outlined),
+                          label: const Text('Pay Rent'),
+                        ),
+                      if (status == 'approved' && innerHasAgreement) ...[
+                        OutlinedButton.icon(
+                          onPressed: () => _openAgreementDetails(
+                            bookingId: booking.id ?? widget.bookingId,
+                            roomName: resolvedRoomTitle,
+                            roomImage: roomImage,
+                            landlordName: resolvedLandlordName,
+                            tenantName: resolvedTenantName,
+                          ),
+                          icon: const Icon(Icons.description_outlined),
+                          label: const Text('View Agreement'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            Get.snackbar('Info', 'Contacting Landlord...');
+                          },
+                          icon: const Icon(Icons.chat_bubble_outline),
+                          label: const Text('Contact Landlord'),
+                        ),
+                      ],
+                      TextButton.icon(
+                        onPressed: () =>
+                            controller.cancelBooking(widget.bookingId),
+                        icon: const Icon(Icons.cancel_outlined),
+                        label: const Text('Cancel'),
+                      ),
+                    ],
+                  ],
+                );
+              }),
+              const SizedBox(height: 16),
+              Obx(() {
+                if (controller.successMessage.isNotEmpty) {
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      controller.successMessage.value,
+                      style: TextStyle(color: Colors.green.shade900),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              }),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+
+  Future<void> _openAgreementDetails({
+    required int bookingId,
+    required String roomName,
+    required String roomImage,
+    required String landlordName,
+    required String tenantName,
+  }) async {
+    await Get.to(
+      () => AgreementDetailsView(
+        bookingId: bookingId,
+        roomName: roomName,
+        roomImage: roomImage,
+        landlordName: landlordName,
+        tenantName: tenantName,
+      ),
+    );
+    // Reload booking details so the agreement status (and button label) updates
+    // immediately when the user returns from the agreement screen.
+    await _reloadOnReturn();
+  }
+
+  String _resolveRoomImage(
+    room_detail.RoomDetailModel? room,
+    BookingModel booking,
+  ) {
+    if (room != null && room.images.isNotEmpty) {
+      final url = _extractImageUrl(room.images);
+      if (url.isNotEmpty) return url;
+    }
+    if (booking.roomImages.isNotEmpty) {
+      return booking.roomImages.first;
+    }
+    return '';
+  }
+
+  String? _formatLocation(String? province, String? state) {
+    final parts = <String>[];
+    if (province != null && province.trim().isNotEmpty) parts.add(province.trim());
+    if (state != null && state.trim().isNotEmpty) parts.add(state.trim());
+    return parts.isEmpty ? null : parts.join(', ');
+  }
+
+  String _extractImageUrl(List<room_detail.Image>? images) {
+    if (images == null || images.isEmpty) return '';
+    for (final image in images) {
+      if (image.image != null && image.image!.isNotEmpty) return image.image!;
+    }
+    return '';
+  }
+
+  Color _statusColor(String status, ColorScheme colorScheme) {
+    switch (status) {
+      case 'approved':
+        return Colors.green.shade700;
+      case 'rejected':
+        return Colors.red.shade700;
+      case 'cancelled':
+      case 'canceled':
+        return Colors.blueGrey.shade700;
+      default:
+        return colorScheme.primary;
+    }
+  }
+
+  Widget _fallbackImage({double height = 220}) {
+    return Container(
+      height: height,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.indigo.shade50,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.home_work_outlined,
+          size: 42,
+          color: Colors.indigo.shade700,
+        ),
+      ),
+    );
+  }
+
+  Widget _pill(String label, IconData icon, ColorScheme colorScheme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: colorScheme.primary),
+          const SizedBox(width: 6),
+          Text(label),
+        ],
+      ),
+    );
+  }
+
+  Widget _chip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final String? value;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    if (value == null || value!.trim().isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 8),
+          Text(
+            '$label: ',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          Expanded(
+            child: Text(
+              value!, 
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: color,
+                fontWeight: color != null ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatePlaceholder extends StatelessWidget {
+  const _StatePlaceholder({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 38,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 18),
+            FilledButton.icon(
+              onPressed: onAction,
+              icon: const Icon(Icons.refresh_rounded),
+              label: Text(actionLabel),
+            ),
+          ],
+        ),
       ),
     );
   }
