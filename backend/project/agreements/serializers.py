@@ -90,37 +90,14 @@ class AgreementSerializer(serializers.ModelSerializer):
         return booking
 
     def create(self, validated_data):
-        validated_data['content'] = self._build_content(validated_data)
+        from .utils import generate_agreement_content
+        booking = validated_data['booking']
+        validated_data['content'] = generate_agreement_content(
+            booking,
+            rent_price=validated_data.get('rent_price'),
+            house_rules=validated_data.get('house_rules'),
+            additional_description=validated_data.get('additional_description'),
+        )
         validated_data['landlord_is_signed'] = True
         validated_data['landlord_signed_at'] = timezone.now()
         return super().create(validated_data)
-
-    def _build_content(self, data):
-        lines = [
-            f'Rent Price: NPR {data["rent_price"]}',
-            f'Rent Mode: {dict(Agreement.RENT_MODE_CHOICES).get(data["rent_mode"], data["rent_mode"])}',
-        ]
-
-        if data['rent_mode'] == Agreement.RENT_MODE_FIXED:
-            duration_label = dict(Agreement.FIXED_DURATION_TYPE_CHOICES).get(
-                data.get('fixed_duration_type'),
-                data.get('fixed_duration_type'),
-            )
-            lines.append(
-                f'Fixed Duration: {data.get("fixed_duration_value")} {duration_label}'
-            )
-        else:
-            lines.extend([
-                f'Initial Rent: NPR {data.get("initial_rent")}',
-                f'Increment Every: {dict(Agreement.INCREMENT_EVERY_CHOICES).get(data.get("increment_every"), data.get("increment_every"))}',
-                f'Increment Type: {dict(Agreement.INCREMENT_TYPE_CHOICES).get(data.get("increment_type"), data.get("increment_type"))}',
-                f'Increase By: {data.get("increase_by")}',
-            ])
-
-        if data.get('house_rules'):
-            lines.extend(['', 'House Rules:', data['house_rules']])
-
-        if data.get('additional_description'):
-            lines.extend(['', 'Additional Description:', data['additional_description']])
-
-        return '\n'.join(lines)

@@ -1,4 +1,5 @@
 import '../../utils/dio_connection.dart';
+import '../auth_model/user_model.dart';
 
 class BookingListModel {
     BookingListModel({
@@ -39,6 +40,7 @@ class Result {
         required this.landlordId,
         required this.landlordName,
         required this.roomImages,
+        this.tenantUser,
     });
 
     final int? id;
@@ -54,6 +56,7 @@ class Result {
     final String? landlordId;
     final String? landlordName;
     final List<String> roomImages;
+    final UserModel? tenantUser;
 
     int? get room => roomId;
     String? get tenant => tenantId;
@@ -127,6 +130,7 @@ class Result {
             landlordId: landlordId,
             landlordName: landlordName,
             roomImages: parsedImages,
+            tenantUser: json["tenant"] == null ? null : UserModel.fromJson(json["tenant"]),
         );
     }
 

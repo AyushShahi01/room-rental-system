@@ -29,6 +29,7 @@ class RoomDetailModel {
         required this.createdAt,
         required this.updatedAt,
         required this.landlord,
+        this.agreementPolicy,
     });
 
     final int? id;
@@ -57,6 +58,7 @@ class RoomDetailModel {
     final DateTime? createdAt;
     final DateTime? updatedAt;
     final LandlordModel? landlord;
+    final String? agreementPolicy;
 
     factory RoomDetailModel.fromJson(Map<String, dynamic> json){ 
         return RoomDetailModel(
@@ -86,6 +88,7 @@ class RoomDetailModel {
             createdAt: DateTime.tryParse(json["created_at"] ?? ""),
             updatedAt: DateTime.tryParse(json["updated_at"] ?? ""),
             landlord: json["landlord"] == null ? null : LandlordModel.fromJson(json["landlord"]),
+            agreementPolicy: json["agreement_policy"]?.toString(),
         );
     }
 

@@ -102,12 +102,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def serialize_message(self, message):
-        data = MessageSerializer(message).data
-        if 'sender' in data and data['sender']:
-            data['sender'] = str(data['sender'])
-        if 'receiver' in data and data['receiver']:
-            data['receiver'] = str(data['receiver'])
-        return data
+        return MessageSerializer(message).data
 
     @database_sync_to_async
     def mark_message_as_read(self, message_id):

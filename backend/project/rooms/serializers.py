@@ -42,6 +42,17 @@ class RoomSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('id', 'landlord', 'created_at', 'updated_at')
 
+    def to_internal_value(self, data):
+        # Round latitude and longitude to 6 decimal places to satisfy DecimalField(max_digits=9, decimal_places=6)
+        data = data.copy() if hasattr(data, 'copy') else dict(data)
+        for field in ('latitude', 'longitude'):
+            if field in data and data[field] not in (None, '', 'null'):
+                try:
+                    data[field] = round(float(data[field]), 6)
+                except (ValueError, TypeError):
+                    pass
+        return super().to_internal_value(data)
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         from users.serializers import UserSerializer

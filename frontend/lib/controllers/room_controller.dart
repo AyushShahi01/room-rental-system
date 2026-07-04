@@ -66,17 +66,19 @@ class RoomController extends GetxController {
 
 
 
-  Future<void> createRoom(Map<String, dynamic> data) async {
+  Future<room_detail.RoomDetailModel?> createRoom(Map<String, dynamic> data) async {
     try {
       final userId = Get.find<AuthController>().currentUser.value?.id;
       if (userId != null) {
         data['landlord'] = userId;
       }
-      await _roomService.createRoom(data);
+      final result = await _roomService.createRoom(data);
       Get.snackbar('Success', 'Room added successfully');
       loadMyRooms();
+      return result;
     } catch (e) {
       Get.snackbar('Error', 'Failed to create room: $e');
+      rethrow;
     }
   }
 
@@ -90,6 +92,7 @@ class RoomController extends GetxController {
       }
     } catch (e) {
       Get.snackbar('Error', 'Failed to update room: $e');
+      rethrow;
     }
   }
 

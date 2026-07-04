@@ -26,7 +26,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   void initState() {
     super.initState();
     _messageController.fetchMessages(widget.partner.id ?? '');
-    _messageController.startMessagePolling(widget.partner.id ?? '');
+    _messageController.startChatSession(widget.partner.id ?? '');
     
     // Scroll to bottom when list changes
     ever(_messageController.messages, (_) => _scrollToBottom());
@@ -34,7 +34,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
 
   @override
   void dispose() {
-    _messageController.stopMessagePolling();
+    _messageController.stopChatSession();
     _inputController.dispose();
     _scrollController.dispose();
     super.dispose();
