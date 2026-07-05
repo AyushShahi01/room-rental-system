@@ -1,16 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/room/room_model.dart';
+import '../models/booking/booking_model.dart';
 import '../services/room_service.dart';
+import '../services/booking_service.dart';
+import 'booking_controller.dart';
 
 class TenantDashboardController extends GetxController {
   final RoomService _roomService = RoomService();
+  final BookingService _bookingService = BookingService();
 
   final RxInt selectedIndex = 0.obs;
 
   final Rxn<RoomModel> dashboardData = Rxn<RoomModel>();
   final RxBool isLoading = false.obs;
   final RxString errorMessage = ''.obs;
+
+  // Active stay / filters state
+  final Rxn<BookingModel> activeBooking = Rxn<BookingModel>();
+  final RxString selectedFilterTag = ''.obs;
+
+  final List<String> filterTags = [
+    'Wi-Fi',
+    'AC',
+    'Furnished',
+    'Parking',
+    'Bath',
+  ];
 
   // Search parameters needed by tenant views
   final searchController = TextEditingController();
@@ -37,17 +53,46 @@ class TenantDashboardController extends GetxController {
 
   void onItemTapped(int index) {
     selectedIndex.value = index;
+    if (Get.isRegistered<BookingController>()) {
+      Get.find<BookingController>().errorMessage.value = '';
+    }
+  }
+
+  void toggleFilterTag(String tag) {
+    if (selectedFilterTag.value == tag) {
+      selectedFilterTag.value = '';
+    } else {
+      selectedFilterTag.value = tag;
+    }
   }
 
   Future<void> loadDashboardData() async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
+      
       final data = await _roomService.getRooms();
       dashboardData.value = data;
       final filteredResults = data.results.where((r) => r.isAvailable == true).toList();
       allProperties.assignAll(filteredResults);
       featuredProperties.assignAll(filteredResults.take(3).toList());
+
+      // Fetch active stay
+      try {
+        final bookingsRes = await _bookingService.getMyBookings();
+        final approved = bookingsRes.results.firstWhereOrNull(
+          (b) => b.status?.toLowerCase() == 'approved',
+        );
+        if (approved != null) {
+          final fullBooking = await _bookingService.getBooking(approved.id!);
+          activeBooking.value = fullBooking;
+        } else {
+          activeBooking.value = null;
+        }
+      } catch (e) {
+        debugPrint('Error loading active stay booking: $e');
+        activeBooking.value = null;
+      }
     } catch (e) {
       errorMessage.value = 'Failed to load rooms: ${e.toString()}';
       debugPrint('Error loading tenant dashboard rooms: $e');

@@ -98,6 +98,8 @@ class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        if self.request.method == 'GET':
+            return Room.objects.all()
         if user and user.is_authenticated:
             return Room.objects.filter(is_available=True) | Room.objects.filter(landlord=user)
         return Room.objects.filter(is_available=True)

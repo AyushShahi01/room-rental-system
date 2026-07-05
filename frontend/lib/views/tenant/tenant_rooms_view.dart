@@ -139,15 +139,15 @@ class _RoomCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final imageUrl = room.images.isNotEmpty ? room.images.first.image : null;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(22),
       child: Container(
-        width: 260,
-        margin: const EdgeInsets.only(right: 12),
+        width: double.infinity,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: colorScheme.surface,
           borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
@@ -160,77 +160,159 @@ class _RoomCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(22),
-              ),
-              child: SizedBox(
-                height: 140,
-                width: double.infinity,
-                child: imageUrl != null && imageUrl.isNotEmpty
-                    ? Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => SizedBox(
-                          height: 140,
-                          child: Center(
-                            child: Icon(
-                              Icons.home_work_outlined,
-                              size: 40,
-                              color: Colors.grey.shade400,
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(22),
+                  ),
+                  child: SizedBox(
+                    height: 160,
+                    width: double.infinity,
+                    child: imageUrl != null && imageUrl.isNotEmpty
+                        ? Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Container(
+                              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                              child: Center(
+                                child: Icon(
+                                  Icons.home_work_outlined,
+                                  size: 40,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(
+                            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                            child: Center(
+                              child: Icon(
+                                Icons.home_work_outlined,
+                                size: 40,
+                                color: Colors.grey.shade400,
+                              ),
                             ),
                           ),
-                        ),
-                      )
-                    : SizedBox(
-                        height: 140,
-                        child: Center(
-                          child: Icon(
-                            Icons.home_work_outlined,
-                            size: 40,
-                            color: Colors.grey.shade400,
-                          ),
+                  ),
+                ),
+                // Gender badge
+                if (room.genderPreference != null &&
+                    room.genderPreference!.isNotEmpty &&
+                    room.genderPreference!.toLowerCase() != 'any' &&
+                    room.genderPreference!.toLowerCase() != 'co-ed')
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.65),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${room.genderPreference!.toUpperCase()} ONLY',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
                         ),
                       ),
-              ),
+                    ),
+                  ),
+                // Amenity icons
+                Positioned(
+                  bottom: 12,
+                  right: 12,
+                  child: Row(
+                    children: [
+                      if (room.hasWifi == true)
+                        _buildAmenityIcon(Icons.wifi),
+                      if (room.hasAc == true)
+                        _buildAmenityIcon(Icons.ac_unit),
+                      if (room.parkingAvailable == true)
+                        _buildAmenityIcon(Icons.local_parking),
+                      if (room.hasAttachedBathroom == true)
+                        _buildAmenityIcon(Icons.bathtub_outlined),
+                      if (room.furnishedStatus == true)
+                        _buildAmenityIcon(Icons.chair_outlined),
+                    ],
+                  ),
+                ),
+              ],
             ),
             Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     room.title ?? 'Room',
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    '${room.province ?? ''}, ${room.state ?? ''}'.trim(),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
                   Row(
                     children: [
                       Icon(
-                        Icons.attach_money_rounded,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.primary,
+                        Icons.location_on_outlined,
+                        size: 16,
+                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        '₹${room.price ?? '0'}',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                      Expanded(
+                        child: Text(
+                          '${room.province ?? ''}, ${room.state ?? ''}'.trim(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.attach_money_rounded,
+                            size: 18,
+                            color: colorScheme.primary,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            '₹${room.price ?? '0'}',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.primary,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            '/month',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (room.landlord?.username != null)
+                        Text(
+                          'by ${room.landlord!.username}',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                     ],
                   ),
                 ],
@@ -238,6 +320,22 @@ class _RoomCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAmenityIcon(IconData icon) {
+    return Container(
+      margin: const EdgeInsets.only(left: 4),
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.65),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        icon,
+        color: Colors.white,
+        size: 14,
       ),
     );
   }
@@ -265,6 +363,7 @@ class _RecommendationCard extends StatelessWidget {
       final prefix = imageUrl.startsWith('/') ? '' : '/';
       imageUrl = '${DioConnection.baseDomain}$prefix$imageUrl';
     }
+    final colorScheme = Theme.of(context).colorScheme;
 
     return InkWell(
       onTap: onTap,
@@ -273,7 +372,7 @@ class _RecommendationCard extends StatelessWidget {
         width: 260,
         margin: const EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: colorScheme.surface,
           borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
@@ -286,39 +385,87 @@ class _RecommendationCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(22),
-              ),
-              child: SizedBox(
-                height: 140,
-                width: double.infinity,
-                child: imageUrl != null && imageUrl.isNotEmpty
-                    ? Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => SizedBox(
-                          height: 140,
-                          child: Center(
-                            child: Icon(
-                              Icons.home_work_outlined,
-                              size: 40,
-                              color: Colors.grey.shade400,
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(22),
+                  ),
+                  child: SizedBox(
+                    height: 140,
+                    width: double.infinity,
+                    child: imageUrl != null && imageUrl.isNotEmpty
+                        ? Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Container(
+                              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                              child: Center(
+                                child: Icon(
+                                  Icons.home_work_outlined,
+                                  size: 40,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(
+                            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                            child: Center(
+                              child: Icon(
+                                Icons.home_work_outlined,
+                                size: 40,
+                                color: Colors.grey.shade400,
+                              ),
                             ),
                           ),
-                        ),
-                      )
-                    : SizedBox(
-                        height: 140,
-                        child: Center(
-                          child: Icon(
-                            Icons.home_work_outlined,
-                            size: 40,
-                            color: Colors.grey.shade400,
-                          ),
+                  ),
+                ),
+                // Gender badge
+                if (room.genderPreference != null &&
+                    room.genderPreference!.isNotEmpty &&
+                    room.genderPreference!.toLowerCase() != 'any' &&
+                    room.genderPreference!.toLowerCase() != 'co-ed')
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.65),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${room.genderPreference!.toUpperCase()} ONLY',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
                         ),
                       ),
-              ),
+                    ),
+                  ),
+                // Amenity icons
+                Positioned(
+                  bottom: 12,
+                  right: 12,
+                  child: Row(
+                    children: [
+                      if (room.hasWifi == true)
+                        _buildAmenityIcon(Icons.wifi),
+                      if (room.hasAc == true)
+                        _buildAmenityIcon(Icons.ac_unit),
+                      if (room.parkingAvailable == true)
+                        _buildAmenityIcon(Icons.local_parking),
+                      if (room.hasAttachedBathroom == true)
+                        _buildAmenityIcon(Icons.bathtub_outlined),
+                      if (room.furnishedStatus == true)
+                        _buildAmenityIcon(Icons.chair_outlined),
+                    ],
+                  ),
+                ),
+              ],
             ),
             Padding(
               padding: const EdgeInsets.all(14),
@@ -327,18 +474,32 @@ class _RecommendationCard extends StatelessWidget {
                 children: [
                   Text(
                     room.title ?? 'Room',
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    '${room.province ?? ''}, ${room.state ?? ''}'.trim(),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 16,
+                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${room.province ?? ''}, ${room.state ?? ''}'.trim(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 10),
                   Row(
@@ -349,16 +510,15 @@ class _RecommendationCard extends StatelessWidget {
                           Icon(
                             Icons.attach_money_rounded,
                             size: 18,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: colorScheme.primary,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 2),
                           Text(
                             '₹${room.price ?? '0'}',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.primary,
+                            ),
                           ),
                         ],
                       ),
@@ -366,7 +526,8 @@ class _RecommendationCard extends StatelessWidget {
                         Text(
                           'by ${room.landlord!.username}',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                     ],
@@ -376,6 +537,22 @@ class _RecommendationCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAmenityIcon(IconData icon) {
+    return Container(
+      margin: const EdgeInsets.only(left: 4),
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.65),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        icon,
+        color: Colors.white,
+        size: 14,
       ),
     );
   }

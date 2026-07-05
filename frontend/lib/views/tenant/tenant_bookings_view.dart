@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import '../../controllers/booking_controller.dart';
 import '../../models/booking/bookinglist_model.dart';
 import '../booking_view.dart';
-import 'booking_success_view.dart';
 
 class TenantBookingsView extends StatefulWidget {
   const TenantBookingsView({super.key});
@@ -38,19 +37,6 @@ class _TenantBookingsViewState extends State<TenantBookingsView> {
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
         elevation: 0.5,
-        actions: [
-          IconButton(
-            onPressed: () => showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              builder: (_) => _CreateBookingSheet(controller: controller),
-            ),
-            icon: const Icon(Icons.add_circle_outline),
-          ),
-        ],
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
@@ -68,19 +54,10 @@ class _TenantBookingsViewState extends State<TenantBookingsView> {
         }
 
         if (controller.tenantBookings.isEmpty) {
-          return _StatePlaceholder(
+          return const _StatePlaceholder(
             icon: Icons.calendar_month_outlined,
             title: 'No bookings yet',
-            subtitle: 'Create your first booking request and track it here.',
-            actionLabel: 'Create booking',
-            onAction: () => showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              builder: (_) => _CreateBookingSheet(controller: controller),
-            ),
+            subtitle: 'Any booking requests you make will appear here.',
           );
         }
 
@@ -106,113 +83,7 @@ class _TenantBookingsViewState extends State<TenantBookingsView> {
   }
 }
 
-class _CreateBookingSheet extends StatelessWidget {
-  const _CreateBookingSheet({required this.controller});
-  final BookingController controller;
 
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Create booking',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Submit a booking request for a room by entering its room ID.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: controller.roomIdController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: 'Room ID',
-              prefixIcon: const Icon(Icons.meeting_room_outlined),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Obx(() {
-            if (controller.isSubmitting.value) {
-              return SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: null,
-                  icon: const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  label: const Text('Submitting...'),
-                ),
-              );
-            }
-
-            return SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: () async {
-                  await controller.createBooking();
-                  if (!context.mounted) return;
-                  if (controller.successMessage.isNotEmpty) {
-                    Navigator.pop(context);
-                    final createdBooking = controller.selectedBooking.value;
-                    if (createdBooking != null) {
-                      Get.to(() => BookingSuccessView(booking: createdBooking));
-                    }
-                  }
-                },
-                icon: const Icon(Icons.send_rounded),
-                label: const Text('Submit request'),
-              ),
-            );
-          }),
-          Obx(() {
-            if (controller.errorMessage.isNotEmpty) {
-              return Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  controller.errorMessage.value,
-                  style: TextStyle(color: colorScheme.error),
-                ),
-              );
-            }
-            return const SizedBox.shrink();
-          }),
-        ],
-      ),
-    );
-  }
-}
 
 class _BookingCard extends StatefulWidget {
   const _BookingCard({required this.booking, required this.onTap});
@@ -405,15 +276,15 @@ class _StatePlaceholder extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
-    required this.actionLabel,
-    required this.onAction,
+    this.actionLabel,
+    this.onAction,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
-  final String actionLabel;
-  final VoidCallback onAction;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -448,12 +319,14 @@ class _StatePlaceholder extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: onAction,
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text(actionLabel),
-            ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: onAction!,
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(actionLabel!),
+              ),
+            ],
           ],
         ),
       ),

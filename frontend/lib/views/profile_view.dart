@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
+import '../controllers/settings_controller.dart';
 import '../utils/token_storage.dart';
 import '../routes/app_routes.dart';
+import '../widgets/settings_tile.dart';
+import '../models/auth_model/user_model.dart';
 import 'payment_history_view.dart';
 
 class ProfileView extends StatelessWidget {
@@ -54,23 +57,32 @@ class ProfileView extends StatelessWidget {
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white30, width: 2),
                       ),
-                      child: Center(
-                        child: Obx(() {
-                          final user = authController.currentUser.value;
-                          return Text(
-                            _initials(
-                              user?.firstName,
-                              user?.lastName,
-                              user?.username,
-                            ),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
+                      child: Obx(() {
+                        final user = authController.currentUser.value;
+                        final picUrl = user?.absoluteProfilePictureUrl;
+                        if (picUrl != null && picUrl.isNotEmpty) {
+                          return ClipOval(
+                            child: Image.network(
+                              picUrl,
+                              width: 96,
+                              height: 96,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  _initialsWidget(user),
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return const Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                  ),
+                                );
+                              },
                             ),
                           );
-                        }),
-                      ),
+                        } else {
+                          return _initialsWidget(user);
+                        }
+                      }),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -248,6 +260,71 @@ class ProfileView extends StatelessWidget {
 
             const SizedBox(height: 24),
 
+            // ─── Settings Section ──────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(left: 4, bottom: 12),
+                    child: Text(
+                      'Settings',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 2,
+                    child: Obx(() {
+                      final settingsCtrl = Get.find<SettingsController>();
+                      return Column(
+                        children: [
+                          SettingsTile(
+                            icon: Icons.lock_outline,
+                            iconColor: Colors.indigo,
+                            title: 'Change Password',
+                            onTap: () => Get.toNamed(AppRoutes.changePassword),
+                          ),
+                          const Divider(height: 1),
+                          SettingsTile(
+                            icon: Icons.notifications_active_outlined,
+                            iconColor: Colors.blueAccent,
+                            title: 'Push Notifications',
+                            value: settingsCtrl.pushNotifications.value,
+                            onToggle: (_) => settingsCtrl.togglePushNotifications(),
+                          ),
+                          const Divider(height: 1),
+                          SettingsTile(
+                            icon: Icons.mark_email_unread_outlined,
+                            iconColor: Colors.teal,
+                            title: 'Email Marketing',
+                            value: settingsCtrl.emailMarketing.value,
+                            onToggle: (_) => settingsCtrl.toggleEmailMarketing(),
+                          ),
+                          const Divider(height: 1),
+                          SettingsTile(
+                            icon: Icons.visibility_outlined,
+                            iconColor: Colors.orange,
+                            title: 'Profile Visibility',
+                            trailingLabel: settingsCtrl.profileVisibility.value,
+                            onTap: settingsCtrl.toggleProfileVisibility,
+                          ),
+                        ],
+                      );
+                    }),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
             // ─── Actions Section ──────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -373,11 +450,6 @@ class ProfileView extends StatelessWidget {
       centerTitle: true,
       actions: [
         IconButton(
-          icon: const Icon(Icons.settings_outlined, color: Colors.black87),
-          onPressed: () => Get.toNamed(AppRoutes.settings),
-          tooltip: 'Settings',
-        ),
-        IconButton(
           icon: const Icon(Icons.notifications_outlined, color: Colors.black87),
           onPressed: () => Get.toNamed(AppRoutes.notifications),
           tooltip: 'Notifications',
@@ -399,6 +471,23 @@ class ProfileView extends StatelessWidget {
     if ((first ?? '').isNotEmpty) return first![0].toUpperCase();
     if ((username ?? '').isNotEmpty) return username![0].toUpperCase();
     return '?';
+  }
+
+  Widget _initialsWidget(UserModel? user) {
+    return Center(
+      child: Text(
+        _initials(
+          user?.firstName,
+          user?.lastName,
+          user?.username,
+        ),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
   }
 
   Widget _detailRow(IconData icon, String label, String value) {

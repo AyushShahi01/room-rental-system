@@ -110,7 +110,46 @@ class MaintenanceController extends GetxController {
               ),
             );
           } catch (e) {
-            debugPrint('Error fetching room $roomId detail: $e');
+            debugPrint('Error fetching room $roomId detail: $e. Using booking details as fallback.');
+            rooms.add(
+              Result(
+                id: booking.roomId,
+                images: booking.roomImages
+                    .map(
+                      (img) => RoomImage(
+                        id: 0,
+                        room: booking.roomId,
+                        image: img,
+                        createdAt: DateTime.now(),
+                      ),
+                    )
+                    .toList(),
+                title: booking.roomTitle ?? 'Room #${booking.roomId}',
+                description: '',
+                price: booking.roomPrice,
+                province: booking.roomProvince,
+                state: booking.roomState,
+                wardNumber: null,
+                furnishedStatus: null,
+                areaSqft: null,
+                securityDeposit: null,
+                maintenanceCharges: null,
+                hasWifi: null,
+                hasAc: null,
+                hasAttachedBathroom: null,
+                parkingAvailable: null,
+                foodAvailable: null,
+                genderPreference: 'any',
+                waterSupplyAvailable: null,
+                wasteCollectionAvailable: null,
+                isAvailable: true,
+                latitude: null,
+                longitude: null,
+                createdAt: booking.createdAt ?? DateTime.now(),
+                updatedAt: DateTime.now(),
+                landlord: null,
+              ),
+            );
           }
         }
       }

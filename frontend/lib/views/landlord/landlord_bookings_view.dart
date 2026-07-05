@@ -234,39 +234,43 @@ class _BookingCardState extends State<_BookingCard> {
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  FilledButton.icon(
-                    onPressed: widget.booking.id == null
-                        ? null
-                        : () async {
-                            await Get.find<BookingController>().approveBooking(
-                              widget.booking.id!,
-                            );
-                          },
-                    icon: const Icon(Icons.check_circle_outline),
-                    label: const Text('Approve'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: widget.booking.id == null
-                        ? null
-                        : () async {
-                            await Get.find<BookingController>().rejectBooking(
-                              widget.booking.id!,
-                            );
-                          },
-                    icon: const Icon(Icons.block_outlined),
-                    label: const Text('Reject'),
-                  ),
-                  TextButton.icon(
-                    onPressed: widget.booking.id == null
-                        ? null
-                        : () async {
-                            await Get.find<BookingController>().cancelBooking(
-                              widget.booking.id!,
-                            );
-                          },
-                    icon: const Icon(Icons.cancel_outlined),
-                    label: const Text('Cancel'),
-                  ),
+                  if (widget.booking.status?.toLowerCase() == 'pending') ...[
+                    FilledButton.icon(
+                      onPressed: widget.booking.id == null
+                          ? null
+                          : () async {
+                              await Get.find<BookingController>().approveBooking(
+                                widget.booking.id!,
+                              );
+                            },
+                      icon: const Icon(Icons.check_circle_outline),
+                      label: const Text('Approve'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: widget.booking.id == null
+                          ? null
+                          : () async {
+                              await Get.find<BookingController>().rejectBooking(
+                                widget.booking.id!,
+                              );
+                            },
+                      icon: const Icon(Icons.block_outlined),
+                      label: const Text('Reject'),
+                    ),
+                  ],
+                  if (widget.booking.status?.toLowerCase() == 'pending' ||
+                      widget.booking.status?.toLowerCase() == 'approved')
+                    TextButton.icon(
+                      onPressed: widget.booking.id == null
+                          ? null
+                          : () async {
+                              await Get.find<BookingController>().cancelBooking(
+                                widget.booking.id!,
+                              );
+                            },
+                      icon: const Icon(Icons.cancel_outlined),
+                      label: const Text('Cancel'),
+                    ),
                   TextButton.icon(
                     onPressed: widget.booking.tenantId == null
                         ? null

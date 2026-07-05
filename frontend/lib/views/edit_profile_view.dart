@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../controllers/auth_controller.dart';
+import '../models/auth_model/user_model.dart';
 
 class EditProfileView extends StatelessWidget {
   const EditProfileView({super.key});
@@ -61,35 +63,70 @@ class EditProfileView extends StatelessWidget {
                 children: [
                   // ─── Profile Avatar ────────────────────────────────────────
                   Center(
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.blueAccent.withValues(alpha: 0.25),
-                            blurRadius: 12,
-                            offset: const Offset(0, 6),
+                    child: GestureDetector(
+                      onTap: () => _pickAndUploadImage(context, authController),
+                      child: Stack(
+                        children: [
+                          Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.blueAccent.withValues(alpha: 0.25),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: Obx(() {
+                              final user = authController.currentUser.value;
+                              final picUrl = user?.absoluteProfilePictureUrl;
+                              if (picUrl != null && picUrl.isNotEmpty) {
+                                return ClipOval(
+                                  child: Image.network(
+                                    picUrl,
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        _initialsWidget(user),
+                                    loadingBuilder: (context, child, progress) {
+                                      if (progress == null) return child;
+                                      return const Center(
+                                        child: CircularProgressIndicator(color: Colors.white),
+                                      );
+                                    },
+                                  ),
+                                );
+                              } else {
+                                return _initialsWidget(user);
+                              }
+                            }),
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF1565C0),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
                           ),
                         ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          _initials(user?.firstName, user?.lastName,
-                              user?.username),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1,
-                          ),
-                        ),
                       ),
                     ),
                   ),
@@ -250,6 +287,44 @@ class EditProfileView extends StatelessWidget {
     if ((first ?? '').isNotEmpty) return first![0].toUpperCase();
     if ((username ?? '').isNotEmpty) return username![0].toUpperCase();
     return '?';
+  }
+
+  Widget _initialsWidget(UserModel? user) {
+    return Center(
+      child: Text(
+        _initials(user?.firstName, user?.lastName, user?.username),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndUploadImage(
+      BuildContext context, AuthController authController) async {
+    final ImagePicker picker = ImagePicker();
+    try {
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+      if (image != null) {
+        await authController.uploadProfilePicture(image.path);
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to pick image: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+      );
+    }
   }
 
   Widget _readOnlyRow({

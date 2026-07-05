@@ -166,6 +166,37 @@ class AuthController extends GetxController {
     }
   }
 
+  Future<void> uploadProfilePicture(String filePath) async {
+    try {
+      isLoading.value = true;
+      final user = await _authService.uploadProfilePicture(filePath: filePath);
+      currentUser.value = user;
+
+      userName.value = user.username ?? 'Guest';
+      userEmail.value = user.email ?? '';
+      selectedRole.value = user.role ?? 'tenant';
+
+      Get.snackbar(
+        'Success',
+        'Profile picture updated successfully.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+        icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
+      );
+    } on DioException catch (e) {
+      final message = _extractMessage(e) ?? 'Failed to upload profile picture.';
+      _showError('Upload Failed', message);
+    } catch (e) {
+      _showError('Error', 'An unexpected error occurred: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   Future<void> changePassword() async {
     if (isLoading.value) return;
 

@@ -6,7 +6,6 @@ import '../controllers/booking_controller.dart';
 import '../models/booking/booking_model.dart';
 import '../models/room/room_detail_model.dart' as room_detail;
 import 'agreement_view.dart';
-import 'payement_view.dart';
 
 class BookingDetailsView extends StatefulWidget {
   const BookingDetailsView({super.key, required this.bookingId});
@@ -272,18 +271,20 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
                   runSpacing: 12,
                   children: [
                     if (isLandlord) ...[
-                      FilledButton.icon(
-                        onPressed: () =>
-                            controller.approveBooking(widget.bookingId),
-                        icon: const Icon(Icons.check_circle_outline),
-                        label: const Text('Approve'),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: () =>
-                            controller.rejectBooking(widget.bookingId),
-                        icon: const Icon(Icons.block_outlined),
-                        label: const Text('Reject'),
-                      ),
+                      if (status == 'pending') ...[
+                        FilledButton.icon(
+                          onPressed: () =>
+                              controller.approveBooking(widget.bookingId),
+                          icon: const Icon(Icons.check_circle_outline),
+                          label: const Text('Approve'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () =>
+                              controller.rejectBooking(widget.bookingId),
+                          icon: const Icon(Icons.block_outlined),
+                          label: const Text('Reject'),
+                        ),
+                      ],
                       if (status == 'approved' && !innerHasAgreement)
                         FilledButton.icon(
                           onPressed: () => _openAgreementDetails(
@@ -309,19 +310,7 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
                           label: const Text('View Agreement'),
                         ),
                     ] else ...[
-                      if (status == 'approved' && controller.paymentStatus.value.toLowerCase() == 'pending')
-                        FilledButton.icon(
-                          onPressed: () {
-                            Get.to(() => PaymentView(
-                                  bookingId: booking.id ?? widget.bookingId,
-                                  roomName: resolvedRoomTitle,
-                                  amount: booking.roomPrice ?? room?.price ?? '0',
-                                  paymentStatus: controller.paymentStatus.value,
-                                ));
-                          },
-                          icon: const Icon(Icons.payment_outlined),
-                          label: const Text('Pay Rent'),
-                        ),
+
                       if (status == 'approved' && innerHasAgreement) ...[
                         OutlinedButton.icon(
                           onPressed: () => _openAgreementDetails(

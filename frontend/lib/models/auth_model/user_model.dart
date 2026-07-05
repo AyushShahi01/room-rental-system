@@ -1,3 +1,5 @@
+import '../../utils/dio_connection.dart';
+
 class UserModel {
     UserModel({
         required this.id,
@@ -12,6 +14,7 @@ class UserModel {
         required this.district,
         required this.city,
         required this.ward,
+        this.profilePicture,
     });
 
     final String? id;
@@ -26,6 +29,19 @@ class UserModel {
     final String? district;
     final String? city;
     final int? ward;
+    final String? profilePicture;
+
+    String? get absoluteProfilePictureUrl {
+        if (profilePicture == null || profilePicture!.isEmpty) return null;
+        if (profilePicture!.startsWith('http://') || profilePicture!.startsWith('https://')) {
+            return profilePicture;
+        }
+        final base = DioConnection.baseDomain;
+        if (profilePicture!.startsWith('/')) {
+            return '$base$profilePicture';
+        }
+        return '$base/$profilePicture';
+    }
 
     factory UserModel.fromJson(Map<String, dynamic> json){ 
         return UserModel(
@@ -41,7 +57,9 @@ class UserModel {
             district: json["district"]?.toString(),
             city: json["city"]?.toString(),
             ward: json["ward"] is int ? json["ward"] as int : int.tryParse(json["ward"]?.toString() ?? ''),
+            profilePicture: json["profile_picture"]?.toString(),
         );
     }
 
 }
+

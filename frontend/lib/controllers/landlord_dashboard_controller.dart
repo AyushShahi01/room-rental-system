@@ -6,6 +6,7 @@ import '../services/room_service.dart';
 import '../services/booking_service.dart';
 import '../services/maintenance_service.dart';
 import 'payement_controller.dart';
+import 'booking_controller.dart';
 
 class LandlordDashboardController extends GetxController {
   final AuthService _authService = AuthService();
@@ -38,6 +39,9 @@ class LandlordDashboardController extends GetxController {
 
   void onItemTapped(int index) {
     selectedIndex.value = index;
+    if (Get.isRegistered<BookingController>()) {
+      Get.find<BookingController>().errorMessage.value = '';
+    }
   }
 
   Future<void> loadDashboardData() async {

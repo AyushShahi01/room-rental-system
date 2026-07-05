@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/landlord_dashboard_controller.dart';
 import '../../controllers/auth_controller.dart';
+import '../../models/auth_model/user_model.dart';
 import '../../routes/app_routes.dart';
 import 'landlord_maintenance_view.dart';
 import '../payment_history_view.dart';
@@ -26,15 +27,54 @@ class LandlordDashboard extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.black87),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => Get.toNamed(AppRoutes.settings),
-            tooltip: 'Settings',
-          ),
-          IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () => Get.toNamed(AppRoutes.notifications),
             tooltip: 'Notifications',
           ),
+          Obx(() {
+            final user = authController.currentUser.value;
+            final picUrl = user?.absoluteProfilePictureUrl;
+            return GestureDetector(
+              onTap: () => controller.onItemTapped(4),
+              child: Container(
+                margin: const EdgeInsets.only(right: 16, left: 8, top: 10, bottom: 10),
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.indigo.shade200,
+                    width: 1.5,
+                  ),
+                ),
+                child: picUrl != null && picUrl.isNotEmpty
+                    ? ClipOval(
+                        child: Image.network(
+                          picUrl,
+                          width: 36,
+                          height: 36,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              _appBarInitials(user),
+                          loadingBuilder: (context, child, progress) {
+                            if (progress == null) return child;
+                            return const Center(
+                              child: SizedBox(
+                                width: 12,
+                                height: 12,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.5,
+                                  color: Colors.indigo,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    : _appBarInitials(user),
+              ),
+            );
+          }),
         ],
       ),
       body: SafeArea(
@@ -167,7 +207,6 @@ class LandlordDashboard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
                       Row(
                         children: [
                           Expanded(
@@ -213,8 +252,9 @@ class LandlordDashboard extends StatelessWidget {
                     Expanded(
                       child: _buildActionButton(
                         label: 'Add New Room',
+                        subtitle: 'List a room for rent',
                         icon: Icons.add_circle_outline,
-                        color: Colors.indigo,
+                        gradient: [Colors.indigo.shade700, Colors.indigo.shade500],
                         onTap: () {
                           controller.selectedIndex.value = 1;
                         },
@@ -224,8 +264,9 @@ class LandlordDashboard extends StatelessWidget {
                     Expanded(
                       child: _buildActionButton(
                         label: 'Verify Payments',
+                        subtitle: 'Approve tenant logs',
                         icon: Icons.check_circle_outline,
-                        color: Colors.teal,
+                        gradient: [Colors.teal.shade700, Colors.teal.shade500],
                         onTap: () => Get.to(() => const PaymentHistoryView()),
                       ),
                     ),
@@ -425,13 +466,14 @@ class LandlordDashboard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -442,7 +484,7 @@ class LandlordDashboard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 28),
@@ -463,10 +505,12 @@ class LandlordDashboard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       color: Colors.grey.shade500,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -480,30 +524,57 @@ class LandlordDashboard extends StatelessWidget {
 
   Widget _buildActionButton({
     required String label,
+    required String subtitle,
     required IconData icon,
-    required Color color,
+    required List<Color> gradient,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2)),
+          gradient: LinearGradient(
+            colors: gradient,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: gradient.first.withValues(alpha: 0.22),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: Colors.white, size: 22),
+            ),
+            const SizedBox(height: 14),
             Text(
               label,
-              style: TextStyle(
-                color: color,
+              style: const TextStyle(
+                color: Colors.white,
                 fontWeight: FontWeight.bold,
-                fontSize: 13,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: 11,
               ),
             ),
           ],
@@ -539,6 +610,36 @@ class LandlordDashboard extends StatelessWidget {
         style: TextStyle(
           color: color,
           fontSize: 9,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _appBarInitials(UserModel? user) {
+    final first = user?.firstName;
+    final last = user?.lastName;
+    final username = user?.username;
+    String initials = '?';
+    if ((first ?? '').isNotEmpty && (last ?? '').isNotEmpty) {
+      initials = '${first![0]}${last![0]}'.toUpperCase();
+    } else if ((first ?? '').isNotEmpty) {
+      initials = first![0].toUpperCase();
+    } else if ((username ?? '').isNotEmpty) {
+      initials = username![0].toUpperCase();
+    }
+    
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.indigo,
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initials,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
           fontWeight: FontWeight.bold,
         ),
       ),

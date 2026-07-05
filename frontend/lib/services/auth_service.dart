@@ -93,6 +93,22 @@ class AuthService {
     return UserModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  Future<UserModel> uploadProfilePicture({required String filePath}) async {
+    final formData = FormData.fromMap({
+      'profile_picture': await MultipartFile.fromFile(filePath),
+    });
+    final response = await _dio.post(
+      'auth/me/profile-picture/',
+      data: formData,
+      options: Options(
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      ),
+    );
+    return UserModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<UserModel> getMeUpdate() async {
     final response = await _dio.get('auth/me/update/');
     return UserModel.fromJson(response.data as Map<String, dynamic>);
