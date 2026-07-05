@@ -20,6 +20,16 @@ class RentRecordListCreateView(generics.ListCreateAPIView):
         # Automatically update overdue statuses before listing
         RentRecord.update_overdue()
 
+        # Catch up sync rent records for all approved bookings
+        try:
+            from bookings.models import Booking
+            from .utils import sync_rent_records_for_booking
+            for booking in Booking.objects.filter(status=Booking.STATUS_APPROVED):
+                sync_rent_records_for_booking(booking)
+        except BaseException as e:
+            import logging
+            logging.getLogger(__name__).error(f"Failed to sync rent records in get_queryset: {e}")
+
         user = self.request.user
         if user.role == 'admin':
             qs = RentRecord.objects.select_related('room', 'tenant').all()
@@ -81,11 +91,21 @@ class RentRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
         super().check_object_permissions(request, obj)
         user = request.user
 
-        # Write operations are restricted to landlords and admins
+        # Write operations are restricted to landlords/admins or tenant logging payment
         if request.method not in ['GET', 'HEAD', 'OPTIONS']:
             if user.role not in ['landlord', 'admin']:
-                raise PermissionDenied("Only landlords and administrators can modify rent records.")
-            if user.role == 'landlord' and obj.room.landlord_id != user.id:
+                if user.role == 'tenant' and obj.tenant_id == user.id:
+                    if request.method != 'PATCH':
+                        raise PermissionDenied("Tenants can only log payments using PATCH.")
+                    requested_status = request.data.get('status')
+                    if requested_status != RentRecord.STATUS_PENDING:
+                        raise PermissionDenied("Tenants can only update status to 'pending' to log payment.")
+                    allowed_fields = {'status', 'remarks', 'amount_paid'}
+                    if not set(request.data.keys()).issubset(allowed_fields):
+                        raise PermissionDenied("Tenants can only update status, remarks, and amount_paid.")
+                else:
+                    raise PermissionDenied("Only landlords and administrators can modify rent records.")
+            elif user.role == 'landlord' and obj.room.landlord_id != user.id:
                 raise PermissionDenied("You can only modify rent records for rooms that you own.")
 
     def perform_update(self, serializer):
@@ -137,6 +157,16 @@ class RentDashboardView(APIView):
 
         # Sync overdue records before calculating stats
         RentRecord.update_overdue()
+
+        # Catch up sync rent records for all approved bookings
+        try:
+            from bookings.models import Booking
+            from .utils import sync_rent_records_for_booking
+            for booking in Booking.objects.filter(status=Booking.STATUS_APPROVED):
+                sync_rent_records_for_booking(booking)
+        except BaseException as e:
+            import logging
+            logging.getLogger(__name__).error(f"Failed to sync rent records in RentDashboardView: {e}")
 
         # Base filter for rent records
         if user.role == 'admin':

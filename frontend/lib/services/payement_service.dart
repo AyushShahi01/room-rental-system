@@ -71,5 +71,15 @@ class PaymentService {
     }
     return [];
   }
+
+  Future<RentRecordModel> updateRentRecordStatus(int id, String status) async {
+    final response = await _dio.patch('rent/$id/', data: {'status': status});
+    return RentRecordModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<RentRecordModel> patchRentRecord(int id, Map<String, dynamic> data) async {
+    final response = await _dio.patch('rent/$id/', data: data);
+    return RentRecordModel.fromJson(response.data as Map<String, dynamic>);
+  }
 }
 

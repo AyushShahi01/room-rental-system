@@ -56,6 +56,7 @@ class RoomLocationListView(APIView):
         rooms = Room.objects.filter(
             latitude__isnull=False,
             longitude__isnull=False,
+            is_available=True,
         ).select_related('landlord')
 
         serializer = RoomLocationSerializer(rooms, many=True)

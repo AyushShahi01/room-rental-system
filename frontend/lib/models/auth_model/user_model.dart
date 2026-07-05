@@ -31,6 +31,13 @@ class UserModel {
     final int? ward;
     final String? profilePicture;
 
+    String get displayName {
+        final fName = firstName ?? '';
+        final lName = lastName ?? '';
+        final fullName = '$fName $lName'.trim();
+        return fullName.isNotEmpty ? fullName : (username ?? id ?? 'User');
+    }
+
     String? get absoluteProfilePictureUrl {
         if (profilePicture == null || profilePicture!.isEmpty) return null;
         if (profilePicture!.startsWith('http://') || profilePicture!.startsWith('https://')) {

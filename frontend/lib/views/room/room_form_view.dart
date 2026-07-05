@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../controllers/room_controller.dart';
+import '../../controllers/landlord_dashboard_controller.dart';
 import '../../models/room/room_detail_model.dart' as detail;
 import '../../utils/api_error.dart';
 import 'location_picker_view.dart';
@@ -39,6 +40,16 @@ class _RoomFormViewState extends State<RoomFormView> {
   final _depositController = TextEditingController();
   final _maintenanceController = TextEditingController();
   final _agreementController = TextEditingController();
+
+  String _rentMode = 'fixed';
+  String _fixedDurationType = 'months';
+  final _durationValueController = TextEditingController();
+  final _initialRentController = TextEditingController();
+  String _incrementEvery = 'monthly';
+  String _incrementType = 'fixed_amount';
+  final _increaseByController = TextEditingController();
+  final _houseRulesController = TextEditingController();
+  final _additionalDescriptionController = TextEditingController();
 
   bool _furnished = false;
   bool _wifi = false;
@@ -83,8 +94,18 @@ class _RoomFormViewState extends State<RoomFormView> {
       _gender = room.genderPreference ?? 'any';
       _latitude = double.tryParse(room.latitude?.toString() ?? '');
       _longitude = double.tryParse(room.longitude?.toString() ?? '');
+      _agreementController.text = room.agreementPolicy ?? '';
+      _rentMode = room.rentMode ?? 'fixed';
+      _fixedDurationType = room.fixedDurationType ?? 'months';
+      _durationValueController.text = room.fixedDurationValue?.toString() ?? '';
+      _initialRentController.text = room.initialRent ?? '';
+      _incrementEvery = room.incrementEvery ?? 'monthly';
+      _incrementType = room.incrementType ?? 'fixed_amount';
+      _increaseByController.text = room.increaseBy ?? '';
+      _houseRulesController.text = room.houseRules ?? '';
+      _additionalDescriptionController.text = room.additionalDescription ?? '';
     } else {
-      _agreementController.text = _defaultAgreementTemplate;
+      _agreementController.text = '';
     }
   }
 
@@ -100,6 +121,11 @@ class _RoomFormViewState extends State<RoomFormView> {
     _depositController.dispose();
     _maintenanceController.dispose();
     _agreementController.dispose();
+    _durationValueController.dispose();
+    _initialRentController.dispose();
+    _increaseByController.dispose();
+    _houseRulesController.dispose();
+    _additionalDescriptionController.dispose();
     super.dispose();
   }
 
@@ -308,16 +334,22 @@ class _RoomFormViewState extends State<RoomFormView> {
           ],
         );
       case 2:
-        return _sectionCard(
-          title: 'Rental Agreement & Lease Terms',
+        return Column(
           children: [
-            _buildTextField(
-              'Agreement Policy / Standard Lease Terms',
-              controller: _agreementController,
-              maxLines: 15,
+            _sectionCard(
+              title: 'Agreement',
+              children: [
+                _buildTextField(
+                  'Agreement',
+                  controller: _agreementController,
+                  maxLines: 15,
+                  hintText: 'Enter your house rules (e.g. no pets, quiet hours, guest policy), payment schedule, notice period, and any other relevant agreement terms here...',
+                ),
+              ],
             ),
           ],
         );
+
       case 3:
         return _sectionCard(
           title: 'Map & Coordinates',
@@ -721,10 +753,6 @@ class _RoomFormViewState extends State<RoomFormView> {
   }
 
   bool _validateStep2() {
-    if (_agreementController.text.trim().isEmpty) {
-      Get.snackbar('Validation Error', 'Agreement policy cannot be completely blank');
-      return false;
-    }
     return true;
   }
 
@@ -777,6 +805,7 @@ class _RoomFormViewState extends State<RoomFormView> {
     String? Function(String?)? validator,
     int maxLines = 1,
     TextInputType? keyboardType,
+    String? hintText,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -787,6 +816,8 @@ class _RoomFormViewState extends State<RoomFormView> {
         keyboardType: keyboardType,
         decoration: InputDecoration(
           labelText: label,
+          hintText: hintText,
+          alignLabelWithHint: maxLines > 1,
           border: const OutlineInputBorder(),
         ),
       ),
@@ -847,6 +878,15 @@ class _RoomFormViewState extends State<RoomFormView> {
       'gender_preference': _gender,
       'is_available': _available,
       'agreement_policy': _agreementController.text.trim(),
+      'rent_mode': _rentMode,
+      'fixed_duration_type': _fixedDurationType,
+      'fixed_duration_value': int.tryParse(_durationValueController.text.trim()),
+      'initial_rent': double.tryParse(_initialRentController.text.trim())?.toStringAsFixed(2),
+      'increment_every': _incrementEvery,
+      'increment_type': _incrementType,
+      'increase_by': double.tryParse(_increaseByController.text.trim())?.toStringAsFixed(2),
+      'house_rules': _houseRulesController.text.trim(),
+      'additional_description': _additionalDescriptionController.text.trim(),
     };
 
     if (_latitude != null) {
@@ -883,6 +923,9 @@ class _RoomFormViewState extends State<RoomFormView> {
           for (var imgFile in _selectedImages) {
             await roomController.uploadRoomImage(createdRoom.id!, imgFile);
           }
+        }
+        if (Get.isRegistered<LandlordDashboardController>()) {
+          Get.find<LandlordDashboardController>().selectedIndex.value = 1;
         }
       }
       if (mounted) Get.back();
@@ -921,202 +964,5 @@ class _RoomFormViewState extends State<RoomFormView> {
   }
 }
 
-const String _defaultAgreementTemplate = '''# RESIDENTIAL ROOM RENTAL AGREEMENT
 
-This Room Rental Agreement ("Agreement") is entered into on **{{agreement_date}}** between:
-
-### 1. Landlord Information
-
-**Full Name:** {{landlord_name}}
-
-**Citizenship/ID No.:** {{landlord_id}}
-
-**Phone Number:** {{landlord_phone}}
-
-**Address:** {{landlord_address}}
-
-(Hereinafter referred to as the "Landlord")
-
-AND
-
-### 2. Tenant Information
-
-**Full Name:** {{tenant_name}}
-
-**Citizenship/Passport No.:** {{tenant_id}}
-
-**Phone Number:** {{tenant_phone}}
-
-**Permanent Address:** {{tenant_address}}
-
-(Hereinafter referred to as the "Tenant")
-
----
-
-## 3. Property Details
-
-The Landlord agrees to rent the following room to the Tenant:
-
-* Property Name: {{property_name}}
-* Property Address: {{property_address}}
-* Room Number: {{room_number}}
-* Floor: {{floor}}
-* Room Type: {{room_type}}
-
----
-
-## 4. Rental Period
-
-* Start Date: {{start_date}}
-* End Date: {{end_date}}
-
-If no end date is specified, this agreement shall continue on a month-to-month basis until terminated by either party according to this agreement.
-
----
-
-## 5. Monthly Rent
-
-The Tenant agrees to pay:
-
-* Monthly Rent: Rs. {{monthly_rent}}
-* Due Date: {{due_day}} of every month
-* Security Deposit: Rs. {{security_deposit}}
-
----
-
-## 6. Utility Charges
-
-The Tenant shall be responsible for the following:
-
-☐ Electricity
-
-☐ Water
-
-☐ Internet
-
-☐ Garbage Collection
-
-☐ Other: _______________________
-
-Unless otherwise agreed, utility charges shall be paid separately from the monthly rent.
-
----
-
-## 7. Security Deposit
-
-The security deposit shall be refundable upon termination of the tenancy after deducting any unpaid rent, damages beyond normal wear and tear, or other outstanding obligations.
-
----
-
-## 8. Tenant Responsibilities
-
-The Tenant agrees to:
-
-* Pay rent on time.
-* Keep the room clean and in good condition.
-* Use the property only for residential purposes.
-* Not engage in illegal activities.
-* Not make structural changes without written permission.
-* Inform the landlord immediately of any damages or maintenance issues.
-
----
-
-## 9. Landlord Responsibilities
-
-The Landlord agrees to:
-
-* Provide peaceful possession of the rented room.
-* Maintain essential services whenever reasonably possible.
-* Perform major repairs not caused by tenant negligence.
-* Respect the Tenant's privacy and provide reasonable notice before entering the room except during emergencies.
-
----
-
-## 10. Visitors
-
-Visitors are permitted provided they do not disturb other tenants or violate the property's rules. Overnight stays require prior approval from the Landlord.
-
----
-
-## 11. Termination
-
-Either party may terminate this agreement by providing **{{notice_period}} days' written notice**, unless otherwise required by applicable law.
-
-Outstanding rent and utility payments must be settled before vacating the premises.
-
----
-
-## 12. Damages
-
-The Tenant shall be responsible for damages caused by negligence, misuse, or intentional acts.
-
-Normal wear and tear shall not be considered damage.
-
----
-
-## 13. House Rules
-
-The Tenant agrees to follow the property's house rules, including but not limited to:
-
-* Maintain cleanliness.
-* Avoid excessive noise.
-* No illegal substances.
-* Respect neighboring tenants.
-* Follow parking regulations, if applicable.
-
----
-
-## 14. Governing Law
-
-This Agreement shall be governed by the applicable laws of Nepal.
-
----
-
-## 15. Additional Terms
-
-{{additional_terms}}
-
----
-
-## Declaration
-
-Both parties declare that they have read, understood, and voluntarily agreed to the terms and conditions stated in this Agreement.
-
-### Landlord
-
-Signature: ___________________________
-
-Name: {{landlord_name}}
-
-Date: __________________
-
----
-
-### Tenant
-
-Signature: ___________________________
-
-Name: {{tenant_name}}
-
-Date: __________________
-
----
-
-### Witness 1
-
-Name: ___________________________
-
-Signature: ___________________________
-
-Phone: ___________________________
-
----
-
-### Witness 2
-
-Name: ___________________________
-
-Signature: ___________________________
-
-Phone: ___________________________''';
 

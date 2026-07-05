@@ -79,8 +79,12 @@ class RentRecordSerializer(serializers.ModelSerializer):
         # Auto-determination of status and dates
         now_date = timezone.now().date()
 
+        # If status is pending, preserve it
+        if status == RentRecord.STATUS_PENDING:
+            attrs['status'] = RentRecord.STATUS_PENDING
+            attrs['payment_date'] = None
         # If amount_paid is fully paid, force paid status
-        if amount_paid == amount:
+        elif amount_paid == amount:
             attrs['status'] = RentRecord.STATUS_PAID
             if not payment_date:
                 attrs['payment_date'] = now_date

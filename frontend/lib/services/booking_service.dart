@@ -23,8 +23,10 @@ class BookingService {
     return BookingModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<CommonResponseBookingModel> approveBooking(int id) async {
-    final response = await _dio.patch('bookings/$id/approve/');
+  Future<CommonResponseBookingModel> approveBooking(int id, String startDate) async {
+    final response = await _dio.patch('bookings/$id/approve/', data: {
+      'rent_start_date': startDate,
+    });
     return CommonResponseBookingModel.fromJson(
       response.data as Map<String, dynamic>,
     );

@@ -100,32 +100,58 @@ class _BookingCard extends StatefulWidget {
 }
 
 class _BookingCardState extends State<_BookingCard> {
-
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final statusColor = _statusColor(widget.booking.status ?? '', colorScheme);
+
+    Color statusColor;
+    Color statusBgColor;
+    final statusStr = (widget.booking.status ?? 'pending').toLowerCase();
+    if (statusStr == 'approved') {
+      statusColor = const Color(0xFF2E7D32);
+      statusBgColor = const Color(0xFFE8F5E9);
+    } else if (statusStr == 'rejected') {
+      statusColor = const Color(0xFFC62828);
+      statusBgColor = const Color(0xFFFFEBEE);
+    } else if (statusStr == 'cancelled' || statusStr == 'canceled') {
+      statusColor = const Color(0xFF616161);
+      statusBgColor = const Color(0xFFF5F5F5);
+    } else {
+      statusColor = const Color(0xFFB78103);
+      statusBgColor = const Color(0xFFFFF8E1);
+    }
+
     final roomTitle = widget.booking.roomTitle ?? 'Room #${widget.booking.roomId ?? ''}';
     final imageUrl = widget.booking.roomImages.isNotEmpty ? widget.booking.roomImages.first : '';
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: InkWell(
         onTap: widget.onTap,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                     child: SizedBox(
-                      width: 88,
-                      height: 88,
+                      width: 90,
+                      height: 90,
                       child: imageUrl.isNotEmpty
                           ? Image.network(
                               imageUrl,
@@ -135,38 +161,43 @@ class _BookingCardState extends State<_BookingCard> {
                           : _fallbackImage(),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
                               child: Text(
                                 roomTitle,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w700),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
                               ),
                             ),
+                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 10,
-                                vertical: 6,
+                                vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: statusColor.withValues(alpha: 0.14),
-                                borderRadius: BorderRadius.circular(999),
+                                color: statusBgColor,
+                                borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                (widget.booking.status ?? 'pending')
-                                    .toUpperCase(),
+                                statusStr.toUpperCase(),
                                 style: TextStyle(
                                   color: statusColor,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                  letterSpacing: 0.5,
                                 ),
                               ),
                             ),
@@ -176,15 +207,19 @@ class _BookingCardState extends State<_BookingCard> {
                         Row(
                           children: [
                             Icon(
-                              Icons.person_outline,
+                              Icons.person_outline_rounded,
                               size: 16,
-                              color: colorScheme.onSurfaceVariant,
+                              color: Colors.grey.shade500,
                             ),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
                                 widget.booking.tenantName ?? 'Tenant name unavailable',
-                                style: Theme.of(context).textTheme.bodyMedium,
+                                style: TextStyle(
+                                  color: Colors.grey.shade700,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
                           ],
@@ -193,9 +228,9 @@ class _BookingCardState extends State<_BookingCard> {
                         Row(
                           children: [
                             Icon(
-                              Icons.calendar_today_outlined,
-                              size: 16,
-                              color: colorScheme.onSurfaceVariant,
+                              Icons.calendar_today_rounded,
+                              size: 15,
+                              color: Colors.grey.shade500,
                             ),
                             const SizedBox(width: 6),
                             Expanded(
@@ -203,7 +238,10 @@ class _BookingCardState extends State<_BookingCard> {
                                 widget.booking.createdAt != null
                                     ? widget.booking.createdAt!.toLocal().toString().split(' ')[0]
                                     : 'Date not available',
-                                style: Theme.of(context).textTheme.bodyMedium,
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 13,
+                                ),
                               ),
                             ),
                           ],
@@ -212,15 +250,20 @@ class _BookingCardState extends State<_BookingCard> {
                         Row(
                           children: [
                             Icon(
-                              Icons.attach_money_rounded,
-                              size: 16,
-                              color: colorScheme.primary,
+                              Icons.payments_outlined,
+                              size: 15,
+                              color: Colors.indigo.shade600,
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              widget.booking.roomPrice ?? 'Price available soon',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.w600),
+                              widget.booking.roomPrice != null && widget.booking.roomPrice!.isNotEmpty
+                                  ? 'Rs. ${widget.booking.roomPrice}'
+                                  : 'Price available soon',
+                              style: TextStyle(
+                                color: Colors.indigo.shade800,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -229,76 +272,184 @@ class _BookingCardState extends State<_BookingCard> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  if (widget.booking.status?.toLowerCase() == 'pending') ...[
-                    FilledButton.icon(
-                      onPressed: widget.booking.id == null
-                          ? null
-                          : () async {
-                              await Get.find<BookingController>().approveBooking(
-                                widget.booking.id!,
-                              );
-                            },
-                      icon: const Icon(Icons.check_circle_outline),
-                      label: const Text('Approve'),
+              if (widget.booking.status != null) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Divider(color: Colors.grey.shade100, height: 1),
+                ),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Material(
+                        color: Colors.indigo.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: widget.booking.tenantId == null
+                            ? null
+                            : () {
+                                final tenantUser = UserModel(
+                                  id: widget.booking.tenantId,
+                                  username: widget.booking.tenantName,
+                                  email: '',
+                                  firstName: widget.booking.tenantName,
+                                  lastName: '',
+                                  role: 'tenant',
+                                  tenantId: widget.booking.tenantId,
+                                  landlordId: null,
+                                  province: null,
+                                  district: null,
+                                  city: null,
+                                  ward: null,
+                                );
+                                Get.to(() => ChatDetailView(
+                                      partner: tenantUser,
+                                      bookingId: widget.booking.id,
+                                    ));
+                              },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.chat_bubble_outline_rounded,
+                                size: 16,
+                                color: Colors.indigo.shade700,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Chat',
+                                style: TextStyle(
+                                  color: Colors.indigo.shade700,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                    OutlinedButton.icon(
-                      onPressed: widget.booking.id == null
-                          ? null
-                          : () async {
-                              await Get.find<BookingController>().rejectBooking(
-                                widget.booking.id!,
-                              );
-                            },
-                      icon: const Icon(Icons.block_outlined),
-                      label: const Text('Reject'),
-                    ),
+                    const SizedBox(width: 8),
+                    if (widget.booking.status?.toLowerCase() == 'pending') ...[
+                      Material(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: widget.booking.id == null
+                              ? null
+                              : () async {
+                                  await Get.find<BookingController>().rejectBooking(
+                                    widget.booking.id!,
+                                  );
+                                },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.block_outlined,
+                                  size: 16,
+                                  color: Colors.red.shade700,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Reject',
+                                  style: TextStyle(
+                                    color: Colors.red.shade700,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Material(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: widget.booking.id == null
+                              ? null
+                              : () async {
+                                  await Get.find<BookingController>().showApproveDialog(
+                                    context,
+                                    widget.booking.id!,
+                                  );
+                                },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.check_circle_outline_rounded,
+                                  size: 16,
+                                  color: Colors.green.shade700,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Approve',
+                                  style: TextStyle(
+                                    color: Colors.green.shade700,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (widget.booking.status?.toLowerCase() == 'pending' ||
+                        widget.booking.status?.toLowerCase() == 'approved') ...[
+                      const SizedBox(width: 8),
+                      Material(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: widget.booking.id == null
+                              ? null
+                              : () async {
+                                  await Get.find<BookingController>().cancelBooking(
+                                    widget.booking.id!,
+                                  );
+                                },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.cancel_outlined,
+                                  size: 16,
+                                  color: Colors.grey.shade700,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Cancel',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade700,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
-                  if (widget.booking.status?.toLowerCase() == 'pending' ||
-                      widget.booking.status?.toLowerCase() == 'approved')
-                    TextButton.icon(
-                      onPressed: widget.booking.id == null
-                          ? null
-                          : () async {
-                              await Get.find<BookingController>().cancelBooking(
-                                widget.booking.id!,
-                              );
-                            },
-                      icon: const Icon(Icons.cancel_outlined),
-                      label: const Text('Cancel'),
-                    ),
-                  TextButton.icon(
-                    onPressed: widget.booking.tenantId == null
-                        ? null
-                        : () {
-                            final tenantUser = UserModel(
-                              id: widget.booking.tenantId,
-                              username: widget.booking.tenantName,
-                              email: '',
-                              firstName: widget.booking.tenantName,
-                              lastName: '',
-                              role: 'tenant',
-                              tenantId: widget.booking.tenantId,
-                              landlordId: null,
-                              province: null,
-                              district: null,
-                              city: null,
-                              ward: null,
-                            );
-                            Get.to(() => ChatDetailView(
-                                  partner: tenantUser,
-                                  bookingId: widget.booking.id,
-                                ));
-                          },
-                    icon: const Icon(Icons.chat_bubble_outline_rounded),
-                    label: const Text('Chat'),
-                  ),
-                ],
+                ),
               ),
+            ],
             ],
           ),
         ),
@@ -317,24 +468,6 @@ class _BookingCardState extends State<_BookingCard> {
         ),
       ),
     );
-  }
-
-
-
-
-
-  Color _statusColor(String status, ColorScheme colorScheme) {
-    switch (status.toLowerCase()) {
-      case 'approved':
-        return Colors.green.shade700;
-      case 'rejected':
-        return Colors.red.shade700;
-      case 'cancelled':
-      case 'canceled':
-        return Colors.blueGrey.shade700;
-      default:
-        return colorScheme.primary;
-    }
   }
 }
 

@@ -29,7 +29,7 @@ class AppMapController extends GetxController {
       isLoading.value = true;
       errorMessage.value = '';
       final locations = await _service.getRoomLocations();
-      roomLocations.assignAll(locations);
+      roomLocations.assignAll(locations.where((room) => room.isAvailable).toList());
     } catch (e) {
       errorMessage.value = 'Failed to load room locations.';
       debugPrint('[MapController] Error loading locations: $e');

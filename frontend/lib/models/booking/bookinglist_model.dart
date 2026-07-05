@@ -41,6 +41,8 @@ class Result {
         required this.landlordName,
         required this.roomImages,
         this.tenantUser,
+        this.rentStartDate,
+        this.bookedDate,
     });
 
     final int? id;
@@ -57,6 +59,8 @@ class Result {
     final String? landlordName;
     final List<String> roomImages;
     final UserModel? tenantUser;
+    final String? rentStartDate;
+    final String? bookedDate;
 
     int? get room => roomId;
     String? get tenant => tenantId;
@@ -130,7 +134,11 @@ class Result {
             landlordId: landlordId,
             landlordName: landlordName,
             roomImages: parsedImages,
-            tenantUser: json["tenant"] == null ? null : UserModel.fromJson(json["tenant"]),
+            tenantUser: (json["tenant"] is Map)
+                ? UserModel.fromJson(json["tenant"] as Map<String, dynamic>)
+                : null,
+            rentStartDate: json["rent_start_date"] as String?,
+            bookedDate: json["booked_date"] as String?,
         );
     }
 

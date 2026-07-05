@@ -11,6 +11,7 @@ import 'room_images_view.dart';
 import 'room_form_view.dart';
 import '../route_map_view.dart';
 import '../tenant/booking_success_view.dart';
+import '../../models/room/room_detail_model.dart' as detail_model;
 
 class RoomDetailView extends StatefulWidget {
   const RoomDetailView({super.key, required this.roomId});
@@ -43,11 +44,173 @@ class _RoomDetailViewState extends State<RoomDetailView> {
   }
 
   Future<void> _bookNow() async {
-    final _room = _roomController.currentRoomDetail.value;
-    if (_room == null) return;
+    final room = _roomController.currentRoomDetail.value;
+    if (room == null) return;
+    _showAgreementConfirmation(context, room);
+  }
 
+  void _showAgreementConfirmation(BuildContext context, detail_model.RoomDetailModel room) {
+    final RxBool isAgreed = false.obs;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    Get.bottomSheet(
+      Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(28),
+            topRight: Radius.circular(28),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 48,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(Icons.gavel_rounded, color: colorScheme.primary, size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  'Lease Agreement Terms',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Please review and agree to the landlord\'s terms and rules before booking this room:',
+              style: TextStyle(color: Colors.black54, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildAgreementRow(Icons.monetization_on_outlined, 'Monthly Rent', 'Rs. ${room.price ?? "0"} / month', colorScheme),
+                    _buildAgreementRow(
+                      Icons.security_rounded,
+                      'Security Deposit',
+                      room.securityDeposit != null && room.securityDeposit!.isNotEmpty
+                          ? 'Rs. ${room.securityDeposit}'
+                          : 'N/A',
+                      colorScheme,
+                    ),
+                    _buildAgreementRow(
+                      Icons.build_circle_outlined,
+                      'Maintenance Fee',
+                      room.maintenanceCharges != null && room.maintenanceCharges!.isNotEmpty
+                          ? 'Rs. ${room.maintenanceCharges}'
+                          : 'Rs. 0',
+                      colorScheme,
+                    ),
+                    const Divider(height: 24),
+                    if (room.agreementPolicy != null && room.agreementPolicy!.trim().isNotEmpty) ...[
+                      const Text(
+                        'Rental Agreement Policy & Rules:',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Text(
+                          room.agreementPolicy!,
+                          style: TextStyle(color: Colors.grey.shade700, height: 1.4, fontSize: 13),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Obx(
+              () => CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: isAgreed.value,
+                onChanged: (val) => isAgreed.value = val ?? false,
+                controlAffinity: ListTileControlAffinity.leading,
+                title: const Text(
+                  'I agree to the landlord\'s terms and house rules.',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Get.back(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Decline'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Obx(
+                    () => FilledButton(
+                      onPressed: isAgreed.value
+                          ? () async {
+                              Get.back(); // close sheet
+                              await _submitBooking(room);
+                            }
+                          : null,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Agree & Book'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  Future<void> _submitBooking(detail_model.RoomDetailModel room) async {
     try {
-      _bookingController.roomIdController.text = _room.id.toString();
+      _bookingController.roomIdController.text = room.id.toString();
       await _bookingController.createBooking();
       
       final booking = _bookingController.selectedBooking.value;
@@ -57,6 +220,35 @@ class _RoomDetailViewState extends State<RoomDetailView> {
     } catch (e) {
       debugPrint('Error booking room: $e');
     }
+  }
+
+  Widget _buildAgreementRow(IconData icon, String label, String value, ColorScheme colorScheme) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: colorScheme.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _specCard({
@@ -327,7 +519,7 @@ class _RoomDetailViewState extends State<RoomDetailView> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                '₹${_room.price ?? "0"}',
+                                'Rs. ${_room.price ?? "0"}',
                                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                       fontWeight: FontWeight.w900,
                                       color: colorScheme.primary,
@@ -414,14 +606,14 @@ class _RoomDetailViewState extends State<RoomDetailView> {
                             _specCard(
                               icon: Icons.security_rounded,
                               label: 'Deposit',
-                              value: _room.securityDeposit != null ? '₹${_room.securityDeposit}' : 'N/A',
+                              value: _room.securityDeposit != null ? 'Rs. ${_room.securityDeposit}' : 'N/A',
                               colorScheme: colorScheme,
                             ),
                             const SizedBox(width: 12),
                             _specCard(
                               icon: Icons.build_circle_outlined,
                               label: 'Maintenance',
-                              value: _room.maintenanceCharges != null ? '₹${_room.maintenanceCharges}' : '₹0',
+                              value: _room.maintenanceCharges != null ? 'Rs. ${_room.maintenanceCharges}' : 'Rs. 0',
                               colorScheme: colorScheme,
                             ),
                           ],

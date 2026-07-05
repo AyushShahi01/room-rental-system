@@ -203,13 +203,15 @@ class _BookingCardState extends State<_BookingCard> {
                     Row(
                       children: [
                         Icon(
-                          Icons.attach_money_rounded,
+                          Icons.payments_outlined,
                           size: 16,
                           color: colorScheme.primary,
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          widget.booking.roomPrice ?? 'Price available soon',
+                          widget.booking.roomPrice != null && widget.booking.roomPrice!.isNotEmpty
+                              ? 'Rs. ${widget.booking.roomPrice}'
+                              : 'Price available soon',
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(fontWeight: FontWeight.w600),
                         ),

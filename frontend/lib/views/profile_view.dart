@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
-import '../controllers/settings_controller.dart';
 import '../utils/token_storage.dart';
 import '../routes/app_routes.dart';
 import '../widgets/settings_tile.dart';
 import '../models/auth_model/user_model.dart';
-import 'payment_history_view.dart';
+
 
 class ProfileView extends StatelessWidget {
   /// Set to true when navigated as a standalone route (e.g. from Settings).
@@ -99,6 +98,9 @@ class ProfileView extends StatelessWidget {
                           fullName.isNotEmpty
                               ? fullName
                               : authController.userName.value,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -109,6 +111,9 @@ class ProfileView extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             '@${authController.userName.value}',
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontSize: 13,
                               color: Colors.white70,
@@ -123,6 +128,9 @@ class ProfileView extends StatelessWidget {
                   Obx(
                     () => Text(
                       authController.userEmail.value,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.white70,
@@ -281,43 +289,12 @@ class ProfileView extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     elevation: 2,
-                    child: Obx(() {
-                      final settingsCtrl = Get.find<SettingsController>();
-                      return Column(
-                        children: [
-                          SettingsTile(
-                            icon: Icons.lock_outline,
-                            iconColor: Colors.indigo,
-                            title: 'Change Password',
-                            onTap: () => Get.toNamed(AppRoutes.changePassword),
-                          ),
-                          const Divider(height: 1),
-                          SettingsTile(
-                            icon: Icons.notifications_active_outlined,
-                            iconColor: Colors.blueAccent,
-                            title: 'Push Notifications',
-                            value: settingsCtrl.pushNotifications.value,
-                            onToggle: (_) => settingsCtrl.togglePushNotifications(),
-                          ),
-                          const Divider(height: 1),
-                          SettingsTile(
-                            icon: Icons.mark_email_unread_outlined,
-                            iconColor: Colors.teal,
-                            title: 'Email Marketing',
-                            value: settingsCtrl.emailMarketing.value,
-                            onToggle: (_) => settingsCtrl.toggleEmailMarketing(),
-                          ),
-                          const Divider(height: 1),
-                          SettingsTile(
-                            icon: Icons.visibility_outlined,
-                            iconColor: Colors.orange,
-                            title: 'Profile Visibility',
-                            trailingLabel: settingsCtrl.profileVisibility.value,
-                            onTap: settingsCtrl.toggleProfileVisibility,
-                          ),
-                        ],
-                      );
-                    }),
+                    child: SettingsTile(
+                      icon: Icons.lock_outline,
+                      iconColor: Colors.indigo,
+                      title: 'Change Password',
+                      onTap: () => Get.toNamed(AppRoutes.changePassword),
+                    ),
                   ),
                 ],
               ),
@@ -368,26 +345,6 @@ class ProfileView extends StatelessWidget {
                   //     ),
                   //   ),
                   // ),
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    onPressed: () => Get.to(() => const PaymentHistoryView()),
-                    icon: const Icon(Icons.payment_outlined),
-                    label: const Text('Rent Payments'),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(52),
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black87,
-                      elevation: 1,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      side: BorderSide(color: Colors.grey.shade300),
-                      textStyle: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 12),
                   Obx(
                     () => ElevatedButton.icon(
@@ -448,13 +405,6 @@ class ProfileView extends StatelessWidget {
         ),
       ),
       centerTitle: true,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined, color: Colors.black87),
-          onPressed: () => Get.toNamed(AppRoutes.notifications),
-          tooltip: 'Notifications',
-        ),
-      ],
     );
 
     return Scaffold(
@@ -495,18 +445,22 @@ class ProfileView extends StatelessWidget {
       children: [
         Icon(icon, size: 20, color: Colors.blueAccent),
         const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-            ),
-            Text(
-              value.isEmpty ? '—' : value,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-          ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+              ),
+              Text(
+                value.isEmpty ? '—' : value,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ],
     );

@@ -177,7 +177,7 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
                       const SizedBox(height: 8),
                       Text('Room: ${booking.roomTitle ?? "Unknown Room"}', style: TextStyle(color: Colors.grey.shade700)),
                       const SizedBox(height: 4),
-                      Text('Rent Amount: ₹${booking.roomPrice ?? "0"} / month', style: const TextStyle(fontWeight: FontWeight.w500)),
+                      Text('Rent Amount: Rs. ${booking.roomPrice ?? "0"} / month', style: const TextStyle(fontWeight: FontWeight.w500)),
                       const SizedBox(height: 4),
                       Text(
                         'Next Rent Due: ${DateFormat('yMMMMd').format(nextDueDate)}',
@@ -263,7 +263,7 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
                       const Divider(height: 24),
                       _buildInfoText('Billing Month', '${_getMonthName(record.billingMonth)} ${record.billingYear}'),
                       const SizedBox(height: 6),
-                      _buildInfoText('Monthly Rent', '₹${record.amount}'),
+                      _buildInfoText('Monthly Rent', 'Rs. ${record.amount}'),
                       const SizedBox(height: 6),
                       _buildInfoText(
                         'Rent Due Date', 
@@ -277,7 +277,7 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
                         child: FilledButton.icon(
                           onPressed: () {
                             Get.to(() => PaymentView(
-                                  bookingId: record.id,
+                                  recordId: record.id,
                                   roomName: record.room.title,
                                   amount: record.amount,
                                   paymentStatus: 'pending',
@@ -360,7 +360,7 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
                           ),
                         ),
                         Text(
-                          '₹${payment.amount}',
+                          'Rs. ${payment.amount}',
                           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo.shade700, fontSize: 16),
                         ),
                       ],
@@ -454,7 +454,7 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
                   child: const Icon(Icons.check_circle_outline),
                 ),
                 title: Text(
-                  '₹${payment.amount} — $roomName',
+                  'Rs. ${payment.amount} — $roomName',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Column(

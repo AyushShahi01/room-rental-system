@@ -8,6 +8,7 @@ import '../../models/room/room_model.dart';
 import '../room/room_detail_view.dart';
 import '../room/room_form_view.dart';
 import '../room/room_images_view.dart';
+import 'room_management_view.dart';
 
 class LandlordRoomsView extends StatefulWidget {
   const LandlordRoomsView({super.key});
@@ -137,7 +138,7 @@ class _LandlordRoomsViewState extends State<LandlordRoomsView> {
                       children: [
                         const SizedBox(height: 6),
                         Text(
-                          '${room.province ?? ''}, ${room.state ?? ''} • ₹${room.price ?? '0'}',
+                          '${room.province ?? ''}, ${room.state ?? ''} • Rs. ${room.price ?? '0'}',
                         ),
                         const SizedBox(height: 6),
                         Text(
@@ -210,19 +211,29 @@ class _LandlordRoomsViewState extends State<LandlordRoomsView> {
                           case 'toggle':
                             await _toggleAvailability(room.id ?? 0);
                             break;
+                          case 'manage':
+                            await Get.to(
+                              () => RoomManagementView(room: room),
+                            );
+                            break;
                           case 'delete':
                             await _deleteRoom(room.id ?? 0);
                             break;
                         }
                       },
-                      itemBuilder: (context) => const [
-                        PopupMenuItem(value: 'edit', child: Text('Edit')),
-                        PopupMenuItem(value: 'images', child: Text('Images')),
-                        PopupMenuItem(
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                        const PopupMenuItem(value: 'images', child: Text('Images')),
+                        const PopupMenuItem(
                           value: 'toggle',
                           child: Text('Toggle Availability'),
                         ),
-                        PopupMenuItem(value: 'delete', child: Text('Delete')),
+                        if (room.isAvailable == false)
+                          const PopupMenuItem(
+                            value: 'manage',
+                            child: Text('Manage'),
+                          ),
+                        const PopupMenuItem(value: 'delete', child: Text('Delete')),
                       ],
                     ),
                     onTap: () =>

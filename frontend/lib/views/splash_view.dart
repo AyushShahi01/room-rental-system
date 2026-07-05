@@ -16,56 +16,95 @@ class SplashView extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo
-              Container(
-                width: 120,
-                height: 120,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.home_rounded,
-                  size: 90,
-                  color: Color(0xFF2EAD4B), // Green
+              // Logo with scale and fade-in animation
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 1000),
+                curve: Curves.easeOutBack,
+                builder: (context, value, child) {
+                  return Transform.scale(
+                    scale: value,
+                    child: Opacity(
+                      opacity: value.clamp(0.0, 1.0),
+                      child: child,
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1565C0).withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFF1565C0).withValues(alpha: 0.25),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF1565C0).withValues(alpha: 0.06),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.home_rounded,
+                    size: 80,
+                    color: Color(0xFF1565C0),
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
 
-              // App Name
-              RichText(
-                text: const TextSpan(
+              // App Name & Tagline with fade-in animation
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 1200),
+                curve: Curves.easeOut,
+                builder: (context, value, child) {
+                  return Opacity(opacity: value, child: child);
+                },
+                child: Column(
                   children: [
-                    TextSpan(
-                      text: "Smart",
-                      style: TextStyle(
-                        fontSize: 42,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: const TextSpan(
+                        children: [
+                          TextSpan(
+                            text: "Room Rental ",
+                            style: TextStyle(
+                              fontSize: 34,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1B3B6F),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          TextSpan(
+                            text: "System",
+                            style: TextStyle(
+                              fontSize: 34,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF42A5F5),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    TextSpan(
-                      text: "Rent",
+                    const SizedBox(height: 12),
+                    // Tagline
+                    const Text(
+                      "Find your perfect stay",
                       style: TextStyle(
-                        fontSize: 42,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2EAD4B),
+                        fontSize: 16,
+                        color: Colors.black54,
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ],
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              // Tagline
-              const Text(
-                "Find your perfect stay",
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.black54,
-                  fontWeight: FontWeight.w400,
                 ),
               ),
             ],

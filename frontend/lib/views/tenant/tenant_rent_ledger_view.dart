@@ -51,6 +51,8 @@ class _TenantRentLedgerViewState extends State<TenantRentLedgerView> {
         return Colors.orange.shade700;
       case 'overdue':
         return Colors.red.shade700;
+      case 'pending':
+        return Colors.blue.shade700;
       case 'unpaid':
       default:
         return Colors.grey.shade700;
@@ -65,6 +67,8 @@ class _TenantRentLedgerViewState extends State<TenantRentLedgerView> {
         return Icons.hourglass_bottom;
       case 'overdue':
         return Icons.warning_amber_rounded;
+      case 'pending':
+        return Icons.hourglass_top;
       case 'unpaid':
       default:
         return Icons.hourglass_empty;
@@ -270,7 +274,7 @@ class _TenantRentLedgerViewState extends State<TenantRentLedgerView> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '₹${record.amount}',
+                      'Rs. ${record.amount}',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -332,7 +336,7 @@ class _TenantRentLedgerViewState extends State<TenantRentLedgerView> {
                   onPressed: () {
                     // Navigate to payement log screen
                     Get.to(() => PaymentView(
-                          bookingId: record.id,
+                          recordId: record.id,
                           roomName: record.room.title,
                           amount: record.amount,
                           paymentStatus: 'pending',

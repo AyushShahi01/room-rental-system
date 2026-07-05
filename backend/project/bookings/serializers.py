@@ -41,8 +41,10 @@ class BookingSerializer(serializers.ModelSerializer):
             'tenant_name',
             'landlord_id',
             'landlord_name',
+            'rent_start_date',
+            'booked_date',
         )
-        read_only_fields = ('id', 'status', 'created_at')
+        read_only_fields = ('id', 'status', 'created_at', 'booked_date')
 
     def get_tenant_name(self, obj):
         user = obj.tenant

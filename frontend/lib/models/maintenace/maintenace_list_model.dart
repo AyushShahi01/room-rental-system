@@ -54,10 +54,12 @@ class Result {
         final tenantRaw = json["tenant"];
         String? tenantId;
         String? tenantUsername;
-        if (tenantRaw is Map<String, dynamic>) {
+        if (tenantRaw is Map) {
             tenantId = tenantRaw["id"]?.toString();
-            tenantUsername = tenantRaw["username"]?.toString()
-                ?? tenantRaw["first_name"]?.toString();
+            final String fName = tenantRaw["first_name"]?.toString() ?? '';
+            final String lName = tenantRaw["last_name"]?.toString() ?? '';
+            final String fullName = '$fName $lName'.trim();
+            tenantUsername = fullName.isNotEmpty ? fullName : (tenantRaw["username"]?.toString());
         } else {
             tenantId = tenantRaw?.toString();
         }

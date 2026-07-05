@@ -111,9 +111,12 @@ class LandlordDashboardController extends GetxController {
               userObj = localUsers.firstWhere((u) => u['id'] == b.tenant);
             } catch (_) {}
             if (userObj != null) {
-              tenantName = userObj['username'] ?? userObj['first_name'] ?? b.tenant!;
+              final String firstName = userObj['first_name'] ?? '';
+              final String lastName = userObj['last_name'] ?? '';
+              final String fullName = '$firstName $lastName'.trim();
+              tenantName = fullName.isNotEmpty ? fullName : (userObj['username'] ?? b.tenant!);
             } else {
-              tenantName = b.tenant!;
+              tenantName = b.tenantName ?? b.tenant!;
             }
           }
 
@@ -166,7 +169,7 @@ class LandlordDashboardController extends GetxController {
           totalPayments.value = dash.overdueTenants.length;
           for (var record in dash.overdueTenants) {
             activities.add(ActivityItem(
-              title: 'Overdue Rent: ${record.tenant.username ?? 'Tenant'}',
+              title: 'Overdue Rent: ${record.tenant.displayName}',
               subtitle: '${record.room.title} — ₹${record.amount} is unpaid',
               date: record.createdAt,
               type: 'rent',
@@ -214,21 +217,7 @@ class LandlordDashboardController extends GetxController {
     }
   }
 
-  Future<void> approveBooking(int bookingId) async {
-    Get.snackbar(
-      'Success',
-      'Booking #$bookingId approved successfully.',
-      snackPosition: SnackPosition.BOTTOM,
-    );
-  }
 
-  Future<void> rejectBooking(int bookingId) async {
-    Get.snackbar(
-      'Rejected',
-      'Booking #$bookingId rejected.',
-      snackPosition: SnackPosition.BOTTOM,
-    );
-  }
 }
 
 class ActivityItem {

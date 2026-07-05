@@ -17,6 +17,8 @@ class BookingModel {
     required this.landlordName,
     required this.roomImages,
     this.landlord,
+    this.bookedDate,
+    this.rentStartDate,
   });
 
   final int? id;
@@ -35,6 +37,8 @@ class BookingModel {
   final String? landlordId;
   final String? landlordName;
   final UserModel? landlord;
+  final String? bookedDate;
+  final String? rentStartDate;
 
   int? get room => roomId;
   String? get tenant => tenantId;
@@ -83,7 +87,10 @@ class BookingModel {
     String? tenantName = json['tenant_name'] as String?;
     if (tenantRaw is Map) {
       tenantId = tenantRaw['id']?.toString();
-      tenantName ??= tenantRaw['username']?.toString() ?? tenantRaw['first_name']?.toString();
+      final String fName = tenantRaw['first_name']?.toString() ?? '';
+      final String lName = tenantRaw['last_name']?.toString() ?? '';
+      final String fullName = '$fName $lName'.trim();
+      tenantName = fullName.isNotEmpty ? fullName : (tenantRaw['username']?.toString() ?? tenantName);
     } else {
       tenantId = tenantRaw?.toString();
     }
@@ -133,6 +140,8 @@ class BookingModel {
       landlordName: landlordName,
       roomImages: parsedImages,
       landlord: landlordUser,
+      bookedDate: json['booked_date'] as String?,
+      rentStartDate: json['rent_start_date'] as String?,
     );
   }
 }

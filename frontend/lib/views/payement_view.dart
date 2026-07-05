@@ -3,14 +3,14 @@ import 'package:get/get.dart';
 import '../controllers/payement_controller.dart';
 
 class PaymentView extends StatefulWidget {
-  final int bookingId;
+  final int recordId;
   final String roomName;
   final String amount;
   final String paymentStatus;
 
   const PaymentView({
     super.key,
-    required this.bookingId,
+    required this.recordId,
     required this.roomName,
     required this.amount,
     required this.paymentStatus,
@@ -28,9 +28,6 @@ class _PaymentViewState extends State<PaymentView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.loadMyPayments();
-    });
   }
 
   @override
@@ -85,7 +82,7 @@ class _PaymentViewState extends State<PaymentView> {
                         backgroundColor: Colors.green.shade700,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      child: const Text('Return to Booking', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      child: const Text('Return to Ledger', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -111,9 +108,9 @@ class _PaymentViewState extends State<PaymentView> {
                       ),
                 ),
                 const SizedBox(height: 24),
-                _buildDetailRow('Booking ID', widget.bookingId.toString(), context),
+                _buildDetailRow('Invoice ID', widget.recordId.toString(), context),
                 _buildDetailRow('Room Name', widget.roomName, context),
-                _buildDetailRow('Amount', '₹${widget.amount}', context),
+                _buildDetailRow('Amount', 'Rs. ${widget.amount}', context),
                 _buildDetailRow('Status', widget.paymentStatus.toUpperCase(), context, 
                     color: _getStatusColor(widget.paymentStatus, colorScheme)),
                 const SizedBox(height: 40),
@@ -163,15 +160,14 @@ class _PaymentViewState extends State<PaymentView> {
                     }
                     return FilledButton(
                       onPressed: () {
-                        controller.processPayment(
-                          bookingId: widget.bookingId,
+                        controller.logRentPayment(
+                          recordId: widget.recordId,
                           amount: widget.amount,
-                          gateway: 'manual',
                           referenceNote: _refNoteController.text,
                         );
                       },
                       child: Text(
-                        'Log Payment of ₹${widget.amount}',
+                        'Log Payment of Rs. ${widget.amount}',
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     );
@@ -191,72 +187,7 @@ class _PaymentViewState extends State<PaymentView> {
                   }
                   return const SizedBox.shrink();
                 }),
-                const SizedBox(height: 32),
-                Text(
-                  'Previous Payment History',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 16),
-                Obx(() {
-                  if (controller.isLoading.value) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  final history = controller.myPayments.where((p) => p.booking?.id == widget.bookingId).toList();
-                  if (history.isEmpty) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text('No payment history for this booking.', style: TextStyle(color: Colors.grey.shade600)),
-                      ),
-                    );
-                  }
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: history.length,
-                    itemBuilder: (context, index) {
-                      final payment = history[index];
-                      final status = payment.status?.toLowerCase() ?? 'pending';
-                      final gateway = payment.paymentGateway?.toUpperCase() ?? 'MANUAL';
-                      final refToken = payment.transactionToken ?? '';
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.monetization_on_outlined,
-                            color: Colors.blue.shade700,
-                          ),
-                          title: Text('₹${payment.amount ?? '0'} ($gateway)'),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (refToken.toString().isNotEmpty)
-                                Text('Ref: $refToken', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-                              Text(payment.createdAt != null ? payment.createdAt!.toLocal().toString().split('.')[0] : 'N/A'),
-                            ],
-                          ),
-                          trailing: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: _getStatusColor(status, colorScheme).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              status.toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: _getStatusColor(status, colorScheme),
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                }),
+
               ],
             ),
           ),

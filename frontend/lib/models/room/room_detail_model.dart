@@ -30,6 +30,15 @@ class RoomDetailModel {
         required this.updatedAt,
         required this.landlord,
         this.agreementPolicy,
+        this.rentMode,
+        this.fixedDurationType,
+        this.fixedDurationValue,
+        this.initialRent,
+        this.incrementEvery,
+        this.incrementType,
+        this.increaseBy,
+        this.houseRules,
+        this.additionalDescription,
     });
 
     final int? id;
@@ -59,6 +68,15 @@ class RoomDetailModel {
     final DateTime? updatedAt;
     final LandlordModel? landlord;
     final String? agreementPolicy;
+    final String? rentMode;
+    final String? fixedDurationType;
+    final int? fixedDurationValue;
+    final String? initialRent;
+    final String? incrementEvery;
+    final String? incrementType;
+    final String? increaseBy;
+    final String? houseRules;
+    final String? additionalDescription;
 
     factory RoomDetailModel.fromJson(Map<String, dynamic> json){ 
         return RoomDetailModel(
@@ -89,6 +107,15 @@ class RoomDetailModel {
             updatedAt: DateTime.tryParse(json["updated_at"] ?? ""),
             landlord: json["landlord"] == null ? null : LandlordModel.fromJson(json["landlord"]),
             agreementPolicy: json["agreement_policy"]?.toString(),
+            rentMode: json["rent_mode"]?.toString(),
+            fixedDurationType: json["fixed_duration_type"]?.toString(),
+            fixedDurationValue: json["fixed_duration_value"] as int?,
+            initialRent: json["initial_rent"]?.toString(),
+            incrementEvery: json["increment_every"]?.toString(),
+            incrementType: json["increment_type"]?.toString(),
+            increaseBy: json["increase_by"]?.toString(),
+            houseRules: json["house_rules"]?.toString(),
+            additionalDescription: json["additional_description"]?.toString(),
         );
     }
 

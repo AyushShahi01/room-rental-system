@@ -33,14 +33,6 @@ class SettingsView extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        actions: [
-          // Notification icon in AppBar
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.black87),
-            tooltip: 'Notifications',
-            onPressed: () => Get.toNamed(AppRoutes.notifications),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -162,39 +154,7 @@ class SettingsView extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 16),
-
-            // ─── PREFERENCES ──────────────────────────────────────────────
-            Obx(() => _SectionCard(
-                  title: 'PREFERENCES',
-                  children: [
-                    SettingsTile(
-                      icon: Icons.notifications_active_outlined,
-                      iconColor: Colors.blueAccent,
-                      title: 'Push Notifications',
-                      value: settingsCtrl.pushNotifications.value,
-                      onToggle: (_) => settingsCtrl.togglePushNotifications(),
-                    ),
-                    const _Divider(),
-                    SettingsTile(
-                      icon: Icons.mark_email_unread_outlined,
-                      iconColor: Colors.teal,
-                      title: 'Email Marketing',
-                      value: settingsCtrl.emailMarketing.value,
-                      onToggle: (_) => settingsCtrl.toggleEmailMarketing(),
-                    ),
-                    const _Divider(),
-                    SettingsTile(
-                      icon: Icons.visibility_outlined,
-                      iconColor: Colors.orange,
-                      title: 'Profile Visibility',
-                      trailingLabel: settingsCtrl.profileVisibility.value,
-                      onTap: settingsCtrl.toggleProfileVisibility,
-                    ),
-                  ],
-                )),
-
-            const SizedBox(height: 28),
+             const SizedBox(height: 12),
 
             // ─── Logout Button ─────────────────────────────────────────────
             Padding(
@@ -274,17 +234,4 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-/// Thin divider between tiles inside a card.
-class _Divider extends StatelessWidget {
-  const _Divider();
 
-  @override
-  Widget build(BuildContext context) {
-    return Divider(
-      height: 1,
-      indent: 70,
-      endIndent: 16,
-      color: Colors.grey.shade100,
-    );
-  }
-}

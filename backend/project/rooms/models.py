@@ -43,6 +43,17 @@ class Room(models.Model):
 
     agreement_policy = models.TextField(blank=True, default='')
 
+    # Room agreement template defaults
+    rent_mode = models.CharField(max_length=20, default='fixed')
+    fixed_duration_type = models.CharField(max_length=10, null=True, blank=True, default='months')
+    fixed_duration_value = models.PositiveIntegerField(null=True, blank=True)
+    initial_rent = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    increment_every = models.CharField(max_length=20, null=True, blank=True, default='monthly')
+    increment_type = models.CharField(max_length=20, null=True, blank=True, default='fixed_amount')
+    increase_by = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    house_rules = models.TextField(blank=True, default='')
+    additional_description = models.TextField(blank=True, default='')
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

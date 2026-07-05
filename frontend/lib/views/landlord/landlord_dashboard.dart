@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/landlord_dashboard_controller.dart';
 import '../../controllers/auth_controller.dart';
+import '../../controllers/booking_controller.dart';
 import '../../models/auth_model/user_model.dart';
-import '../../routes/app_routes.dart';
 import 'landlord_maintenance_view.dart';
 import '../payment_history_view.dart';
 
@@ -24,13 +24,7 @@ class LandlordDashboard extends StatelessWidget {
           'Dashboard',
           style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
         ),
-        iconTheme: const IconThemeData(color: Colors.black87),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () => Get.toNamed(AppRoutes.notifications),
-            tooltip: 'Notifications',
-          ),
           Obx(() {
             final user = authController.currentUser.value;
             final picUrl = user?.absoluteProfilePictureUrl;
@@ -184,50 +178,24 @@ class LandlordDashboard extends StatelessWidget {
                         children: [
                           Expanded(
                             child: _buildMetricCard(
-                              title: 'Rent Collected',
-                              value:
-                                  '₹${controller.totalRentCollected.value.toStringAsFixed(0)}',
-                              icon: Icons.monetization_on,
-                              color: Colors.green.shade600,
-                              onTap: () =>
-                                  Get.to(() => const PaymentHistoryView()),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildMetricCard(
-                              title: 'Pending Rent',
-                              value:
-                                  '₹${controller.totalPendingRent.value.toStringAsFixed(0)}',
-                              icon: Icons.hourglass_empty,
-                              color: Colors.orange.shade700,
-                              onTap: () =>
-                                  Get.to(() => const PaymentHistoryView()),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildMetricCard(
-                              title: 'Overdue Rent Accounts',
-                              value: '${controller.overdueTenantsCount.value}',
-                              icon: Icons.warning_amber_rounded,
-                              color: Colors.red.shade700,
-                              onTap: () =>
-                                  Get.to(() => const PaymentHistoryView()),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildMetricCard(
                               title: 'Maintenance',
                               value: '${controller.maintenanceRequests.value}',
                               icon: Icons.build,
                               color: Colors.purple.shade600,
                               onTap: () =>
                                   Get.to(() => const LandlordMaintenanceView()),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildMetricCard(
+                              title: 'Rent Collected',
+                              value:
+                                  'Rs. ${controller.totalRentCollected.value.toStringAsFixed(0)}',
+                              icon: Icons.monetization_on,
+                              color: Colors.green.shade600,
+                              onTap: () =>
+                                  Get.to(() => const PaymentHistoryView()),
                             ),
                           ),
                         ],
@@ -252,21 +220,21 @@ class LandlordDashboard extends StatelessWidget {
                     Expanded(
                       child: _buildActionButton(
                         label: 'Add New Room',
-                        subtitle: 'List a room for rent',
+                        subtitle: 'List room for rent',
                         icon: Icons.add_circle_outline,
-                        gradient: [Colors.indigo.shade700, Colors.indigo.shade500],
+                        color: Colors.indigo.shade600,
                         onTap: () {
                           controller.selectedIndex.value = 1;
                         },
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: _buildActionButton(
-                        label: 'Verify Payments',
-                        subtitle: 'Approve tenant logs',
-                        icon: Icons.check_circle_outline,
-                        gradient: [Colors.teal.shade700, Colors.teal.shade500],
+                        label: 'Payment Management',
+                        subtitle: 'Manage invoices',
+                        icon: Icons.receipt_long_rounded,
+                        color: Colors.teal.shade600,
                         onTap: () => Get.to(() => const PaymentHistoryView()),
                       ),
                     ),
@@ -416,9 +384,15 @@ class LandlordDashboard extends StatelessWidget {
                                           ),
                                         ),
                                       ),
-                                      onPressed: () => controller.rejectBooking(
-                                        activity.data.id as int,
-                                      ),
+                                      onPressed: () async {
+                                        final bookingController = Get.isRegistered<BookingController>()
+                                            ? Get.find<BookingController>()
+                                            : Get.put(BookingController());
+                                        await bookingController.rejectBooking(
+                                          activity.data.id as int,
+                                        );
+                                        controller.loadDashboardData();
+                                      },
                                       child: const Text('Reject'),
                                     ),
                                     const SizedBox(width: 12),
@@ -433,10 +407,16 @@ class LandlordDashboard extends StatelessWidget {
                                           ),
                                         ),
                                       ),
-                                      onPressed: () =>
-                                          controller.approveBooking(
-                                            activity.data.id as int,
-                                          ),
+                                      onPressed: () {
+                                        final bookingController = Get.isRegistered<BookingController>()
+                                            ? Get.find<BookingController>()
+                                            : Get.put(BookingController());
+                                        bookingController.showApproveDialog(
+                                          context,
+                                          activity.data.id as int,
+                                          onSuccess: () => controller.loadDashboardData(),
+                                        );
+                                      },
                                       child: const Text('Approve'),
                                     ),
                                   ],
@@ -526,58 +506,65 @@ class LandlordDashboard extends StatelessWidget {
     required String label,
     required String subtitle,
     required IconData icon,
-    required List<Color> gradient,
+    required Color color,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: gradient,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withValues(alpha: 0.15),
+              width: 1.5,
+            ),
           ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: gradient.first.withValues(alpha: 0.22),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 20),
               ),
-              child: Icon(icon, color: Colors.white, size: 22),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: color.withValues(alpha: 0.9),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.8),
-                fontSize: 11,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -89,14 +89,69 @@ class BookingApproveView(APIView):
         if booking.status != Booking.STATUS_PENDING:
             return Response({'error': 'Only pending bookings can be approved.'}, status=status.HTTP_400_BAD_REQUEST)
 
+        rent_start_date_str = request.data.get('rent_start_date')
+        if not rent_start_date_str:
+            return Response({'error': 'Rent start date is required to approve the booking.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        import datetime
+        try:
+            rent_start_date = datetime.datetime.strptime(rent_start_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({'error': 'Invalid date format. Use YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        from django.utils import timezone
         booking.status = Booking.STATUS_APPROVED
-        booking.save(update_fields=['status'])
+        booking.rent_start_date = rent_start_date
+        booking.booked_date = timezone.localdate()
+        booking.save(update_fields=['status', 'rent_start_date', 'booked_date'])
 
         # Auto-flip room availability to False
         room = booking.room
         room.is_available = False
         room.save(update_fields=['is_available'])
         create_notification(booking.tenant, f'Your booking for {booking.room.title} has been approved!')
+
+        # Auto-create Agreement from Room template terms
+        from agreements.models import Agreement
+        from agreements.utils import generate_agreement_content
+        try:
+            # Clear any pre-existing/stale agreement for this booking to avoid UniqueConstraint errors
+            Agreement.objects.filter(booking=booking).delete()
+
+            content = generate_agreement_content(
+                booking,
+                rent_price=room.price,
+                house_rules=room.house_rules,
+                additional_description=room.additional_description
+            )
+            Agreement.objects.create(
+                booking=booking,
+                content=content,
+                rent_price=room.price,
+                rent_mode=room.rent_mode,
+                fixed_duration_type=room.fixed_duration_type,
+                fixed_duration_value=room.fixed_duration_value,
+                initial_rent=room.initial_rent,
+                increment_every=room.increment_every,
+                increment_type=room.increment_type,
+                increase_by=room.increase_by,
+                house_rules=room.house_rules or '',
+                additional_description=room.additional_description or '',
+                landlord_is_signed=True,
+                landlord_signed_at=timezone.now()
+            )
+            create_notification(booking.tenant, 'A lease agreement has been auto-generated for your booking.')
+        except BaseException as e:
+            import logging
+            logging.getLogger(__name__).error(f"Failed to auto-create lease agreement on booking approval: {e}")
+
+        # Sync rent records immediately
+        from payments.utils import sync_rent_records_for_booking
+        try:
+            sync_rent_records_for_booking(booking)
+        except BaseException as e:
+            import logging
+            logging.getLogger(__name__).error(f"Failed to sync rent records on booking approval: {e}")
 
         return Response({'message': 'Booking approved.'}, status=status.HTTP_200_OK)
 

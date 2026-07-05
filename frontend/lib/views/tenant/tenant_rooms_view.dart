@@ -70,7 +70,7 @@ class _TenantRoomsViewState extends State<TenantRoomsView> {
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
-                    height: 280,
+                    height: 300,
                     width: double.infinity,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
@@ -284,13 +284,13 @@ class _RoomCard extends StatelessWidget {
                       Row(
                         children: [
                           Icon(
-                            Icons.attach_money_rounded,
+                            Icons.payments_outlined,
                             size: 18,
                             color: colorScheme.primary,
                           ),
                           const SizedBox(width: 2),
                           Text(
-                            '₹${room.price ?? '0'}',
+                            'Rs. ${room.price ?? '0'}',
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: colorScheme.primary,
@@ -508,13 +508,13 @@ class _RecommendationCard extends StatelessWidget {
                       Row(
                         children: [
                           Icon(
-                            Icons.attach_money_rounded,
+                            Icons.payments_outlined,
                             size: 18,
                             color: colorScheme.primary,
                           ),
                           const SizedBox(width: 2),
                           Text(
-                            '₹${room.price ?? '0'}',
+                            'Rs. ${room.price ?? '0'}',
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: colorScheme.primary,

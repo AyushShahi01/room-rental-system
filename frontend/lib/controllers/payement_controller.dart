@@ -111,6 +111,52 @@ class PaymentController extends GetxController {
     }
   }
 
+  Future<void> logRentPayment({
+    required int recordId,
+    required String amount,
+    required String referenceNote,
+  }) async {
+    try {
+      isSubmitting.value = true;
+      errorMessage.value = '';
+      isSuccess.value = false;
+      successMessage.value = '';
+
+      final updateData = {
+        'status': 'pending',
+        'remarks': referenceNote,
+        'amount_paid': amount,
+      };
+
+      await _service.patchRentRecord(recordId, updateData);
+
+      isSuccess.value = true;
+      successMessage.value = 'Payment logged successfully. Landlord has been notified.';
+    } catch (e) {
+      String err = 'Failed to log payment. Please try again.';
+      if (e is DioException && e.response?.data != null) {
+        if (e.response!.data is Map) {
+          err = (e.response!.data as Map).values.join(', ');
+        } else {
+          err = e.response!.data.toString();
+        }
+      } else if (e is Exception) {
+        err = e.toString().replaceFirst('Exception: ', '');
+      }
+      errorMessage.value = err;
+      debugPrint('Error logging rent payment: $e');
+      Get.snackbar(
+        'Error',
+        err,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade700,
+        colorText: Colors.white,
+      );
+    } finally {
+      isSubmitting.value = false;
+    }
+  }
+
   Future<void> verifyTenantPayment(int paymentId) async {
     try {
       isLoading.value = true;
@@ -163,6 +209,31 @@ class PaymentController extends GetxController {
       debugPrint('Error loading rent records: $e');
     } finally {
       if (showLoading) isLoading.value = false;
+    }
+  }
+
+  Future<void> updateRentRecordStatus(int recordId, String status) async {
+    try {
+      isLoading.value = true;
+      await _service.updateRentRecordStatus(recordId, status);
+      Get.snackbar(
+        'Success',
+        'Rent status updated to $status.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade600,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      debugPrint('Error updating rent status: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to update rent status.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
     }
   }
 }

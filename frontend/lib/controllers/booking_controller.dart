@@ -224,12 +224,12 @@ class BookingController extends GetxController {
     }
   }
 
-  Future<void> approveBooking(int bookingId) async {
+  Future<void> approveBooking(int bookingId, String startDate) async {
     try {
       isSubmitting.value = true;
       errorMessage.value = '';
       successMessage.value = '';
-      await _service.approveBooking(bookingId);
+      await _service.approveBooking(bookingId, startDate);
       await loadIncomingBookings(showLoading: false);
       await loadBookingDetails(bookingId);
       successMessage.value = 'Booking approved.';
@@ -246,6 +246,101 @@ class BookingController extends GetxController {
     } finally {
       isSubmitting.value = false;
     }
+  }
+
+  Future<void> showApproveDialog(BuildContext context, int bookingId, {VoidCallback? onSuccess}) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 30)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      helpText: 'Select Starting Rent Date',
+      confirmText: 'SELECT',
+      cancelText: 'CANCEL',
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.indigo.shade700,
+              onPrimary: Colors.white,
+              onSurface: Colors.black87,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate == null) return;
+
+    final String formattedDate = "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogCtx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(Icons.calendar_month_rounded, color: Colors.indigo.shade700),
+              const SizedBox(width: 10),
+              const Text('Confirm Start Date'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Rent will be tracked on a monthly calendar basis starting from:',
+                style: TextStyle(fontSize: 14, color: Colors.black87),
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.indigo.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.indigo.shade200),
+                  ),
+                  child: Text(
+                    formattedDate,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.indigo.shade900,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: Text('CANCEL', style: TextStyle(color: Colors.grey.shade600)),
+            ),
+            FilledButton(
+              onPressed: () async {
+                Navigator.of(dialogCtx).pop();
+                await approveBooking(bookingId, formattedDate);
+                if (onSuccess != null) {
+                  onSuccess();
+                }
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.indigo.shade700,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text('CONFIRM'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> rejectBooking(int bookingId) async {

@@ -9,12 +9,14 @@ class RentRecord(models.Model):
     STATUS_UNPAID = 'unpaid'
     STATUS_PARTIALLY_PAID = 'partially_paid'
     STATUS_OVERDUE = 'overdue'
+    STATUS_PENDING = 'pending'
 
     STATUS_CHOICES = (
         (STATUS_PAID, 'Paid'),
         (STATUS_UNPAID, 'Unpaid'),
         (STATUS_PARTIALLY_PAID, 'Partially Paid'),
         (STATUS_OVERDUE, 'Overdue'),
+        (STATUS_PENDING, 'Pending Verification'),
     )
 
     tenant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='rent_records')

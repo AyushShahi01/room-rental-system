@@ -5,6 +5,10 @@ import 'package:room_rental_system/controllers/auth_controller.dart';
 import '../controllers/booking_controller.dart';
 import '../models/booking/booking_model.dart';
 import '../models/room/room_detail_model.dart' as room_detail;
+import '../models/auth_model/user_model.dart';
+import '../models/maintenace/maintenace_list_model.dart' as maintenance_list;
+import '../services/maintenance_service.dart';
+import 'message/chat_detail_view.dart';
 import 'agreement_view.dart';
 
 class BookingDetailsView extends StatefulWidget {
@@ -18,13 +22,29 @@ class BookingDetailsView extends StatefulWidget {
 
 class _BookingDetailsViewState extends State<BookingDetailsView> {
   final BookingController controller = Get.put(BookingController());
+  List<maintenance_list.Result> _maintenanceRequests = [];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.loadBookingDetails(widget.bookingId);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await controller.loadBookingDetails(widget.bookingId);
+      await _loadMaintenance();
     });
+  }
+
+  Future<void> _loadMaintenance() async {
+    try {
+      final booking = controller.selectedBooking.value;
+      if (booking != null && booking.roomId != null) {
+        final res = await MaintenanceService().getMaintenanceByRoom(booking.roomId!);
+        setState(() {
+          _maintenanceRequests = res.results;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading maintenance in booking details: $e');
+    }
   }
 
   /// Reload booking details whenever this page is resumed (e.g. after returning
@@ -32,6 +52,7 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
   /// status badges update without a full app restart.
   Future<void> _reloadOnReturn() async {
     await controller.loadBookingDetails(widget.bookingId);
+    await _loadMaintenance();
   }
 
   @override
@@ -163,8 +184,8 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
                         runSpacing: 8,
                         children: [
                           _pill(
-                            '₹${booking.roomPrice ?? room?.price ?? "0"}',
-                            Icons.attach_money_rounded,
+                            'Rs. ${booking.roomPrice ?? room?.price ?? "0"}',
+                            Icons.payments_outlined,
                             colorScheme,
                           ),
                           if (room != null)
@@ -210,6 +231,18 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
                         label: 'Agreement Status',
                         value: controller.agreementStatus.value.toUpperCase(),
                       ),
+                      if (booking.rentStartDate != null)
+                        _InfoRow(
+                          icon: Icons.calendar_today_outlined,
+                          label: 'Rent Collection Starts',
+                          value: booking.rentStartDate!,
+                        ),
+                      if (booking.bookedDate != null)
+                        _InfoRow(
+                          icon: Icons.bookmark_added_outlined,
+                          label: 'Booked Date',
+                          value: booking.bookedDate!,
+                        ),
                     ],
                   ),
                 ),
@@ -257,6 +290,8 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
                 ),
               ],
               const SizedBox(height: 16),
+              _buildMaintenanceSection(colorScheme),
+              const SizedBox(height: 16),
               Obx(() {
                 if (controller.isSubmitting.value) {
                   return const Center(child: CircularProgressIndicator());
@@ -265,16 +300,39 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
                 final role = Get.find<AuthController>().selectedRole.value.toLowerCase();
                 final isLandlord = role == 'landlord' || role == 'admin';
                 final innerHasAgreement = controller.agreementExists.value;
-
                 return Wrap(
                   spacing: 12,
                   runSpacing: 12,
                   children: [
+                    FilledButton.icon(
+                      onPressed: () {
+                        final partnerUser = UserModel(
+                          id: isLandlord ? booking.tenantId : booking.landlordId,
+                          username: isLandlord ? booking.tenantName : booking.landlordName,
+                          email: '',
+                          firstName: isLandlord ? booking.tenantName : booking.landlordName,
+                          lastName: '',
+                          role: isLandlord ? 'tenant' : 'landlord',
+                          tenantId: isLandlord ? booking.tenantId : null,
+                          landlordId: isLandlord ? null : booking.landlordId,
+                          province: null,
+                          district: null,
+                          city: null,
+                          ward: null,
+                        );
+                        Get.to(() => ChatDetailView(
+                              partner: partnerUser,
+                              bookingId: booking.id,
+                            ));
+                      },
+                      icon: const Icon(Icons.chat_bubble_outline_rounded),
+                      label: Text(isLandlord ? 'Chat with Tenant' : 'Chat with Landlord'),
+                    ),
                     if (isLandlord) ...[
                       if (status == 'pending') ...[
                         FilledButton.icon(
                           onPressed: () =>
-                              controller.approveBooking(widget.bookingId),
+                              controller.showApproveDialog(context, widget.bookingId),
                           icon: const Icon(Icons.check_circle_outline),
                           label: const Text('Approve'),
                         ),
@@ -285,18 +343,6 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
                           label: const Text('Reject'),
                         ),
                       ],
-                      if (status == 'approved' && !innerHasAgreement)
-                        FilledButton.icon(
-                          onPressed: () => _openAgreementDetails(
-                            bookingId: booking.id ?? widget.bookingId,
-                            roomName: resolvedRoomTitle,
-                            roomImage: roomImage,
-                            landlordName: resolvedLandlordName,
-                            tenantName: resolvedTenantName,
-                          ),
-                          icon: const Icon(Icons.add_card),
-                          label: const Text('Create Agreement'),
-                        ),
                       if (status == 'approved' && innerHasAgreement)
                         OutlinedButton.icon(
                           onPressed: () => _openAgreementDetails(
@@ -310,7 +356,6 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
                           label: const Text('View Agreement'),
                         ),
                     ] else ...[
-
                       if (status == 'approved' && innerHasAgreement) ...[
                         OutlinedButton.icon(
                           onPressed: () => _openAgreementDetails(
@@ -322,13 +367,6 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
                           ),
                           icon: const Icon(Icons.description_outlined),
                           label: const Text('View Agreement'),
-                        ),
-                        OutlinedButton.icon(
-                          onPressed: () {
-                            Get.snackbar('Info', 'Contacting Landlord...');
-                          },
-                          icon: const Icon(Icons.chat_bubble_outline),
-                          label: const Text('Contact Landlord'),
                         ),
                       ],
                       TextButton.icon(
@@ -474,6 +512,92 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+    );
+  }
+
+  Widget _buildMaintenanceSection(ColorScheme colorScheme) {
+    if (_maintenanceRequests.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Maintenance Requests',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 12),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _maintenanceRequests.length,
+              separatorBuilder: (_, __) => const Divider(),
+              itemBuilder: (context, index) {
+                final req = _maintenanceRequests[index];
+                final statusStr = (req.status ?? 'pending').toLowerCase();
+                
+                Color statusColor = Colors.orange;
+                if (statusStr == 'resolved') statusColor = Colors.green;
+                if (statusStr == 'in_progress') statusColor = Colors.blue;
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              req.description ?? '',
+                              style: const TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: statusColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              statusStr.toUpperCase().replaceAll('_', ' '),
+                              style: TextStyle(
+                                color: statusColor,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Requested on: ${req.createdAt?.toLocal().toString().split(' ')[0] ?? ''}',
+                        style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
