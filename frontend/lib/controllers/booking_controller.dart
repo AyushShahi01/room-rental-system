@@ -10,6 +10,8 @@ import '../services/room_service.dart';
 import '../services/auth_service.dart';
 import '../services/payement_service.dart';
 import '../services/agreement_service.dart';
+import 'room_controller.dart';
+import 'tenant_dashboard_controller.dart';
 
 class BookingController extends GetxController {
   final BookingService _service = BookingService();
@@ -215,6 +217,12 @@ class BookingController extends GetxController {
       selectedBooking.value = booking;
       roomIdController.clear();
       await loadTenantBookings(showLoading: false);
+      if (Get.isRegistered<RoomController>()) {
+        Get.find<RoomController>().loadRooms(refresh: true);
+      }
+      if (Get.isRegistered<TenantDashboardController>()) {
+        Get.find<TenantDashboardController>().loadDashboardData();
+      }
       successMessage.value = 'Booking request submitted successfully.';
     } catch (e) {
       errorMessage.value = 'Unable to create a booking request right now.';
@@ -376,6 +384,12 @@ class BookingController extends GetxController {
       await loadTenantBookings(showLoading: false);
       await loadIncomingBookings(showLoading: false);
       await loadBookingDetails(bookingId);
+      if (Get.isRegistered<RoomController>()) {
+        Get.find<RoomController>().loadRooms(refresh: true);
+      }
+      if (Get.isRegistered<TenantDashboardController>()) {
+        Get.find<TenantDashboardController>().loadDashboardData();
+      }
       successMessage.value = 'Booking cancelled.';
       Get.snackbar(
         'Cancelled',

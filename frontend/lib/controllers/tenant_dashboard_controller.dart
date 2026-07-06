@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/room/room_model.dart';
 import '../models/booking/booking_model.dart';
+import '../models/booking/bookinglist_model.dart';
 import '../services/room_service.dart';
 import '../services/booking_service.dart';
 import 'booking_controller.dart';
@@ -33,6 +34,7 @@ class TenantDashboardController extends GetxController {
   final RxString searchQuery = ''.obs;
   final RxBool isSearchMode = false.obs;
   final RxList<dynamic> searchResults = <dynamic>[].obs;
+  final RxBool isSearching = false.obs;
 
   // Property list parameters needed by tenant views
   final RxList<dynamic> allProperties = <dynamic>[].obs;
@@ -73,13 +75,30 @@ class TenantDashboardController extends GetxController {
       
       final data = await _roomService.getRooms();
       dashboardData.value = data;
-      final filteredResults = data.results.where((r) => r.isAvailable == true).toList();
+
+      // Fetch bookings to filter out requested/approved rooms
+      var bookedRoomIds = <int>{};
+      BookingListModel? tenantBookingsRes;
+      try {
+        tenantBookingsRes = await _bookingService.getMyBookings();
+        bookedRoomIds = tenantBookingsRes.results
+            .where((b) => b.status?.toLowerCase() != 'cancelled' && b.status?.toLowerCase() != 'rejected')
+            .map((b) => b.roomId)
+            .whereType<int>()
+            .toSet();
+      } catch (e) {
+        debugPrint('Error fetching tenant bookings in loadDashboardData: $e');
+      }
+
+      final filteredResults = data.results
+          .where((r) => r.isAvailable == true && !bookedRoomIds.contains(r.id))
+          .toList();
       allProperties.assignAll(filteredResults);
       featuredProperties.assignAll(filteredResults.take(3).toList());
 
       // Fetch active stay
       try {
-        final bookingsRes = await _bookingService.getMyBookings();
+        final BookingListModel bookingsRes = tenantBookingsRes ?? await _bookingService.getMyBookings();
         final approved = bookingsRes.results.firstWhereOrNull(
           (b) => b.status?.toLowerCase() == 'approved',
         );
@@ -101,25 +120,22 @@ class TenantDashboardController extends GetxController {
     }
   }
 
-  void performSearch(String query) {
+  Future<void> performSearch(String query) async {
     searchQuery.value = query.trim();
     if (searchQuery.value.isEmpty) {
       isSearchMode.value = false;
       searchResults.clear();
     } else {
       isSearchMode.value = true;
-      final queryLower = searchQuery.value.toLowerCase();
-      final filtered = allProperties.where((room) {
-        final title = (room.title as String? ?? '').toLowerCase();
-        final description = (room.description as String? ?? '').toLowerCase();
-        final province = (room.province as String? ?? '').toLowerCase();
-        final state = (room.state as String? ?? '').toLowerCase();
-        return title.contains(queryLower) ||
-               description.contains(queryLower) ||
-               province.contains(queryLower) ||
-               state.contains(queryLower);
-      }).toList();
-      searchResults.assignAll(filtered);
+      isSearching.value = true;
+      try {
+        final data = await _roomService.getRooms(filters: {'search': searchQuery.value});
+        searchResults.assignAll(data.results.where((r) => r.isAvailable == true).toList());
+      } catch (e) {
+        debugPrint('Error searching rooms: $e');
+      } finally {
+        isSearching.value = false;
+      }
     }
   }
 }

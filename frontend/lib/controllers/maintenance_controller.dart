@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../models/maintenace/maintenance_model.dart';
 import '../services/maintenance_service.dart';
@@ -238,6 +239,25 @@ class MaintenanceController extends GetxController {
     }
   }
 
+  Future<void> pickImage() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+      if (pickedFile != null) {
+        imagePath.value = pickedFile.path;
+      }
+    } catch (e) {
+      debugPrint('Error picking image for maintenance request: $e');
+    }
+  }
+
+  void removeImage() {
+    imagePath.value = '';
+  }
+
   Future<void> submitRequest() async {
     if (titleController.text.isEmpty ||
         descriptionController.text.isEmpty ||
@@ -260,6 +280,7 @@ class MaintenanceController extends GetxController {
       await _maintenanceService.createMaintenance(
         room: selectedRoom.value!.id ?? 0,
         description: fullDescription,
+        imagePath: imagePath.value.isNotEmpty ? imagePath.value : null,
       );
 
       Get.snackbar(

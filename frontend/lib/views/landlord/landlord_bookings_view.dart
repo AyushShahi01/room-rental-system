@@ -407,8 +407,7 @@ class _BookingCardState extends State<_BookingCard> {
                         ),
                       ),
                     ],
-                    if (widget.booking.status?.toLowerCase() == 'pending' ||
-                        widget.booking.status?.toLowerCase() == 'approved') ...[
+                    if (widget.booking.status?.toLowerCase() == 'approved') ...[
                       const SizedBox(width: 8),
                       Material(
                         color: Colors.grey.shade100,

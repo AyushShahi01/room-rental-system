@@ -169,12 +169,17 @@ class BookingRejectView(APIView):
         return Response({'message': 'Booking rejected.'}, status=status.HTTP_200_OK)
 
 class BookingCancelView(APIView):
-    permission_classes = [IsAuthenticated, IsTenant]
+    permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        if request.user.role != 'tenant':
-            return Response({'error': 'Only tenants can cancel bookings.'}, status=status.HTTP_403_FORBIDDEN)
-        booking = get_object_or_404(Booking, pk=pk, tenant=request.user)
+        booking = get_object_or_404(Booking, pk=pk)
+        
+        is_tenant = booking.tenant == request.user
+        is_landlord = booking.room.landlord == request.user
+        
+        if not (is_tenant or is_landlord):
+            return Response({'error': 'You do not have permission to cancel this booking.'}, status=status.HTTP_403_FORBIDDEN)
+
         if booking.status not in (Booking.STATUS_PENDING, Booking.STATUS_APPROVED):
             return Response({'error': 'Only pending or approved bookings can be cancelled.'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -188,7 +193,12 @@ class BookingCancelView(APIView):
             room = booking.room
             room.is_available = True
             room.save(update_fields=['is_available'])
-        create_notification(booking.room.landlord, f'Booking for {booking.room.title} has been cancelled.')
+
+        # Send appropriate notification to the other party
+        if is_tenant:
+            create_notification(booking.room.landlord, f'Booking for {booking.room.title} has been cancelled by the tenant.')
+        else:
+            create_notification(booking.tenant, f'Your booking for {booking.room.title} has been cancelled by the landlord.')
 
         return Response({'message': 'Booking cancelled.'}, status=status.HTTP_200_OK)
 

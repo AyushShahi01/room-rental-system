@@ -7,7 +7,7 @@ import '../controllers/booking_controller.dart';
 import '../models/auth_model/user_model.dart';
 import 'payement_view.dart';
 import 'message/chat_detail_view.dart';
-import '../models/payement/rent_record_model.dart';
+
 
 class PaymentHistoryView extends StatefulWidget {
   const PaymentHistoryView({super.key});
@@ -43,10 +43,9 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
 
   Future<void> _refreshData() async {
     if (_isLandlord) {
-      await _paymentController.loadPaymentHistory();
+      await _paymentController.loadRentRecords();
       await _bookingController.loadIncomingBookings();
     } else {
-      await _paymentController.loadMyPayments();
       await _bookingController.loadTenantBookings();
       final tenantId = _authController.currentUser.value?.id;
       if (tenantId != null) {
@@ -105,15 +104,15 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
 
       if (_isLandlord) {
         // Landlord Tenant Reminders Panel
-        final activeBookings = _bookingController.incomingBookings
-            .where((b) => b.status?.toLowerCase() == 'approved')
+        final unpaidRecords = _paymentController.rentRecords
+            .where((r) => r.status == 'unpaid' || r.status == 'overdue' || r.status == 'partially_paid')
             .toList();
 
-        if (activeBookings.isEmpty) {
+        if (unpaidRecords.isEmpty) {
           return _buildEmptyState(
             icon: Icons.people_outline,
-            title: 'No Active Tenants',
-            subtitle: 'Reminders will show up when a booking is approved.',
+            title: 'No Pending Payments',
+            subtitle: 'All tenants have cleared their rent. Excellent!',
           );
         }
 
@@ -121,27 +120,12 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
           onRefresh: _refreshData,
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: activeBookings.length,
+            itemCount: unpaidRecords.length,
             itemBuilder: (context, index) {
-              final booking = activeBookings[index];
-              
-              // Calculate tenant payment status
-              final tenantPayments = _paymentController.paymentHistory
-                  .where((p) => p.booking?.id == booking.id && p.status?.toLowerCase() == 'verified')
-                  .toList();
-              
-              tenantPayments.sort((a, b) => (b.createdAt ?? DateTime.now()).compareTo(a.createdAt ?? DateTime.now()));
-
-              DateTime nextDueDate = booking.createdAt ?? DateTime.now();
-              if (tenantPayments.isNotEmpty && tenantPayments.first.createdAt != null) {
-                nextDueDate = tenantPayments.first.createdAt!.add(const Duration(days: 30));
-              } else {
-                nextDueDate = nextDueDate.add(const Duration(days: 30));
-              }
-
-              final isOverdue = DateTime.now().isAfter(nextDueDate);
-              final String statusText = isOverdue ? 'OVERDUE' : 'PAID';
-              final Color statusColor = isOverdue ? Colors.red.shade700 : Colors.green.shade700;
+              final record = unpaidRecords[index];
+              final isOverdue = record.status == 'overdue';
+              final String statusText = record.status.replaceAll('_', ' ').toUpperCase();
+              final Color statusColor = isOverdue ? Colors.red.shade700 : Colors.orange.shade800;
 
               return Card(
                 elevation: 0,
@@ -157,7 +141,7 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
                         children: [
                           Expanded(
                             child: Text(
-                              booking.tenantName ?? 'Tenant Name',
+                              record.tenant.username ?? 'Tenant',
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                             ),
                           ),
@@ -175,29 +159,51 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text('Room: ${booking.roomTitle ?? "Unknown Room"}', style: TextStyle(color: Colors.grey.shade700)),
+                      Text('Room: ${record.room.title}', style: TextStyle(color: Colors.grey.shade700)),
                       const SizedBox(height: 4),
-                      Text('Rent Amount: Rs. ${booking.roomPrice ?? "0"} / month', style: const TextStyle(fontWeight: FontWeight.w500)),
+                      Text('Rent Amount: Rs. ${record.amount}', style: const TextStyle(fontWeight: FontWeight.w500)),
                       const SizedBox(height: 4),
                       Text(
-                        'Next Rent Due: ${DateFormat('yMMMMd').format(nextDueDate)}',
+                        'Billing Month: ${_getMonthName(record.billingMonth)} ${record.billingYear}',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Rent Due Date: ${record.dueDate}',
                         style: TextStyle(color: isOverdue ? Colors.red.shade700 : Colors.grey.shade600, fontWeight: isOverdue ? FontWeight.w600 : FontWeight.normal),
                       ),
-                      if (isOverdue) ...[
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () => _sendChatReminder(booking.tenantId, booking.tenantName, booking.roomTitle, booking.roomPrice),
-                            icon: const Icon(Icons.chat_bubble_outline),
-                            label: const Text('Send Chat Reminder'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.indigo.shade700,
-                              side: BorderSide(color: Colors.indigo.shade200),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => _sendChatReminder(
+                                record.tenant.id,
+                                record.tenant.username,
+                                record.room.title,
+                                record.amount,
+                              ),
+                              icon: const Icon(Icons.chat_bubble_outline),
+                              label: const Text('Send Chat Reminder'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.indigo.shade700,
+                                side: BorderSide(color: Colors.indigo.shade200),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: FilledButton.icon(
+                              onPressed: () => _markRecordAsPaidInHistory(record.id),
+                              icon: const Icon(Icons.check, size: 16),
+                              label: const Text('Mark Paid'),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Colors.green.shade700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -317,16 +323,16 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
         return const Center(child: CircularProgressIndicator());
       }
 
-      // Filter all unverified pending payments
-      final pendingLogs = _paymentController.paymentHistory
-          .where((p) => p.status?.toLowerCase() == 'pending')
+      // Filter all unverified pending payments from RentRecords
+      final pendingRecords = _paymentController.rentRecords
+          .where((r) => r.status.toLowerCase() == 'pending')
           .toList();
 
-      if (pendingLogs.isEmpty) {
+      if (pendingRecords.isEmpty) {
         return _buildEmptyState(
           icon: Icons.check_circle_outline_rounded,
           title: 'All Logged Payments Verified',
-          subtitle: 'No unverified rent logs found.',
+          subtitle: 'No unverified rent statements found.',
         );
       }
 
@@ -334,12 +340,13 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
         onRefresh: _refreshData,
         child: ListView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: pendingLogs.length,
+          itemCount: pendingRecords.length,
           itemBuilder: (context, index) {
-            final payment = pendingLogs[index];
-            final tenantName = payment.booking?.tenant?.username ?? 'Tenant';
-            final roomName = payment.booking?.room?.title ?? 'Room';
-            final refToken = payment.transactionToken ?? '';
+            final record = pendingRecords[index];
+            final tenantName = record.tenant.username ?? 'Tenant';
+            final roomName = record.room.title;
+            final refToken = record.remarks;
+            final amountPaid = record.amountPaid;
 
             return Card(
               elevation: 0,
@@ -360,20 +367,36 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
                           ),
                         ),
                         Text(
-                          'Rs. ${payment.amount}',
+                          'Rs. $amountPaid',
                           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo.shade700, fontSize: 16),
                         ),
                       ],
                     ),
                     const SizedBox(height: 6),
-                    Text('Logged Room: $roomName', style: TextStyle(color: Colors.grey.shade700)),
-                    if (refToken.toString().isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text('Reference: $refToken', style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
-                    ],
+                    Text('Room: $roomName', style: TextStyle(color: Colors.grey.shade700)),
                     const SizedBox(height: 4),
                     Text(
-                      'Logged At: ${payment.createdAt != null ? DateFormat('yMMMMd hh:mm a').format(payment.createdAt!.toLocal()) : "N/A"}',
+                      'Statement: ${_getMonthName(record.billingMonth)} ${record.billingYear} (Total Due: Rs. ${record.amount})',
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                    ),
+                    if (refToken.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Reference/Notes:\n$refToken',
+                          style: TextStyle(color: Colors.grey.shade800, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    Text(
+                      'Logged At: ${DateFormat('yMMMMd hh:mm a').format(record.updatedAt.toLocal())}',
                       style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
                     ),
                     const Divider(height: 24),
@@ -381,10 +404,9 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         ElevatedButton.icon(
-                          onPressed: () {
-                            if (payment.id != null) {
-                              _paymentController.verifyTenantPayment(payment.id!);
-                            }
+                          onPressed: () async {
+                            await _paymentController.updateRentRecordStatus(record.id, 'paid');
+                            await _refreshData();
                           },
                           icon: const Icon(Icons.verified_outlined, size: 18),
                           label: const Text('Verify & Confirm'),
@@ -413,18 +435,16 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
         return const Center(child: CircularProgressIndicator());
       }
 
-      final list = _isLandlord ? _paymentController.paymentHistory : _paymentController.myPayments;
-      
-      // Filter only verified logs for landlord, but show all logs (including pending/failed) for tenants
-      final logs = _isLandlord 
-          ? list.where((p) => p.status?.toLowerCase() == 'verified').toList()
-          : list;
+      // Filter paid rent statements
+      final logs = _paymentController.rentRecords
+          .where((r) => r.status.toLowerCase() == 'paid')
+          .toList();
 
       if (logs.isEmpty) {
         return _buildEmptyState(
           icon: Icons.history_toggle_off_rounded,
           title: 'No Payment Logs',
-          subtitle: 'Completed manual payment logs will display here.',
+          subtitle: 'Completed rent payments will display here.',
         );
       }
 
@@ -434,14 +454,12 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
           padding: const EdgeInsets.all(16),
           itemCount: logs.length,
           itemBuilder: (context, index) {
-            final payment = logs[index];
-            final roomName = payment.booking?.room?.title ?? 'Room';
-            final refToken = payment.transactionToken ?? '';
-            final status = payment.status?.toLowerCase() ?? 'pending';
+            final record = logs[index];
+            final roomName = record.room.title;
+            final refToken = record.remarks;
+            final status = record.status;
 
-            final statusColor = status == 'verified' || status == 'paid' 
-                ? Colors.green.shade700 
-                : (status == 'pending' ? Colors.orange.shade800 : Colors.red.shade700);
+            final statusColor = Colors.green.shade700;
 
             return Card(
               elevation: 0,
@@ -454,20 +472,19 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
                   child: const Icon(Icons.check_circle_outline),
                 ),
                 title: Text(
-                  'Rs. ${payment.amount} — $roomName',
+                  'Rs. ${record.amountPaid} — $roomName',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (_isLandlord)
-                      Text('Tenant: ${payment.booking?.tenant?.username ?? "Unknown"}'),
-                    if (refToken.toString().isNotEmpty)
+                      Text('Tenant: ${record.tenant.username ?? "Unknown"}'),
+                    Text('Billing Month: ${_getMonthName(record.billingMonth)} ${record.billingYear}'),
+                    if (refToken.isNotEmpty)
                       Text('Ref: $refToken', style: const TextStyle(fontSize: 12)),
                     Text(
-                      payment.createdAt != null 
-                          ? DateFormat('yMMMMd hh:mm a').format(payment.createdAt!.toLocal()) 
-                          : 'N/A',
+                      'Paid On: ${record.paymentDate ?? DateFormat('yMMMMd').format(record.updatedAt.toLocal())}',
                       style: const TextStyle(fontSize: 11),
                     ),
                   ],
@@ -537,6 +554,32 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
         ),
       ],
     );
+  }
+
+  Future<void> _markRecordAsPaidInHistory(int recordId) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Mark Invoice as Paid'),
+        content: const Text('Are you sure you want to mark this rent invoice as paid? (e.g. received via Cash/Direct Deposit)'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('CANCEL'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.green.shade700),
+            child: const Text('CONFIRM'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _paymentController.updateRentRecordStatus(recordId, 'paid');
+      await _refreshData();
+    }
   }
 
   void _sendChatReminder(String? tenantId, String? tenantName, String? roomName, String? price) {

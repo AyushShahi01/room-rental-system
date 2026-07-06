@@ -93,7 +93,7 @@ class _PaymentViewState extends State<PaymentView> {
 
         return RefreshIndicator(
           onRefresh: () async {
-            await controller.loadMyPayments(showLoading: false);
+            await controller.loadRentRecords(showLoading: false);
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),

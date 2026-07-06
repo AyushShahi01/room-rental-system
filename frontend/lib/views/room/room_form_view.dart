@@ -11,6 +11,7 @@ import '../../controllers/landlord_dashboard_controller.dart';
 import '../../models/room/room_detail_model.dart' as detail;
 import '../../utils/api_error.dart';
 import 'location_picker_view.dart';
+import 'room_publish_success_view.dart';
 
 class RoomFormView extends StatefulWidget {
   const RoomFormView({
@@ -322,7 +323,7 @@ class _RoomFormViewState extends State<RoomFormView> {
             _buildTextField(
               'Security Deposit (Rs.)',
               controller: _depositController,
-              validator: _optionalPositiveNumber,
+              validator: _optionalNonNegativeNumber,
               keyboardType: TextInputType.number,
             ),
             _buildTextField(
@@ -737,8 +738,8 @@ class _RoomFormViewState extends State<RoomFormView> {
     }
     if (_depositController.text.trim().isNotEmpty) {
       final dep = double.tryParse(_depositController.text.trim());
-      if (dep == null || dep <= 0) {
-        Get.snackbar('Validation Error', 'Security deposit must be a positive number');
+      if (dep == null || dep < 0) {
+        Get.snackbar('Validation Error', 'Security deposit must be 0 or greater');
         return false;
       }
     }
@@ -847,6 +848,15 @@ class _RoomFormViewState extends State<RoomFormView> {
     return null;
   }
 
+  String? _optionalNonNegativeNumber(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final parsed = num.tryParse(value.trim());
+    if (parsed == null || parsed < 0) {
+      return 'Must be 0 or greater';
+    }
+    return null;
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -899,7 +909,7 @@ class _RoomFormViewState extends State<RoomFormView> {
     if (areaValue != null && areaValue > 0) {
       data['area_sqft'] = areaValue;
     }
-    if (depositValue != null && depositValue > 0) {
+    if (depositValue != null && depositValue >= 0) {
       data['security_deposit'] = depositValue.toStringAsFixed(2);
     }
     if (maintenanceValue != null && maintenanceValue > 0) {
@@ -916,6 +926,7 @@ class _RoomFormViewState extends State<RoomFormView> {
             await roomController.uploadRoomImage(roomId, imgFile);
           }
         }
+        if (mounted) Get.back();
       } else {
         final roomController = Get.isRegistered<RoomController>() ? Get.find<RoomController>() : Get.put(RoomController());
         final createdRoom = await roomController.createRoom(data);
@@ -927,8 +938,10 @@ class _RoomFormViewState extends State<RoomFormView> {
         if (Get.isRegistered<LandlordDashboardController>()) {
           Get.find<LandlordDashboardController>().selectedIndex.value = 1;
         }
+        if (mounted) {
+          Get.off(() => RoomPublishSuccessView(roomTitle: data['title'] ?? 'Room Listing'));
+        }
       }
-      if (mounted) Get.back();
     } on DioException catch (e) {
       if (mounted) {
         final message = extractApiErrorMessage(

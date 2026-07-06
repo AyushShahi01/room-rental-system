@@ -33,6 +33,17 @@ class RoomListCreateView(generics.ListCreateAPIView):
         else:
             queryset = Room.objects.filter(is_available=True)
 
+        # Generic search parameter
+        search = self.request.query_params.get('search')
+        if search:
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(title__icontains=search) |
+                Q(description__icontains=search) |
+                Q(province__icontains=search) |
+                Q(state__icontains=search)
+            )
+
         # Extract search query parameters
         province = self.request.query_params.get('province')
         state = self.request.query_params.get('state')

@@ -6,6 +6,9 @@ import '../models/room/recommendation_model.dart' as rec_model;
 import '../models/room/room_detail_model.dart' as room_detail;
 import '../models/room/room_model.dart' as room_model;
 import '../services/room_service.dart';
+import '../services/booking_service.dart';
+import '../models/booking/bookinglist_model.dart';
+import 'package:flutter/material.dart';
 
 class RoomController extends GetxController {
   final RoomService _roomService = RoomService();
@@ -25,18 +28,71 @@ class RoomController extends GetxController {
 
 
 
-  Future<void> loadRooms() async {
-    isRoomsLoading.value = true;
+  // Pagination State
+  var page = 1;
+  var hasNextPage = true.obs;
+  var isLoadMoreLoading = false.obs;
+
+  Future<void> loadRooms({bool refresh = true}) async {
+    if (refresh) {
+      page = 1;
+      hasNextPage.value = true;
+      isRoomsLoading.value = true;
+    }
     try {
-      final response = await _roomService.getRooms();
-      final recommendations = await _roomService.getRecommendations({});
-      // Filter out rooms that are not available (booked)
-      rooms.value = response.results.where((r) => r.isAvailable == true).toList();
-      recommendedRooms.value = recommendations.results.where((r) => r.room?.isAvailable == true).toList();
+      final bookingService = BookingService();
+      var bookedRoomIds = <int>{};
+      try {
+        final BookingListModel bookingsRes = await bookingService.getMyBookings();
+        bookedRoomIds = bookingsRes.results
+            .where((b) => b.status?.toLowerCase() != 'cancelled' && b.status?.toLowerCase() != 'rejected')
+            .map((b) => b.roomId)
+            .whereType<int>()
+            .toSet();
+      } catch (e) {
+        debugPrint('Error fetching tenant bookings in RoomController: $e');
+      }
+
+      final response = await _roomService.getRooms(filters: {'page': page});
+      final fetchedRooms = response.results
+          .where((r) => r.isAvailable == true && !bookedRoomIds.contains(r.id))
+          .toList();
+
+      if (refresh) {
+        rooms.value = fetchedRooms;
+        final recommendations = await _roomService.getRecommendations({});
+        recommendedRooms.value = recommendations.results
+            .where((r) => r.room?.isAvailable == true && !bookedRoomIds.contains(r.room?.id))
+            .toList();
+      } else {
+        // Append unique rooms
+        for (var r in fetchedRooms) {
+          if (!rooms.contains(r)) {
+            rooms.add(r);
+          }
+        }
+      }
+      
+      hasNextPage.value = response.next != null;
+      if (hasNextPage.value) {
+        page++;
+      }
     } catch (e) {
       Get.snackbar('Error', 'Failed to load rooms: $e');
     } finally {
-      isRoomsLoading.value = false;
+      if (refresh) {
+        isRoomsLoading.value = false;
+      }
+    }
+  }
+
+  Future<void> loadMoreRooms() async {
+    if (isLoadMoreLoading.value || !hasNextPage.value) return;
+    isLoadMoreLoading.value = true;
+    try {
+      await loadRooms(refresh: false);
+    } finally {
+      isLoadMoreLoading.value = false;
     }
   }
 

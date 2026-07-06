@@ -17,11 +17,27 @@ class TenantRoomsView extends StatefulWidget {
 
 class _TenantRoomsViewState extends State<TenantRoomsView> {
   final RoomController _roomController = Get.put(RoomController());
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _roomController.loadRooms();
+    _roomController.loadRooms(refresh: true);
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _roomController.loadMoreRooms();
+    }
   }
 
   @override
@@ -57,6 +73,8 @@ class _TenantRoomsViewState extends State<TenantRoomsView> {
           final _rooms = _roomController.rooms;
           final _recommended = _roomController.recommendedRooms;
           return SingleChildScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,7 +98,7 @@ class _TenantRoomsViewState extends State<TenantRoomsView> {
                         final recommendation = _recommended[index];
                         final room = recommendation.room;
                         if (room == null) return const SizedBox();
-                        
+
                         return _RecommendationCard(
                           room: room,
                           onTap: () => Get.to(
@@ -94,9 +112,9 @@ class _TenantRoomsViewState extends State<TenantRoomsView> {
                 ],
                 Text(
                   'Available Rooms',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 12),
                 if (_rooms.isEmpty)
@@ -105,7 +123,7 @@ class _TenantRoomsViewState extends State<TenantRoomsView> {
                     title: 'No rooms available',
                     subtitle: 'Try again later for fresh listings.',
                   )
-                else
+                else ...[
                   ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -115,12 +133,36 @@ class _TenantRoomsViewState extends State<TenantRoomsView> {
                       final room = _rooms[index];
                       return _RoomCard(
                         room: room,
-                        onTap: () => Get.to(
-                          () => RoomDetailView(roomId: room.id ?? 0),
-                        ),
+                        onTap: () =>
+                            Get.to(() => RoomDetailView(roomId: room.id ?? 0)),
                       );
                     },
                   ),
+                  Obx(() {
+                    if (_roomController.isLoadMoreLoading.value) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    if (!_roomController.hasNextPage.value &&
+                        _rooms.isNotEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24.0),
+                        child: Center(
+                          child: Text(
+                            'No more rooms available',
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }),
+                ],
               ],
             ),
           );
@@ -174,7 +216,8 @@ class _RoomCard extends StatelessWidget {
                             imageUrl,
                             fit: BoxFit.cover,
                             errorBuilder: (_, _, _) => Container(
-                              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                              color: colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.3),
                               child: Center(
                                 child: Icon(
                                   Icons.home_work_outlined,
@@ -185,7 +228,8 @@ class _RoomCard extends StatelessWidget {
                             ),
                           )
                         : Container(
-                            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                            color: colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.3),
                             child: Center(
                               child: Icon(
                                 Icons.home_work_outlined,
@@ -205,7 +249,10 @@ class _RoomCard extends StatelessWidget {
                     top: 12,
                     left: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.65),
                         borderRadius: BorderRadius.circular(12),
@@ -227,10 +274,8 @@ class _RoomCard extends StatelessWidget {
                   right: 12,
                   child: Row(
                     children: [
-                      if (room.hasWifi == true)
-                        _buildAmenityIcon(Icons.wifi),
-                      if (room.hasAc == true)
-                        _buildAmenityIcon(Icons.ac_unit),
+                      if (room.hasWifi == true) _buildAmenityIcon(Icons.wifi),
+                      if (room.hasAc == true) _buildAmenityIcon(Icons.ac_unit),
                       if (room.parkingAvailable == true)
                         _buildAmenityIcon(Icons.local_parking),
                       if (room.hasAttachedBathroom == true)
@@ -262,7 +307,9 @@ class _RoomCard extends StatelessWidget {
                       Icon(
                         Icons.location_on_outlined,
                         size: 16,
-                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                        color: colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.7,
+                        ),
                       ),
                       const SizedBox(width: 4),
                       Expanded(
@@ -270,9 +317,8 @@ class _RoomCard extends StatelessWidget {
                           '${room.province ?? ''}, ${room.state ?? ''}'.trim(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: colorScheme.onSurfaceVariant),
                         ),
                       ),
                     ],
@@ -291,27 +337,28 @@ class _RoomCard extends StatelessWidget {
                           const SizedBox(width: 2),
                           Text(
                             'Rs. ${room.price ?? '0'}',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.primary,
-                              fontSize: 16,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.primary,
+                                  fontSize: 16,
+                                ),
                           ),
                           Text(
                             '/month',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: colorScheme.onSurfaceVariant),
                           ),
                         ],
                       ),
                       if (room.landlord?.username != null)
                         Text(
                           'by ${room.landlord!.username}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w500,
+                              ),
                         ),
                     ],
                   ),
@@ -332,11 +379,7 @@ class _RoomCard extends StatelessWidget {
         color: Colors.black.withValues(alpha: 0.65),
         shape: BoxShape.circle,
       ),
-      child: Icon(
-        icon,
-        color: Colors.white,
-        size: 14,
-      ),
+      child: Icon(icon, color: Colors.white, size: 14),
     );
   }
 }
@@ -358,7 +401,7 @@ class _RecommendationCard extends StatelessWidget {
         imageUrl = img;
       }
     }
-    
+
     if (imageUrl != null && !imageUrl.startsWith('http')) {
       final prefix = imageUrl.startsWith('/') ? '' : '/';
       imageUrl = '${DioConnection.baseDomain}$prefix$imageUrl';
@@ -399,7 +442,8 @@ class _RecommendationCard extends StatelessWidget {
                             imageUrl,
                             fit: BoxFit.cover,
                             errorBuilder: (_, _, _) => Container(
-                              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                              color: colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.3),
                               child: Center(
                                 child: Icon(
                                   Icons.home_work_outlined,
@@ -410,7 +454,8 @@ class _RecommendationCard extends StatelessWidget {
                             ),
                           )
                         : Container(
-                            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                            color: colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.3),
                             child: Center(
                               child: Icon(
                                 Icons.home_work_outlined,
@@ -430,7 +475,10 @@ class _RecommendationCard extends StatelessWidget {
                     top: 12,
                     left: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.65),
                         borderRadius: BorderRadius.circular(12),
@@ -452,10 +500,8 @@ class _RecommendationCard extends StatelessWidget {
                   right: 12,
                   child: Row(
                     children: [
-                      if (room.hasWifi == true)
-                        _buildAmenityIcon(Icons.wifi),
-                      if (room.hasAc == true)
-                        _buildAmenityIcon(Icons.ac_unit),
+                      if (room.hasWifi == true) _buildAmenityIcon(Icons.wifi),
+                      if (room.hasAc == true) _buildAmenityIcon(Icons.ac_unit),
                       if (room.parkingAvailable == true)
                         _buildAmenityIcon(Icons.local_parking),
                       if (room.hasAttachedBathroom == true)
@@ -486,7 +532,9 @@ class _RecommendationCard extends StatelessWidget {
                       Icon(
                         Icons.location_on_outlined,
                         size: 16,
-                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                        color: colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.7,
+                        ),
                       ),
                       const SizedBox(width: 4),
                       Expanded(
@@ -494,9 +542,8 @@ class _RecommendationCard extends StatelessWidget {
                           '${room.province ?? ''}, ${room.state ?? ''}'.trim(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: colorScheme.onSurfaceVariant),
                         ),
                       ),
                     ],
@@ -515,21 +562,14 @@ class _RecommendationCard extends StatelessWidget {
                           const SizedBox(width: 2),
                           Text(
                             'Rs. ${room.price ?? '0'}',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.primary,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.primary,
+                                ),
                           ),
                         ],
                       ),
-                      if (room.landlord?.username != null)
-                        Text(
-                          'by ${room.landlord!.username}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
                     ],
                   ),
                 ],
@@ -549,11 +589,7 @@ class _RecommendationCard extends StatelessWidget {
         color: Colors.black.withValues(alpha: 0.65),
         shape: BoxShape.circle,
       ),
-      child: Icon(
-        icon,
-        color: Colors.white,
-        size: 14,
-      ),
+      child: Icon(icon, color: Colors.white, size: 14),
     );
   }
 }
