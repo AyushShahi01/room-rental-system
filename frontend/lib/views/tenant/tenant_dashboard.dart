@@ -11,6 +11,7 @@ import '../room/room_detail_view.dart';
 import 'tenant_maintenance_view.dart';
 import 'tenant_rent_ledger_view.dart';
 import '../explore_map_view.dart';
+import '../payment_history_view.dart';
 
 class TenantDashboard extends StatelessWidget {
   const TenantDashboard({super.key});
@@ -623,18 +624,18 @@ class TenantDashboard extends StatelessWidget {
                         icon: const Icon(
                           Icons.chat_bubble_outline,
                           color: Colors.white,
-                          size: 16,
+                          size: 14,
                         ),
                         label: const Text(
-                          'Landlord',
+                          'Chat',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 13,
+                            fontSize: 11,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
                           backgroundColor: Colors.white10,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -642,7 +643,33 @@ class TenantDashboard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextButton.icon(
+                        onPressed: () => Get.to(() => const PaymentHistoryView()),
+                        icon: const Icon(
+                          Icons.account_balance_wallet_outlined,
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                        label: const Text(
+                          'Payments',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          backgroundColor: Colors.white10,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: TextButton.icon(
                         onPressed: () =>
@@ -650,18 +677,18 @@ class TenantDashboard extends StatelessWidget {
                         icon: const Icon(
                           Icons.build_circle_outlined,
                           color: Colors.black,
-                          size: 16,
+                          size: 14,
                         ),
                         label: const Text(
-                          'Maintenance',
+                          'Support',
                           style: TextStyle(
                             color: Colors.black,
-                            fontSize: 13,
+                            fontSize: 11,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
                           backgroundColor: Colors.white,
                           foregroundColor: Colors.indigo.shade800,
                           shape: RoundedRectangleBorder(
