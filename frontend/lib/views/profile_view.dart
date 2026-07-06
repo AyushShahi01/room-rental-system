@@ -5,7 +5,6 @@ import '../utils/token_storage.dart';
 import '../routes/app_routes.dart';
 import '../widgets/settings_tile.dart';
 import '../models/auth_model/user_model.dart';
-import 'payment_history_view.dart';
 
 
 class ProfileView extends StatelessWidget {
@@ -290,33 +289,11 @@ class ProfileView extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     elevation: 2,
-                    child: Column(
-                      children: [
-                        SettingsTile(
-                          icon: Icons.lock_outline,
-                          iconColor: Colors.indigo,
-                          title: 'Change Password',
-                          onTap: () => Get.toNamed(AppRoutes.changePassword),
-                        ),
-                        Obx(() {
-                          final isTenant = authController.currentUser.value?.role?.toLowerCase() == 'tenant';
-                          if (isTenant) {
-                            return Column(
-                              children: [
-                                const Divider(height: 1),
-                                SettingsTile(
-                                  icon: Icons.account_balance_wallet_outlined,
-                                  iconColor: Colors.teal,
-                                  title: 'Rent Payments',
-                                  subtitle: 'View bills and log payment receipts',
-                                  onTap: () => Get.to(() => const PaymentHistoryView()),
-                                ),
-                              ],
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        }),
-                      ],
+                    child: SettingsTile(
+                      icon: Icons.lock_outline,
+                      iconColor: Colors.indigo,
+                      title: 'Change Password',
+                      onTap: () => Get.toNamed(AppRoutes.changePassword),
                     ),
                   ),
                 ],
