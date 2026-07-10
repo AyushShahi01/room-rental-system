@@ -28,6 +28,8 @@ from .serializers import (
     RegisterSerializer,
     UserSerializer,
     ProfilePictureUploadSerializer,
+    ForgotPasswordSerializer,
+    ResetPasswordSerializer,
 )
 from .models import OTP
 
@@ -288,3 +290,90 @@ class AdminDashboardView(APIView):
             'staff_users': user_model.objects.filter(is_staff=True).count(),
         }
         return Response(data, status=status.HTTP_200_OK)
+
+
+class ForgotPasswordView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        request=ForgotPasswordSerializer,
+        responses={
+            200: MessageResponseSerializer,
+        },
+    )
+    def post(self, request):
+        serializer = ForgotPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+
+        user_model = get_user_model()
+        user = user_model.objects.filter(email__iexact=email).first()
+
+        if user:
+            code = f'{random.SystemRandom().randint(0, 999999):06d}'
+            expires_at = timezone.now() + timedelta(minutes=settings.OTP_EXPIRY_MINUTES)
+            OTP.objects.create(user=user, code=code, expires_at=expires_at)
+
+            send_mail(
+                'Your Smart Room Renting Password Reset OTP',
+                f'Your verification code for password reset is {code}. It expires in {settings.OTP_EXPIRY_MINUTES} minutes.',
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+
+        return Response(
+            {'message': 'If an account exists with this email, a password reset code has been sent.'},
+            status=status.HTTP_200_OK
+        )
+
+
+class ResetPasswordView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        request=ResetPasswordSerializer,
+        responses={
+            200: MessageResponseSerializer,
+            400: ErrorResponseSerializer,
+            404: ErrorResponseSerializer,
+        },
+    )
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        otp_code = serializer.validated_data['otp_code']
+        new_password = serializer.validated_data['new_password']
+
+        user_model = get_user_model()
+        user = user_model.objects.filter(email__iexact=email).first()
+
+        if not user:
+            return Response(
+                {'error': 'No account found with this email.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        otp = OTP.objects.filter(
+            user=user,
+            code=otp_code,
+            is_used=False,
+        ).first()
+
+        if not otp or otp.is_expired():
+            return Response(
+                {'error': 'OTP has expired or is invalid. Please request a new one.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        otp.is_used = True
+        otp.save(update_fields=['is_used'])
+
+        user.set_password(new_password)
+        user.save(update_fields=['password'])
+
+        return Response(
+            {'message': 'Password reset successfully. You can now log in with your new password.'},
+            status=status.HTTP_200_OK
+        )

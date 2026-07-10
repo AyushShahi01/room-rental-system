@@ -225,3 +225,18 @@ class OTPVerifySerializer(serializers.Serializer):
 class ProfilePictureUploadSerializer(serializers.Serializer):
     profile_picture = serializers.ImageField(required=True)
 
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    otp_code = serializers.CharField(max_length=6, min_length=6, required=True)
+    new_password = serializers.CharField(write_only=True, required=True)
+
+    def validate_new_password(self, value):
+        validate_password(value)
+        return value
+
+

@@ -248,3 +248,78 @@ class UserAuthTests(APITestCase):
         self.assertTrue(bool(user.profile_picture))
         self.assertTrue(user.profile_picture.name.startswith('profiles/profile'))
 
+    def test_forgot_password_sends_email_if_user_exists(self):
+        User.objects.create_user(**self.user_data)
+        response = self.client.post(reverse('forgot-password'), {'email': 'test@example.com'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['message'], 'If an account exists with this email, a password reset code has been sent.')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('verification code for password reset', mail.outbox[0].body)
+
+    def test_forgot_password_always_succeeds_even_if_no_user(self):
+        response = self.client.post(reverse('forgot-password'), {'email': 'nonexistent@example.com'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['message'], 'If an account exists with this email, a password reset code has been sent.')
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_reset_password_success(self):
+        user = User.objects.create_user(**self.user_data)
+        otp = OTP.objects.create(
+            user=user,
+            code='123456',
+            expires_at=timezone.now() + timedelta(minutes=10)
+        )
+        response = self.client.post(reverse('reset-password'), {
+            'email': 'test@example.com',
+            'otp_code': '123456',
+            'new_password': 'NewPassword123!',
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['message'], 'Password reset successfully. You can now log in with your new password.')
+        
+        otp.refresh_from_db()
+        self.assertTrue(otp.is_used)
+        
+        user.refresh_from_db()
+        self.assertTrue(user.check_password('NewPassword123!'))
+
+    def test_reset_password_invalid_otp(self):
+        user = User.objects.create_user(**self.user_data)
+        OTP.objects.create(
+            user=user,
+            code='123456',
+            expires_at=timezone.now() + timedelta(minutes=10)
+        )
+        response = self.client.post(reverse('reset-password'), {
+            'email': 'test@example.com',
+            'otp_code': '654321',
+            'new_password': 'NewPassword123!',
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error'], 'OTP has expired or is invalid. Please request a new one.')
+
+    def test_reset_password_expired_otp(self):
+        user = User.objects.create_user(**self.user_data)
+        OTP.objects.create(
+            user=user,
+            code='123456',
+            expires_at=timezone.now() - timedelta(minutes=1)
+        )
+        response = self.client.post(reverse('reset-password'), {
+            'email': 'test@example.com',
+            'otp_code': '123456',
+            'new_password': 'NewPassword123!',
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error'], 'OTP has expired or is invalid. Please request a new one.')
+
+    def test_reset_password_invalid_email(self):
+        response = self.client.post(reverse('reset-password'), {
+            'email': 'nonexistent@example.com',
+            'otp_code': '123456',
+            'new_password': 'NewPassword123!',
+        })
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['error'], 'No account found with this email.')
+
+
