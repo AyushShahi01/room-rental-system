@@ -38,6 +38,7 @@ class UserAuthTests(APITestCase):
         self.assertEqual(response.data['user']['role'], 'tenant')
         self.assertEqual(response.data['user']['tenant_id'], response.data['user']['id'])
         self.assertIsNone(response.data['user']['landlord_id'])
+        self.assertFalse(User.objects.get(username='testuser').is_email_verified)
 
     def test_login_with_username_returns_tokens(self):
         User.objects.create_user(**self.user_data)

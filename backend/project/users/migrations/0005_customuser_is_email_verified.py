@@ -1,0 +1,40 @@
+from django.db import migrations, models
+
+
+def add_is_email_verified_column(apps, schema_editor):
+    """Add the column only when it is absent in an existing deployment."""
+    user_model = apps.get_model('users', 'CustomUser')
+    table_name = user_model._meta.db_table
+    existing_columns = {
+        column.name
+        for column in schema_editor.connection.introspection.get_table_description(
+            schema_editor.connection.cursor(), table_name
+        )
+    }
+
+    if 'is_email_verified' not in existing_columns:
+        field = models.BooleanField(default=False)
+        field.set_attributes_from_name('is_email_verified')
+        schema_editor.add_field(user_model, field)
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('users', '0004_customuser_profile_picture'),
+    ]
+
+    operations = [
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunPython(add_is_email_verified_column, migrations.RunPython.noop),
+            ],
+            state_operations=[
+                migrations.AddField(
+                    model_name='customuser',
+                    name='is_email_verified',
+                    field=models.BooleanField(default=False),
+                ),
+            ],
+        ),
+    ]

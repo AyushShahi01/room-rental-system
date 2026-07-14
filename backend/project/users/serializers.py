@@ -137,6 +137,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', ''),
             role=validated_data.get('role', CustomUser.Role.TENANT),
+            is_email_verified=False,
             province=validated_data.get('province'),
             district=validated_data.get('district'),
             city=validated_data.get('city'),

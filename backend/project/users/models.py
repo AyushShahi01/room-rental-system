@@ -14,6 +14,7 @@ class CustomUser(AbstractUser):
         ADMIN = 'admin', 'Admin'
 
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.TENANT)
+    is_email_verified = models.BooleanField(default=False)
     province = models.CharField(max_length=100, blank=True, null=True)
     district = models.CharField(max_length=100, blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
