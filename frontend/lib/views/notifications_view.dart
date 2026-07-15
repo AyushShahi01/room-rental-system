@@ -5,13 +5,25 @@ import '../controllers/notification_controller.dart';
 import '../models/notification/notification_list_model.dart';
 import 'booking_view.dart';
 
-class NotificationsView extends StatelessWidget {
+class NotificationsView extends StatefulWidget {
   const NotificationsView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final controller = Get.find<NotificationController>();
+  State<NotificationsView> createState() => _NotificationsViewState();
+}
 
+class _NotificationsViewState extends State<NotificationsView> {
+  late final NotificationController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.find<NotificationController>();
+    WidgetsBinding.instance.addPostFrameCallback((_) => controller.fetchNotifications());
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -190,7 +202,7 @@ class NotificationsView extends StatelessWidget {
     Color iconColor = Colors.blueAccent;
     final contentLower = content.toLowerCase();
     
-    if (contentLower.contains('rent')) {
+    if (contentLower.contains('rent') || contentLower.contains('payment') || contentLower.contains('paid')) {
       icon = Icons.payments_outlined;
       iconColor = Colors.green.shade600;
       title = 'Rent Update';
@@ -202,7 +214,88 @@ class NotificationsView extends StatelessWidget {
       icon = Icons.build_circle_outlined;
       iconColor = Colors.red.shade600;
       title = 'Maintenance Update';
+    } else if (contentLower.contains('agreement') || contentLower.contains('contract') || contentLower.contains('lease')) {
+      icon = Icons.description_outlined;
+      iconColor = Colors.teal.shade600;
+      title = 'Rental Agreement';
+    } else if (contentLower.contains('message') || contentLower.contains('chat')) {
+      icon = Icons.chat_outlined;
+      iconColor = Colors.purple.shade600;
+      title = 'New Message';
+    } else if (contentLower.contains('room')) {
+      icon = Icons.home_work_outlined;
+      iconColor = Colors.blue.shade600;
+      title = 'New Room Available';
     }
+
+    final card = GestureDetector(
+      onTap: () {
+        if (!isRead && notification.id != null) {
+          controller.markAsRead(notification.id!);
+        }
+        if (contentLower.contains('book')) {
+          final match = RegExp(r'#?(\d+)').firstMatch(content);
+          if (match != null && match.group(1) != null) {
+            final bookingId = int.tryParse(match.group(1)!);
+            if (bookingId != null) {
+              Get.to(() => BookingDetailsView(bookingId: bookingId));
+            }
+          }
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: isRead ? Colors.white : Colors.blue.shade50.withOpacity(0.4),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: isRead ? Colors.transparent : Colors.blue.withOpacity(0.15),
+          ),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: isRead ? Colors.grey.shade100 : iconColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              padding: const EdgeInsets.all(14),
+              child: Icon(icon, color: isRead ? Colors.grey.shade500 : iconColor, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: Text(title, style: TextStyle(fontSize: 15, fontWeight: isRead ? FontWeight.w600 : FontWeight.w700, color: isRead ? Colors.grey.shade800 : Colors.black87))),
+                      if (!isRead) Container(width: 10, height: 10, margin: const EdgeInsets.only(top: 4, left: 8), decoration: const BoxDecoration(color: Colors.blueAccent, shape: BoxShape.circle)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(content, style: TextStyle(fontSize: 14, color: isRead ? Colors.grey.shade600 : Colors.grey.shade800, fontWeight: isRead ? FontWeight.normal : FontWeight.w500, height: 1.4)),
+                  const SizedBox(height: 10),
+                  Row(children: [Icon(Icons.access_time, size: 14, color: Colors.grey.shade500), const SizedBox(width: 6), Text(timeStr, style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w500))]),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (notification.isDashboardActivity) return card;
 
     return Dismissible(
       key: Key(notification.id.toString()),
@@ -218,115 +311,7 @@ class NotificationsView extends StatelessWidget {
         ),
         child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
       ),
-      child: GestureDetector(
-        onTap: () {
-          if (!isRead && notification.id != null) {
-            controller.markAsRead(notification.id!);
-          }
-          if (contentLower.contains('book')) {
-            final match = RegExp(r'#?(\d+)').firstMatch(content);
-            if (match != null && match.group(1) != null) {
-              final bookingId = int.tryParse(match.group(1)!);
-              if (bookingId != null) {
-                Get.to(() => BookingDetailsView(bookingId: bookingId));
-              }
-            }
-          }
-        },
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: isRead ? Colors.white : Colors.blue.shade50.withOpacity(0.4),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-            border: Border.all(
-              color: isRead ? Colors.transparent : Colors.blue.withOpacity(0.15),
-            ),
-          ),
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: isRead ? Colors.grey.shade100 : iconColor.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(14),
-                child: Icon(
-                  icon, 
-                  color: isRead ? Colors.grey.shade500 : iconColor,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: isRead ? FontWeight.w600 : FontWeight.w700,
-                              color: isRead ? Colors.grey.shade800 : Colors.black87,
-                            ),
-                          ),
-                        ),
-                        if (!isRead)
-                          Container(
-                            width: 10,
-                            height: 10,
-                            margin: const EdgeInsets.only(top: 4, left: 8),
-                            decoration: const BoxDecoration(
-                              color: Colors.blueAccent,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      content,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: isRead ? Colors.grey.shade600 : Colors.grey.shade800,
-                        fontWeight: isRead ? FontWeight.normal : FontWeight.w500,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Icon(Icons.access_time, size: 14, color: Colors.grey.shade500),
-                        const SizedBox(width: 6),
-                        Text(
-                          timeStr,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade500,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      child: card,
     );
   }
 }

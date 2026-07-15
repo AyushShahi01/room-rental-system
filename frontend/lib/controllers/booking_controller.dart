@@ -12,6 +12,7 @@ import '../services/payement_service.dart';
 import '../services/agreement_service.dart';
 import 'room_controller.dart';
 import 'tenant_dashboard_controller.dart';
+import 'notification_controller.dart';
 
 class BookingController extends GetxController {
   final BookingService _service = BookingService();
@@ -223,6 +224,9 @@ class BookingController extends GetxController {
       if (Get.isRegistered<TenantDashboardController>()) {
         Get.find<TenantDashboardController>().loadDashboardData();
       }
+      if (Get.isRegistered<NotificationController>()) {
+        await Get.find<NotificationController>().refreshState();
+      }
       successMessage.value = 'Booking request submitted successfully.';
     } catch (e) {
       errorMessage.value = 'Unable to create a booking request right now.';
@@ -240,6 +244,9 @@ class BookingController extends GetxController {
       await _service.approveBooking(bookingId, startDate);
       await loadIncomingBookings(showLoading: false);
       await loadBookingDetails(bookingId);
+      if (Get.isRegistered<NotificationController>()) {
+        await Get.find<NotificationController>().refreshState();
+      }
       successMessage.value = 'Booking approved.';
       Get.snackbar(
         'Approved',
@@ -269,7 +276,7 @@ class BookingController extends GetxController {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: Colors.indigo.shade700,
+              primary: Colors.blueAccent.shade700,
               onPrimary: Colors.white,
               onSurface: Colors.black87,
             ),
@@ -292,7 +299,7 @@ class BookingController extends GetxController {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Row(
             children: [
-              Icon(Icons.calendar_month_rounded, color: Colors.indigo.shade700),
+              Icon(Icons.calendar_month_rounded, color: Colors.blueAccent.shade700),
               const SizedBox(width: 10),
               const Text('Confirm Start Date'),
             ],
@@ -310,16 +317,16 @@ class BookingController extends GetxController {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.indigo.shade50,
+                    color: Colors.blue.shade50,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.indigo.shade200),
+                    border: Border.all(color: Colors.blue.shade200),
                   ),
                   child: Text(
                     formattedDate,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.indigo.shade900,
+                      color: Colors.blue.shade900,
                     ),
                   ),
                 ),
@@ -340,7 +347,7 @@ class BookingController extends GetxController {
                 }
               },
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.indigo.shade700,
+                backgroundColor: Colors.blueAccent.shade700,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               child: const Text('CONFIRM'),
@@ -359,6 +366,9 @@ class BookingController extends GetxController {
       await _service.rejectBooking(bookingId);
       await loadIncomingBookings(showLoading: false);
       await loadBookingDetails(bookingId);
+      if (Get.isRegistered<NotificationController>()) {
+        await Get.find<NotificationController>().refreshState();
+      }
       successMessage.value = 'Booking rejected.';
       Get.snackbar(
         'Rejected',
@@ -389,6 +399,9 @@ class BookingController extends GetxController {
       }
       if (Get.isRegistered<TenantDashboardController>()) {
         Get.find<TenantDashboardController>().loadDashboardData();
+      }
+      if (Get.isRegistered<NotificationController>()) {
+        await Get.find<NotificationController>().refreshState();
       }
       successMessage.value = 'Booking cancelled.';
       Get.snackbar(

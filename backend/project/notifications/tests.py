@@ -15,11 +15,13 @@ class NotificationTests(APITestCase):
 
     def test_list_and_mark_read(self):
         notification = Notification.objects.create(user=self.user, content='Hello')
+        newer_notification = Notification.objects.create(user=self.user, content='Newest')
         self.client.force_authenticate(user=self.user)
 
         list_response = self.client.get(reverse('notification-list'))
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(list_response.data['count'], 1)
+        self.assertEqual(list_response.data['count'], 2)
+        self.assertEqual(list_response.data['results'][0]['id'], newer_notification.id)
 
         read_response = self.client.patch(reverse('mark-notification-read', kwargs={'pk': notification.pk}))
         self.assertEqual(read_response.status_code, status.HTTP_200_OK)
@@ -48,3 +50,12 @@ class NotificationTests(APITestCase):
         self.user.refresh_from_db()
         self.assertIsNone(self.user.fcm_token)
         self.assertEqual(Notification.objects.filter(user=self.user).count(), 1)
+
+    @patch('notifications.helpers.send_push')
+    def test_create_notification_sends_to_stored_device_token(self, send_push):
+        self.user.fcm_token = 'device-token'
+        self.user.save(update_fields=['fcm_token'])
+
+        create_notification(self.user, 'Booking approved')
+
+        send_push.assert_called_once_with('device-token', 'Booking approved')

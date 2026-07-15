@@ -8,10 +8,8 @@ class NotificationListModel {
 
     final int? count;
     final String? next;
-    final String? previous;
+    final dynamic previous;
     final List<Result> results;
-
-    
 
     factory NotificationListModel.fromJson(Map<String, dynamic> json){ 
         return NotificationListModel(
@@ -27,25 +25,26 @@ class NotificationListModel {
 class Result {
     Result({
         required this.id,
-        required this.user,
         required this.content,
         required this.isRead,
         required this.createdAt,
+        this.isDashboardActivity = false,
     });
 
     final int? id;
-    final String? user;
     final String? content;
     final bool? isRead;
     final DateTime? createdAt;
+    /// Dashboard activity is display-only: it does not have a notification API id.
+    final bool isDashboardActivity;
 
     factory Result.fromJson(Map<String, dynamic> json){ 
         return Result(
             id: json["id"],
-            user: json["user"]?.toString(),
             content: json["content"],
             isRead: json["is_read"],
             createdAt: DateTime.tryParse(json["created_at"] ?? ""),
+            isDashboardActivity: false,
         );
     }
 

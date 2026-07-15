@@ -5,6 +5,7 @@ import '../routes/app_routes.dart';
 import '../services/auth_service.dart';
 import '../utils/token_storage.dart';
 import '../models/auth_model/user_model.dart';
+import 'notification_controller.dart';
 
 class AuthController extends GetxController {
   final _authService = AuthService();
@@ -283,6 +284,10 @@ class AuthController extends GetxController {
 
       await TokenStorage.saveTokens(accessToken: access, refreshToken: refresh);
 
+      if (Get.isRegistered<NotificationController>()) {
+        Get.find<NotificationController>().uploadFCMToken();
+      }
+
       userName.value = result.user?.username ?? input.split('@').first;
       userEmail.value = result.user?.email ?? input;
       if (result.user != null) {
@@ -297,6 +302,10 @@ class AuthController extends GetxController {
         editWardController.text = u.ward?.toString() ?? '';
       }
 
+      await _showSuccessCard(
+        title: 'Login Successful',
+        message: result.message ?? 'Welcome back! Redirecting to your dashboard...',
+      );
       navToHome();
     } on DioException catch (e) {
       final backendMessage = _extractMessage(e);
@@ -407,11 +416,16 @@ class AuthController extends GetxController {
 
       await TokenStorage.saveTokens(accessToken: access, refreshToken: refresh);
 
+      if (Get.isRegistered<NotificationController>()) {
+        Get.find<NotificationController>().uploadFCMToken();
+      }
+
       userName.value = result.user?.username ?? username;
       userEmail.value = result.user?.email ?? email;
       if (result.user != null) {
         final u = result.user!;
         currentUser.value = UserModel.fromJson(u.toJson());
+        selectedRole.value = u.role ?? selectedRole.value;
         editFirstNameController.text = u.firstName ?? '';
         editLastNameController.text = u.lastName ?? '';
         editProvinceController.text = u.province ?? '';
@@ -420,16 +434,10 @@ class AuthController extends GetxController {
         editWardController.text = (u.ward as dynamic)?.toString() ?? '';
       }
 
-      if (!Get.isSnackbarOpen) {
-        Get.snackbar(
-          'Success',
-          result.message ?? 'Registration successful!',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.shade600,
-          colorText: Colors.white,
-        );
-      }
-
+      await _showSuccessCard(
+        title: 'Registration Successful',
+        message: result.message ?? 'Your account is ready. Redirecting to your dashboard...',
+      );
       navToHome();
     } on DioException catch (e) {
       final message =
@@ -488,6 +496,62 @@ class AuthController extends GetxController {
 
   void toggleConfirmPasswordVisibility() {
     isConfirmPasswordVisible.value = !isConfirmPasswordVisible.value;
+  }
+
+  Future<void> _showSuccessCard({
+    required String title,
+    required String message,
+  }) async {
+    Get.dialog<void>(
+      PopScope(
+        canPop: false,
+        child: Center(
+          child: Card(
+            color: Colors.green.shade600,
+            margin: const EdgeInsets.symmetric(horizontal: 28),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white, size: 36),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          message,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
+    await Future<void>.delayed(const Duration(seconds: 2));
+    if (Get.isDialogOpen ?? false) {
+      Get.back<void>();
+    }
   }
 
   void navToHome() {

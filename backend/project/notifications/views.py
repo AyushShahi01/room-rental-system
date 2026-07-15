@@ -11,7 +11,9 @@ class NotificationListView(generics.ListAPIView):
     serializer_class = NotificationSerializer
 
     def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user)
+        # The mobile badge and both notification pages depend on this endpoint
+        # being newest-first.
+        return Notification.objects.filter(user=self.request.user).order_by('-created_at', '-pk')
 
 class NotificationActionView(APIView):
     permission_classes = [IsAuthenticated]

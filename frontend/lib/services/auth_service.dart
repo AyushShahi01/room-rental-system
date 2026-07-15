@@ -118,6 +118,16 @@ class AuthService {
     final response = await _dio.put('auth/me/update/', data: data);
     return UserModel.fromJson(response.data as Map<String, dynamic>);
   }
+  Future<void> updateDeviceToken({
+  required String fcmToken,
+}) async {
+  await _dio.post(
+    'auth/device-token/',
+    data: {
+      'fcm_token': fcmToken,
+    },
+  );
+}
 
   Future<Map<String, dynamic>> changePassword({
     required String oldPassword,
