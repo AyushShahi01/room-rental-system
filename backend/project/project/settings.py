@@ -129,23 +129,36 @@ else:
 # ─── Email Setup ───────────────────────────────────────────────────────────────
 RESEND_API_KEY = os.environ.get('RESEND_API_KEY')
 
-if RESEND_API_KEY:
-    EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
-    ANYMAIL = {
-        'RESEND_API_KEY': RESEND_API_KEY,
-    }
-    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'onboarding@resend.dev')
-elif DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    DEFAULT_FROM_EMAIL = 'noreply@localhost'
+if DEBUG:
+    # Local development: Print emails to console by default to avoid failures.
+    # Set USE_REAL_EMAIL=True in .env if you want to test actual sending via Resend.
+    USE_REAL_EMAIL = os.environ.get('USE_REAL_EMAIL', 'False').lower() in ('true', '1', 't')
+    if USE_REAL_EMAIL and RESEND_API_KEY:
+        EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
+        ANYMAIL = {
+            'RESEND_API_KEY': RESEND_API_KEY,
+        }
+        DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'onboarding@resend.dev')
+    else:
+        EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+        DEFAULT_FROM_EMAIL = 'noreply@localhost'
 else:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@example.com')
+    # Production
+    if RESEND_API_KEY:
+        EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
+        ANYMAIL = {
+            'RESEND_API_KEY': RESEND_API_KEY,
+        }
+        DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'onboarding@resend.dev')
+    else:
+        EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+        EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+        EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+        EMAIL_USE_TLS = True
+        EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+        EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+        DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@example.com')
+
 
 # ─── Password Validation ───────────────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
