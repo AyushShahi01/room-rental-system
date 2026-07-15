@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../controllers/splash_controller.dart';
+import '../utils/app_color.dart';
 
 class SplashView extends StatelessWidget {
   const SplashView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    Get.put(SplashController());
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -34,15 +31,15 @@ class SplashView extends StatelessWidget {
                   width: 120,
                   height: 120,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1565C0).withValues(alpha: 0.08),
+                    color: AppColor.primaryblue.withValues(alpha: 0.08),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFF1565C0).withValues(alpha: 0.25),
+                      color: AppColor.primaryblue.withValues(alpha: 0.25),
                       width: 2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF1565C0).withValues(alpha: 0.06),
+                        color: AppColor.primaryblue.withValues(alpha: 0.06),
                         blurRadius: 20,
                         spreadRadius: 5,
                       ),
@@ -51,7 +48,7 @@ class SplashView extends StatelessWidget {
                   child: const Icon(
                     Icons.home_rounded,
                     size: 80,
-                    color: Color(0xFF1565C0),
+                    color: AppColor.primaryblue,
                   ),
                 ),
               ),
@@ -77,7 +74,7 @@ class SplashView extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 34,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1B3B6F),
+                              color: AppColor.primaryblue,
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -86,7 +83,7 @@ class SplashView extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 34,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF42A5F5),
+                              color: Colors.blue,
                               letterSpacing: 0.5,
                             ),
                           ),

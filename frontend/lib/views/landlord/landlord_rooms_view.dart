@@ -252,12 +252,12 @@ class _LandlordRoomsViewState extends State<LandlordRoomsView> {
     return Container(
       width: 60,
       height: 60,
-      color: Colors.indigo.shade50,
+      color: Colors.blue.shade50,
       child: Center(
         child: Icon(
           Icons.home_work_outlined,
           size: 24,
-          color: Colors.indigo.shade700,
+          color: Colors.blueAccent.shade700,
         ),
       ),
     );

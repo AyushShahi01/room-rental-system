@@ -6,6 +6,7 @@ import '../models/booking/bookinglist_model.dart';
 import '../services/room_service.dart';
 import '../services/booking_service.dart';
 import 'booking_controller.dart';
+import 'notification_controller.dart';
 
 class TenantDashboardController extends GetxController {
   final RoomService _roomService = RoomService();
@@ -68,12 +69,24 @@ class TenantDashboardController extends GetxController {
     }
   }
 
-  Future<void> loadDashboardData() async {
+  // Pagination State
+  var page = 1;
+  final RxBool hasNextPage = true.obs;
+  final RxBool isLoadMoreLoading = false.obs;
+
+  Future<void> loadDashboardData({bool refresh = true}) async {
     try {
-      isLoading.value = true;
+      if (refresh) {
+        page = 1;
+        hasNextPage.value = true;
+        isLoading.value = true;
+        if (Get.isRegistered<NotificationController>()) {
+          Get.find<NotificationController>().fetchNotifications();
+        }
+      }
       errorMessage.value = '';
       
-      final data = await _roomService.getRooms();
+      final data = await _roomService.getRooms(filters: {'page': page, 'ordering': '-created_at'});
       dashboardData.value = data;
 
       // Fetch bookings to filter out requested/approved rooms
@@ -93,30 +106,63 @@ class TenantDashboardController extends GetxController {
       final filteredResults = data.results
           .where((r) => r.isAvailable == true && !bookedRoomIds.contains(r.id))
           .toList();
-      allProperties.assignAll(filteredResults);
-      featuredProperties.assignAll(filteredResults.take(3).toList());
+          
+      if (refresh) {
+        allProperties.assignAll(filteredResults);
+      } else {
+        allProperties.addAll(filteredResults.where((r) => !allProperties.contains(r)));
+      }
+      
+      // Implement sorting: latest-first order
+      allProperties.sort((a, b) {
+        final aDate = a.createdAt ?? DateTime(2000);
+        final bDate = b.createdAt ?? DateTime(2000);
+        return bDate.compareTo(aDate);
+      });
+
+      if (refresh) {
+        featuredProperties.assignAll(allProperties.take(3).toList());
+      }
+      
+      hasNextPage.value = data.next != null;
+      if (hasNextPage.value) {
+        page++;
+      }
 
       // Fetch active stay
-      try {
-        final BookingListModel bookingsRes = tenantBookingsRes ?? await _bookingService.getMyBookings();
-        final approved = bookingsRes.results.firstWhereOrNull(
-          (b) => b.status?.toLowerCase() == 'approved',
-        );
-        if (approved != null) {
-          final fullBooking = await _bookingService.getBooking(approved.id!);
-          activeBooking.value = fullBooking;
-        } else {
+      if (refresh) {
+        try {
+          final BookingListModel bookingsRes = tenantBookingsRes ?? await _bookingService.getMyBookings();
+          final approved = bookingsRes.results.firstWhereOrNull(
+            (b) => b.status?.toLowerCase() == 'approved',
+          );
+          if (approved != null) {
+            final fullBooking = await _bookingService.getBooking(approved.id!);
+            activeBooking.value = fullBooking;
+          } else {
+            activeBooking.value = null;
+          }
+        } catch (e) {
+          debugPrint('Error loading active stay booking: $e');
           activeBooking.value = null;
         }
-      } catch (e) {
-        debugPrint('Error loading active stay booking: $e');
-        activeBooking.value = null;
       }
     } catch (e) {
       errorMessage.value = 'Failed to load rooms: ${e.toString()}';
       debugPrint('Error loading tenant dashboard rooms: $e');
     } finally {
-      isLoading.value = false;
+      if (refresh) isLoading.value = false;
+      isLoadMoreLoading.value = false;
+    }
+  }
+
+  Future<void> loadMoreRooms() async {
+    if (isLoadMoreLoading.value || !hasNextPage.value) return;
+    isLoadMoreLoading.value = true;
+    try {
+      await loadDashboardData(refresh: false);
+    } finally {
+      isLoadMoreLoading.value = false;
     }
   }
 
@@ -129,8 +175,14 @@ class TenantDashboardController extends GetxController {
       isSearchMode.value = true;
       isSearching.value = true;
       try {
-        final data = await _roomService.getRooms(filters: {'search': searchQuery.value});
-        searchResults.assignAll(data.results.where((r) => r.isAvailable == true).toList());
+        final data = await _roomService.getRooms(filters: {'search': searchQuery.value, 'ordering': '-created_at'});
+        final filteredSearch = data.results.where((r) => r.isAvailable == true).toList();
+        filteredSearch.sort((a, b) {
+          final aDate = a.createdAt ?? DateTime(2000);
+          final bDate = b.createdAt ?? DateTime(2000);
+          return bDate.compareTo(aDate);
+        });
+        searchResults.assignAll(filteredSearch);
       } catch (e) {
         debugPrint('Error searching rooms: $e');
       } finally {

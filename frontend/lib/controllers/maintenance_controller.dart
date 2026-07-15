@@ -8,6 +8,7 @@ import '../services/booking_service.dart';
 import '../services/room_service.dart';
 import 'auth_controller.dart';
 import '../models/room/room_model.dart';
+import 'notification_controller.dart';
 
 class MaintenanceController extends GetxController {
   final MaintenanceService _maintenanceService = MaintenanceService();
@@ -282,6 +283,9 @@ class MaintenanceController extends GetxController {
         description: fullDescription,
         imagePath: imagePath.value.isNotEmpty ? imagePath.value : null,
       );
+      if (Get.isRegistered<NotificationController>()) {
+        await Get.find<NotificationController>().refreshState();
+      }
 
       Get.snackbar(
         'Success',
@@ -314,6 +318,9 @@ class MaintenanceController extends GetxController {
     try {
       isLoading.value = true;
       await _maintenanceService.updateMaintenanceStatus(id, newStatus);
+      if (Get.isRegistered<NotificationController>()) {
+        await Get.find<NotificationController>().refreshState();
+      }
       Get.snackbar(
         'Success',
         'Status updated to $newStatus',

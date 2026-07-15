@@ -86,11 +86,15 @@ class Result {
   factory Result.fromJson(Map<String, dynamic> json) {
     return Result(
       id: json["id"],
-      images:
-          (json["images"] as List<dynamic>?)
-              ?.map((x) => RoomImage.fromJson(x as Map<String, dynamic>))
-              .toList() ??
-          [],
+      images: () {
+        final imgs = (json["images"] as List<dynamic>?)
+                ?.map((x) => RoomImage.fromJson(x as Map<String, dynamic>))
+                .where((img) => img.image != null && img.image!.isNotEmpty)
+                .toList() ??
+            [];
+        imgs.sort((a, b) => (a.createdAt ?? DateTime.now()).compareTo(b.createdAt ?? DateTime.now()));
+        return imgs;
+      }(),
       title: json["title"],
       description: json["description"],
       price: json["price"]?.toString(),
@@ -143,8 +147,13 @@ class RoomImage {
 
   factory RoomImage.fromJson(Map<String, dynamic> json) {
     String? imgUrl = json["image"]?.toString();
-    if (imgUrl != null && !imgUrl.startsWith('http')) {
-      imgUrl = DioConnection.baseDomain + (imgUrl.startsWith('/') ? '' : '/') + imgUrl;
+    if (imgUrl != null) {
+      if (imgUrl.startsWith('http://127.0.0.1') || imgUrl.startsWith('http://localhost')) {
+        final uri = Uri.parse(imgUrl);
+        imgUrl = DioConnection.baseDomain + uri.path;
+      } else if (!imgUrl.startsWith('http')) {
+        imgUrl = DioConnection.baseDomain + (imgUrl.startsWith('/') ? '' : '/') + imgUrl;
+      }
     }
     return RoomImage(
       id: json["id"],

@@ -51,7 +51,6 @@ class LandlordDashboardController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-
       try {
         // GET /api/auth/admin/dashboard/ → {total_users, active_users, staff_users}
         final dashData = await _authService.getAdminStats();

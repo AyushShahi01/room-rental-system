@@ -104,7 +104,17 @@ class RoomListCreateView(generics.ListCreateAPIView):
         return queryset.distinct().order_by('-created_at')
 
     def perform_create(self, serializer):
-        serializer.save(landlord=self.request.user)
+        room = serializer.save(landlord=self.request.user)
+        # Notify all tenants that a new room is available
+        from django.contrib.auth import get_user_model
+        from notifications.helpers import create_notification
+        User = get_user_model()
+        tenants = User.objects.filter(role='tenant')
+        for tenant in tenants:
+            create_notification(
+                tenant,
+                f"New room available: '{room.title}' in {room.state or room.province}."
+            )
 
 class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = RoomSerializer

@@ -40,14 +40,19 @@ class UserModel {
 
     String? get absoluteProfilePictureUrl {
         if (profilePicture == null || profilePicture!.isEmpty) return null;
-        if (profilePicture!.startsWith('http://') || profilePicture!.startsWith('https://')) {
-            return profilePicture;
+        String url = profilePicture!;
+        if (url.startsWith('http://127.0.0.1') || url.startsWith('http://localhost')) {
+            final uri = Uri.parse(url);
+            return DioConnection.baseDomain + uri.path;
+        }
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            return url;
         }
         final base = DioConnection.baseDomain;
-        if (profilePicture!.startsWith('/')) {
-            return '$base$profilePicture';
+        if (url.startsWith('/')) {
+            return '$base$url';
         }
-        return '$base/$profilePicture';
+        return '$base/$url';
     }
 
     factory UserModel.fromJson(Map<String, dynamic> json){ 

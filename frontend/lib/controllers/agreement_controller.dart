@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../models/agreement/agreement_model.dart';
 import '../services/agreement_service.dart';
 import 'booking_controller.dart';
+import 'notification_controller.dart';
 
 class AgreementController extends GetxController {
   final AgreementService _service = AgreementService();
@@ -91,6 +92,9 @@ class AgreementController extends GetxController {
       // Reload agreement from backend, then refresh booking UI.
       await loadAgreementByBooking(bookingId);
       await _refreshBookingState(bookingId);
+      if (Get.isRegistered<NotificationController>()) {
+        await Get.find<NotificationController>().refreshState();
+      }
     } catch (e) {
       String err = 'Failed to create agreement.';
       var alreadyExists = false;
@@ -109,6 +113,9 @@ class AgreementController extends GetxController {
         debugPrint('[AgreementController] Agreement already exists, reloading...');
         await loadAgreementByBooking(bookingId);
         await _refreshBookingState(bookingId);
+        if (Get.isRegistered<NotificationController>()) {
+          await Get.find<NotificationController>().refreshState();
+        }
 
         successMessage.value = 'Agreement retrieved successfully!';
         Get.snackbar(
@@ -159,6 +166,9 @@ class AgreementController extends GetxController {
 
       await loadAgreementByBooking(bookingId);
       await _refreshBookingState(bookingId);
+      if (Get.isRegistered<NotificationController>()) {
+        await Get.find<NotificationController>().refreshState();
+      }
     } catch (e) {
       String err = 'Failed to sign agreement.';
       if (e is DioException && e.response?.data != null) {

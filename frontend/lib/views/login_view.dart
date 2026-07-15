@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
+import '../routes/app_routes.dart';
 
 class LoginView extends StatelessWidget {
   const LoginView({super.key});
@@ -58,6 +59,14 @@ class LoginView extends StatelessWidget {
                     ),
                   ),
                   obscureText: !controller.isLoginPasswordVisible.value,
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => Get.toNamed(AppRoutes.forgotPassword),
+                  style: TextButton.styleFrom(foregroundColor: Colors.blueAccent),
+                  child: const Text('Forgot Password?'),
                 ),
               ),
               const SizedBox(height: 30),

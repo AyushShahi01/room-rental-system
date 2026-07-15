@@ -35,7 +35,7 @@ class LandlordMainView extends StatelessWidget {
           type: BottomNavigationBarType.fixed,
           currentIndex: controller.selectedIndex.value < pages.length ? controller.selectedIndex.value : 0,
           onTap: controller.onItemTapped,
-          selectedItemColor: Colors.indigo.shade700,
+          selectedItemColor: Colors.blueAccent.shade700,
           unselectedItemColor: Colors.grey.shade500,
           showSelectedLabels: true,
           showUnselectedLabels: true,

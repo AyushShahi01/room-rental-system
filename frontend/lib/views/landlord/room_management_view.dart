@@ -120,9 +120,9 @@ class _RoomManagementViewState extends State<RoomManagementView> with SingleTick
         elevation: 0.5,
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.indigo.shade700,
+          labelColor: Colors.blueAccent.shade700,
           unselectedLabelColor: Colors.grey.shade600,
-          indicatorColor: Colors.indigo.shade700,
+          indicatorColor: Colors.blueAccent.shade700,
           tabs: const [
             Tab(text: 'Tenant Info', icon: Icon(Icons.person_outline_rounded)),
             Tab(text: 'Rent Ledger', icon: Icon(Icons.receipt_long_outlined)),
@@ -192,13 +192,13 @@ class _RoomManagementViewState extends State<RoomManagementView> with SingleTick
               children: [
                 CircleAvatar(
                   radius: 30,
-                  backgroundColor: Colors.indigo.shade50,
+                  backgroundColor: Colors.blue.shade50,
                   child: Text(
                     tenantName.isNotEmpty ? tenantName[0].toUpperCase() : 'T',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.indigo.shade700,
+                      color: Colors.blueAccent.shade700,
                     ),
                   ),
                 ),
@@ -251,8 +251,8 @@ class _RoomManagementViewState extends State<RoomManagementView> with SingleTick
                   },
                   icon: const Icon(Icons.chat_bubble_outline_rounded),
                   style: IconButton.styleFrom(
-                    foregroundColor: Colors.indigo.shade700,
-                    backgroundColor: Colors.indigo.shade50,
+                    foregroundColor: Colors.blueAccent.shade700,
+                    backgroundColor: Colors.blue.shade50,
                   ),
                 ),
               ],
@@ -380,10 +380,10 @@ class _RoomManagementViewState extends State<RoomManagementView> with SingleTick
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.indigo.shade50,
+                      color: Colors.blue.shade50,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(Icons.receipt_outlined, color: Colors.indigo.shade700),
+                    child: Icon(Icons.receipt_outlined, color: Colors.blueAccent.shade700),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -618,7 +618,7 @@ class _RoomManagementViewState extends State<RoomManagementView> with SingleTick
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.indigo.shade200),
+                            border: Border.all(color: Colors.blue.shade200),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
@@ -626,12 +626,12 @@ class _RoomManagementViewState extends State<RoomManagementView> with SingleTick
                               Text(
                                 'Update Status',
                                 style: TextStyle(
-                                  color: Colors.indigo.shade700,
+                                  color: Colors.blueAccent.shade700,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              Icon(Icons.arrow_drop_down, color: Colors.indigo.shade700, size: 16),
+                              Icon(Icons.arrow_drop_down, color: Colors.blueAccent.shade700, size: 16),
                             ],
                           ),
                         ),

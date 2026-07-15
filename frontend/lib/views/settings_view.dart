@@ -147,7 +147,7 @@ class SettingsView extends StatelessWidget {
               children: [
                 SettingsTile(
                   icon: Icons.lock_outline,
-                  iconColor: Colors.indigo,
+                  iconColor: Colors.blueAccent,
                   title: 'Change Password',
                   onTap: () => Get.toNamed(AppRoutes.changePassword),
                 ),

@@ -291,7 +291,7 @@ class ProfileView extends StatelessWidget {
                     elevation: 2,
                     child: SettingsTile(
                       icon: Icons.lock_outline,
-                      iconColor: Colors.indigo,
+                      iconColor: Colors.blueAccent,
                       title: 'Change Password',
                       onTap: () => Get.toNamed(AppRoutes.changePassword),
                     ),

@@ -252,7 +252,7 @@ class _BookingCardState extends State<_BookingCard> {
                             Icon(
                               Icons.payments_outlined,
                               size: 15,
-                              color: Colors.indigo.shade600,
+                              color: Colors.blue.shade600,
                             ),
                             const SizedBox(width: 6),
                             Text(
@@ -260,7 +260,7 @@ class _BookingCardState extends State<_BookingCard> {
                                   ? 'Rs. ${widget.booking.roomPrice}'
                                   : 'Price available soon',
                               style: TextStyle(
-                                color: Colors.indigo.shade800,
+                                color: Colors.blue.shade800,
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -283,7 +283,7 @@ class _BookingCardState extends State<_BookingCard> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Material(
-                        color: Colors.indigo.shade50,
+                        color: Colors.blue.shade50,
                       borderRadius: BorderRadius.circular(8),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(8),
@@ -316,13 +316,13 @@ class _BookingCardState extends State<_BookingCard> {
                               Icon(
                                 Icons.chat_bubble_outline_rounded,
                                 size: 16,
-                                color: Colors.indigo.shade700,
+                                color: Colors.blueAccent.shade700,
                               ),
                               const SizedBox(width: 6),
                               Text(
                                 'Chat',
                                 style: TextStyle(
-                                  color: Colors.indigo.shade700,
+                                  color: Colors.blueAccent.shade700,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -458,12 +458,12 @@ class _BookingCardState extends State<_BookingCard> {
 
   Widget _fallbackImage() {
     return Container(
-      color: Colors.indigo.shade50,
+      color: Colors.blue.shade50,
       child: Center(
         child: Icon(
           Icons.home_work_outlined,
           size: 32,
-          color: Colors.indigo.shade700,
+          color: Colors.blueAccent.shade700,
         ),
       ),
     );

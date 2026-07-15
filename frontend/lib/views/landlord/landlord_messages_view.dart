@@ -79,8 +79,8 @@ class LandlordMessagesView extends StatelessWidget {
 
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: Colors.indigo.shade50,
-                  foregroundColor: Colors.indigo.shade700,
+                  backgroundColor: Colors.blue.shade50,
+                  foregroundColor: Colors.blueAccent.shade700,
                   radius: 24,
                   child: Text(
                     displayName.isNotEmpty ? displayName[0].toUpperCase() : 'T',
@@ -104,7 +104,7 @@ class LandlordMessagesView extends StatelessWidget {
                       timeStr,
                       style: TextStyle(
                         fontSize: 12,
-                        color: showUnreadBadge ? Colors.indigo.shade700 : Colors.grey.shade500,
+                        color: showUnreadBadge ? Colors.blueAccent.shade700 : Colors.grey.shade500,
                         fontWeight: showUnreadBadge ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
@@ -131,7 +131,7 @@ class LandlordMessagesView extends StatelessWidget {
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: Colors.indigo.shade700,
+                            color: Colors.blueAccent.shade700,
                             shape: BoxShape.circle,
                           ),
                         ),

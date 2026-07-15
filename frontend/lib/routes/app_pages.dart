@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:room_rental_system/controllers/onboarding_controller.dart';
 import 'package:room_rental_system/routes/app_routes.dart';
 
 import '../views/splash_view.dart';
@@ -13,12 +14,39 @@ import '../views/edit_profile_view.dart';
 import '../views/change_password_view.dart';
 import '../views/notifications_view.dart';
 import '../bindings/notification_binding.dart';
+import '../bindings/forgot_password_binding.dart';
+import '../views/forgot_password_view.dart';
+import '../views/otp_page_view.dart';
+import '../views/reset_password_view.dart';
+import '../views/password_reset_success_view.dart';
 
 class AppPages {
   static final pages = [
     GetPage(name: AppRoutes.splash, page: () => SplashView()),
-    GetPage(name: AppRoutes.onboarding, page: () => OnboardingView()),
+    GetPage(
+      name: AppRoutes.onboarding,
+      page: () => OnboardingView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<OnboardingController>(() => OnboardingController());
+      }),
+    ),
     GetPage(name: AppRoutes.register, page: () => RegisterView()),
+    GetPage(
+      name: AppRoutes.forgotPassword,
+      page: () => const ForgotPasswordView(),
+      binding: ForgotPasswordBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.verifyOtp,
+      page: () => const OtpVerificationView(),
+      binding: ForgotPasswordBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.resetPassword,
+      page: () => const ResetPasswordView(),
+      binding: ForgotPasswordBinding(),
+    ),
+    GetPage(name: AppRoutes.passwordResetSuccess, page: () => const PasswordResetSuccessView()),
     GetPage(name: AppRoutes.login, page: () => LoginView()),
     GetPage(
       name: AppRoutes.tenantDashboard,

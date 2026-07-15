@@ -10,4 +10,8 @@ class AppRoutes {
   static String profile = "/profile";
   static String editProfile = "/edit-profile";
   static String changePassword = "/change-password";
+  static String forgotPassword = "/forgot-password";
+  static String verifyOtp = "/verify-otp";
+  static String resetPassword = "/reset-password";
+  static String passwordResetSuccess = "/password-reset-success";
 }

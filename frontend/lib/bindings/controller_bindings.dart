@@ -12,18 +12,18 @@ class ControllerBindings extends Bindings {
   @override
   void dependencies() {
     Get.put<AuthController>(AuthController(), permanent: true);
-    Get.put<TenantDashboardController>(
-      TenantDashboardController(),
-      permanent: true,
+    Get.lazyPut<TenantDashboardController>(
+      TenantDashboardController.new,
+      fenix: true,
     );
-    Get.put<LandlordDashboardController>(
-      LandlordDashboardController(),
-      permanent: true,
+    Get.lazyPut<LandlordDashboardController>(
+      LandlordDashboardController.new,
+      fenix: true,
     );
     Get.put<NavController>(NavController(), permanent: true);
     Get.put<SplashController>(SplashController(), permanent: true);
     Get.put<SettingsController>(SettingsController(), permanent: true);
-    Get.put<MessageController>(MessageController(), permanent: true);
-    Get.put<NotificationController>(NotificationController(), permanent: true);
+    Get.lazyPut<MessageController>(MessageController.new, fenix: true);
+    Get.lazyPut<NotificationController>(NotificationController.new, fenix: true);
   }
 }

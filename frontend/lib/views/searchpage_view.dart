@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/tenant_dashboard_controller.dart';
-import '../../models/room/room_model.dart';
-import '../room/room_detail_view.dart';
+import '../controllers/tenant_dashboard_controller.dart';
+import '../models/room/room_model.dart';
+import 'room/room_detail_view.dart';
 
-class TenantSearchView extends StatelessWidget {
-  const TenantSearchView({super.key});
+class SearchpageView extends StatelessWidget {
+  const SearchpageView({super.key});
 
   @override
   Widget build(BuildContext context) {

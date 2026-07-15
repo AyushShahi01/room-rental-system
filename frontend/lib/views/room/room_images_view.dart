@@ -55,7 +55,9 @@ class _RoomImagesViewState extends State<RoomImagesView> {
         if (_room == null || _room.id != widget.roomId) {
           return const Center(child: Text('Room not found'));
         }
-        final _images = _room.images;
+        var _images = _room.images.where((img) => img.image != null && img.image!.isNotEmpty).toList();
+        _images.sort((a, b) => (a.createdAt ?? DateTime.now()).compareTo(b.createdAt ?? DateTime.now()));
+
         if (_images.isEmpty) {
           return const Center(child: Text('No images uploaded yet.'));
         }

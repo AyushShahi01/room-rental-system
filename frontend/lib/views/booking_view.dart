@@ -473,14 +473,14 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
       height: height,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.indigo.shade50,
+        color: Colors.blue.shade50,
         borderRadius: BorderRadius.circular(24),
       ),
       child: Center(
         child: Icon(
           Icons.home_work_outlined,
           size: 42,
-          color: Colors.indigo.shade700,
+          color: Colors.blueAccent.shade700,
         ),
       ),
     );

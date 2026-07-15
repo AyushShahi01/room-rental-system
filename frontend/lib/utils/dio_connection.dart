@@ -4,7 +4,7 @@ import '../routes/app_routes.dart';
 import 'token_storage.dart';
 
 class DioConnection {
-  static const String baseDomain = 'http://172.60.60.67:8000';
+  static const String baseDomain = 'https://www.roomrental.tech';
   static const String apiBaseUrl = '$baseDomain/api/';
 
   static final Dio dio = _buildDio();

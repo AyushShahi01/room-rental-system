@@ -38,11 +38,11 @@ class RoomPublishSuccessView extends StatelessWidget {
                   width: 140,
                   height: 140,
                   decoration: BoxDecoration(
-                    color: Colors.green.shade50,
+                    color: Colors.blue.shade50,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.green.withValues(alpha: 0.1),
+                        color: Colors.blueAccent.withValues(alpha: 0.1),
                         blurRadius: 24,
                         spreadRadius: 8,
                       ),
@@ -52,8 +52,8 @@ class RoomPublishSuccessView extends StatelessWidget {
                     child: Container(
                       width: 100,
                       height: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade500,
+                      decoration: const BoxDecoration(
+                        color: Colors.blueAccent,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(

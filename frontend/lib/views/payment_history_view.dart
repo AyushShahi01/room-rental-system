@@ -71,9 +71,9 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
         elevation: 0.5,
         bottom: TabBar(
           controller: _tabController,
-          labelColor: _isLandlord ? Colors.indigo.shade700 : Colors.blueAccent.shade700,
+          labelColor: _isLandlord ? Colors.blueAccent.shade700 : Colors.blueAccent.shade700,
           unselectedLabelColor: Colors.grey.shade600,
-          indicatorColor: _isLandlord ? Colors.indigo.shade700 : Colors.blueAccent.shade700,
+          indicatorColor: _isLandlord ? Colors.blueAccent.shade700 : Colors.blueAccent.shade700,
           tabs: [
             const Tab(text: 'Reminders & Status', icon: Icon(Icons.alarm)),
             if (_isLandlord) const Tab(text: 'Pending Approvals', icon: Icon(Icons.pending_actions)),
@@ -186,8 +186,8 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
                               icon: const Icon(Icons.chat_bubble_outline),
                               label: const Text('Send Chat Reminder'),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.indigo.shade700,
-                                side: BorderSide(color: Colors.indigo.shade200),
+                                foregroundColor: Colors.blueAccent.shade700,
+                                side: BorderSide(color: Colors.blue.shade200),
                               ),
                             ),
                           ),
@@ -368,7 +368,7 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
                         ),
                         Text(
                           'Rs. $amountPaid',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo.shade700, fontSize: 16),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent.shade700, fontSize: 16),
                         ),
                       ],
                     ),
@@ -467,8 +467,8 @@ class _PaymentHistoryViewState extends State<PaymentHistoryView> with SingleTick
               margin: const EdgeInsets.only(bottom: 10),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: _isLandlord ? Colors.indigo.shade50 : Colors.blue.shade50,
-                  foregroundColor: _isLandlord ? Colors.indigo.shade700 : Colors.blueAccent.shade700,
+                  backgroundColor: _isLandlord ? Colors.blue.shade50 : Colors.blue.shade50,
+                  foregroundColor: _isLandlord ? Colors.blueAccent.shade700 : Colors.blueAccent.shade700,
                   child: const Icon(Icons.check_circle_outline),
                 ),
                 title: Text(

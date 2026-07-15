@@ -48,14 +48,6 @@ class AuthController extends GetxController {
   final RxBool isFetchingProfile = false.obs;
 
   @override
-  void onInit() {
-    super.onInit();
-    if (TokenStorage.hasTokens) {
-      fetchCurrentUser();
-    }
-  }
-
-  @override
   void onClose() {
     nameController.dispose();
     emailController.dispose();

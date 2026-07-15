@@ -16,7 +16,7 @@ class LandlordMaintenanceView extends StatelessWidget {
       appBar: AppBar(
         title: const Text('All Maintenance Requests', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
-        foregroundColor: Colors.indigo.shade700,
+        foregroundColor: Colors.blueAccent.shade700,
         elevation: 0,
         centerTitle: true,
         actions: [

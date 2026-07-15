@@ -1,41 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-class OnboardingView extends StatefulWidget {
+import '../controllers/onboarding_controller.dart';
+import '../utils/app_color.dart';
+
+class OnboardingView extends StatelessWidget {
   const OnboardingView({super.key});
 
   @override
-  State<OnboardingView> createState() => _OnboardingViewState();
-}
-
-class _OnboardingViewState extends State<OnboardingView> {
-  final PageController pageController = PageController();
-
-  int currentPage = 0;
-
-  final List<Map<String, String>> pages = [
-    {
-      "image": "assets/images/onboarding1.png",
-      "title": "Find Rooms Easily",
-      "description":
-          "Search rooms and flats from different locations."
-    },
-    {
-      "image": "assets/images/onboarding2.png",
-      "title": "Connect with Landlords",
-      "description":
-          "Directly contact landlords and property owners."
-    },
-    {
-      "image": "assets/images/onboarding3.png",
-      "title": "Start Your Journey",
-      "description":
-          "Find your perfect rental home quickly and easily."
-    },
-  ];
-
-  @override
   Widget build(BuildContext context) {
-    bool isLastPage = currentPage == pages.length - 1;
+    final controller = Get.find<OnboardingController>();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -46,9 +20,7 @@ class _OnboardingViewState extends State<OnboardingView> {
             Align(
               alignment: Alignment.topRight,
               child: TextButton(
-                onPressed: () {
-                  // Navigate to Login/Home
-                },
+                onPressed: controller.goToLogin,
                 child: const Text("Skip"),
               ),
             ),
@@ -56,13 +28,9 @@ class _OnboardingViewState extends State<OnboardingView> {
             /// PageView
             Expanded(
               child: PageView.builder(
-                controller: pageController,
-                itemCount: pages.length,
-                onPageChanged: (index) {
-                  setState(() {
-                    currentPage = index;
-                  });
-                },
+                controller: controller.pageController,
+                itemCount: controller.pages.length,
+                onPageChanged: controller.onPageChanged,
                 itemBuilder: (context, index) {
                   return Padding(
                     padding: const EdgeInsets.all(20),
@@ -70,14 +38,14 @@ class _OnboardingViewState extends State<OnboardingView> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Image.asset(
-                          pages[index]["image"]!,
+                          controller.pages[index]["image"]!,
                           height: 280,
                         ),
 
                         const SizedBox(height: 30),
 
                         Text(
-                          pages[index]["title"]!,
+                          controller.pages[index]["title"]!,
                           style: const TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.bold,
@@ -87,7 +55,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                         const SizedBox(height: 15),
 
                         Text(
-                          pages[index]["description"]!,
+                          controller.pages[index]["description"]!,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontSize: 16,
@@ -102,44 +70,42 @@ class _OnboardingViewState extends State<OnboardingView> {
             ),
 
             /// Indicators + Button
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: List.generate(
-                      pages.length,
-                      (index) => Container(
-                        margin: const EdgeInsets.only(right: 8),
-                        height: 8,
-                        width: currentPage == index ? 25 : 8,
-                        decoration: BoxDecoration(
-                          color: currentPage == index
-                              ? Colors.blue
-                              : Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(20),
+            Obx(
+              () => Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        controller.pages.length,
+                        (index) => Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          height: 8,
+                          width: controller.currentPage.value == index ? 25 : 8,
+                          decoration: BoxDecoration(
+                            color: controller.currentPage.value == index
+                                ? AppColor.primaryblue
+                                : Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                         ),
                       ),
                     ),
-                  ),
 
-                  ElevatedButton(
-                    onPressed: () {
-                      if (isLastPage) {
-                        // Navigate to Login/Home
-                      } else {
-                        pageController.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.ease,
-                        );
-                      }
-                    },
-                    child: Text(
-                      isLastPage ? "Get Started" : "Next",
+                    const SizedBox(height: 20),
+
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton(
+                        onPressed: controller.nextPage,
+                        child: Text(
+                          controller.isLastPage ? "Get Started" : "Next",
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],

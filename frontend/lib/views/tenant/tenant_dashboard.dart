@@ -5,12 +5,15 @@ import '../../controllers/auth_controller.dart';
 import '../../models/room/room_model.dart' as room_model;
 import '../../models/auth_model/user_model.dart';
 import '../../models/booking/booking_model.dart';
+import '../../controllers/notification_controller.dart';
+import '../../routes/app_routes.dart';
 
 import '../message/chat_detail_view.dart';
 import '../room/room_detail_view.dart';
 import 'tenant_maintenance_view.dart';
 import 'tenant_rent_ledger_view.dart';
 import '../explore_map_view.dart';
+import '../searchpage_view.dart';
 
 class TenantDashboard extends StatelessWidget {
   const TenantDashboard({super.key});
@@ -85,7 +88,7 @@ class TenantDashboard extends StatelessWidget {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: controller.loadDashboardData,
-          color: Colors.indigo.shade700,
+          color: Colors.blueAccent.shade700,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
@@ -94,31 +97,38 @@ class TenantDashboard extends StatelessWidget {
                 // 1. App Bar Header
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      Text(
-                        'Find Your Cozy Home',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                          fontWeight: FontWeight.w500,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Find Your Cozy Home',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Obx(() {
+                              final user = authController.currentUser.value;
+                              final displayName =
+                                  user?.firstName ?? authController.userName.value;
+                              return Text(
+                                'Hello, $displayName 👋',
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              );
+                            }),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Obx(() {
-                        final user = authController.currentUser.value;
-                        final displayName =
-                            user?.firstName ?? authController.userName.value;
-                        return Text(
-                          'Hello, $displayName 👋',
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        );
-                      }),
+                      _buildNotificationIcon(),
                     ],
                   ),
                 ),
@@ -148,9 +158,9 @@ class TenantDashboard extends StatelessWidget {
                       ],
                     ),
                     child: TextField(
-                      controller: controller.searchController,
-                      onChanged: (val) {
-                        controller.performSearch(val);
+                      readOnly: true,
+                      onTap: () {
+                        Get.to(() => const SearchpageView());
                       },
                       decoration: InputDecoration(
                         hintText: 'Search city, state or room name...',
@@ -215,11 +225,8 @@ class TenantDashboard extends StatelessWidget {
                     );
                   }
 
-                  final isSearch = controller.isSearchMode.value;
                   final selectedTag = controller.selectedFilterTag.value;
-                  var rooms = isSearch
-                      ? controller.searchResults.cast<room_model.Result>()
-                      : controller.allProperties.cast<room_model.Result>();
+                  var rooms = controller.allProperties.cast<room_model.Result>();
 
                   if (selectedTag.isNotEmpty) {
                     rooms = rooms.where((room) {
@@ -234,7 +241,7 @@ class TenantDashboard extends StatelessWidget {
                       return true;
                     }).toList();
                   }
-                  if (rooms.isEmpty && !isSearch) {
+                  if (rooms.isEmpty) {
                     return Padding(
                       padding: const EdgeInsets.all(24.0),
                       child: Center(
@@ -329,14 +336,14 @@ class TenantDashboard extends StatelessWidget {
                                     children: [
                                       Icon(
                                         Icons.calendar_today,
-                                        color: Colors.indigo.shade700,
+                                        color: Colors.blueAccent.shade700,
                                         size: 28,
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
                                         'My Bookings',
                                         style: TextStyle(
-                                          color: Colors.indigo.shade700,
+                                          color: Colors.blueAccent.shade700,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 12,
                                         ),
@@ -393,7 +400,7 @@ class TenantDashboard extends StatelessWidget {
                         const SizedBox(height: 24),
 
                         Text(
-                          isSearch ? 'Search Results' : 'Available Rooms',
+                          'Available Rooms',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -406,7 +413,7 @@ class TenantDashboard extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(vertical: 24),
                             child: Center(
                               child: Text(
-                                'No rooms match your search query.',
+                                'No rooms match your filter.',
                                 style: TextStyle(color: Colors.grey.shade500),
                               ),
                             ),
@@ -423,6 +430,25 @@ class TenantDashboard extends StatelessWidget {
                               return _RoomCard(room: room, context: context);
                             },
                           ),
+                        if (controller.hasNextPage.value)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 20),
+                            child: Center(
+                              child: controller.isLoadMoreLoading.value
+                                  ? const CircularProgressIndicator()
+                                  : ElevatedButton(
+                                      onPressed: controller.loadMoreRooms,
+                                      style: ElevatedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 32, vertical: 12),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                      child: const Text('Load More'),
+                                    ),
+                            ),
+                          ),
                       ],
                     ),
                   );
@@ -435,7 +461,7 @@ class TenantDashboard extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Get.to(() => const ExploreMapView()),
-        backgroundColor: Colors.indigo.shade800,
+        backgroundColor: Colors.blue.shade800,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.map_outlined),
         label: const Text(
@@ -486,14 +512,14 @@ class TenantDashboard extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.indigo.shade800, Colors.blueAccent.shade700],
+          colors: [Colors.blue.shade800, Colors.blueAccent.shade700],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.indigo.shade900.withValues(alpha: 0.25),
+            color: Colors.blue.shade900.withValues(alpha: 0.25),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -555,7 +581,7 @@ class TenantDashboard extends StatelessWidget {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    if (imageUrl != null)
+                    if (imageUrl != null && imageUrl.isNotEmpty && imageUrl.startsWith('http'))
                       ClipRRect(
                         borderRadius: BorderRadius.circular(10),
                         child: Image.network(
@@ -563,6 +589,19 @@ class TenantDashboard extends StatelessWidget {
                           width: 50,
                           height: 50,
                           fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.home_work_outlined,
+                              color: Colors.blueAccent.shade700,
+                              size: 20,
+                            ),
+                          ),
                         ),
                       )
                     else
@@ -570,12 +609,13 @@ class TenantDashboard extends StatelessWidget {
                         width: 50,
                         height: 50,
                         decoration: BoxDecoration(
-                          color: Colors.white10,
+                          color: Colors.blue.shade50,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(
-                          Icons.meeting_room,
-                          color: Colors.white38,
+                        child: Icon(
+                          Icons.home_work_outlined,
+                          color: Colors.blueAccent.shade700,
+                          size: 20,
                         ),
                       ),
                     const SizedBox(width: 14),
@@ -663,7 +703,7 @@ class TenantDashboard extends StatelessWidget {
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           backgroundColor: Colors.white,
-                          foregroundColor: Colors.indigo.shade800,
+                          foregroundColor: Colors.blue.shade800,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -725,6 +765,54 @@ class TenantDashboard extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildNotificationIcon() {
+    final notificationController = Get.find<NotificationController>();
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(
+            Icons.notifications_none_rounded,
+            size: 28,
+            color: Colors.black87,
+          ),
+          onPressed: () async {
+            await Get.toNamed(AppRoutes.notifications);
+            notificationController.fetchNotifications();
+          },
+        ),
+        Obx(() {
+          final count = notificationController.unreadCount;
+          if (count == 0) return const SizedBox.shrink();
+          return Positioned(
+            right: 6,
+            top: 6,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: Colors.redAccent,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              constraints: const BoxConstraints(
+                minWidth: 16,
+                minHeight: 16,
+              ),
+              child: Text(
+                '$count',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
 }
 
 class _RoomCard extends StatelessWidget {
@@ -769,18 +857,18 @@ class _RoomCard extends StatelessWidget {
                         imageUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
-                          color: Colors.indigo.shade50,
+                          color: Colors.blue.shade50,
                           child: Icon(
                             Icons.home_work_outlined,
-                            color: Colors.indigo.shade700,
+                            color: Colors.blueAccent.shade700,
                           ),
                         ),
                       )
                     : Container(
-                        color: Colors.indigo.shade50,
+                        color: Colors.blue.shade50,
                         child: Icon(
                           Icons.home_work_outlined,
-                          color: Colors.indigo.shade700,
+                          color: Colors.blueAccent.shade700,
                         ),
                       ),
               ),
@@ -814,14 +902,14 @@ class _RoomCard extends StatelessWidget {
                         Icon(
                           Icons.payments_outlined,
                           size: 16,
-                          color: Colors.indigo.shade700,
+                          color: Colors.blueAccent.shade700,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           'Rs. ${room.price ?? '0'}',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.indigo.shade700,
+                            color: Colors.blueAccent.shade700,
                           ),
                         ),
                       ],
@@ -845,3 +933,5 @@ class _RoomCard extends StatelessWidget {
     return null;
   }
 }
+
+

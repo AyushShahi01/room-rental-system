@@ -6,6 +6,8 @@ import '../../controllers/booking_controller.dart';
 import '../../models/auth_model/user_model.dart';
 import 'landlord_maintenance_view.dart';
 import '../payment_history_view.dart';
+import '../../controllers/notification_controller.dart';
+import '../../routes/app_routes.dart';
 
 class LandlordDashboard extends StatelessWidget {
   const LandlordDashboard({super.key});
@@ -37,7 +39,7 @@ class LandlordDashboard extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Colors.indigo.shade200,
+                    color: Colors.blue.shade200,
                     width: 1.5,
                   ),
                 ),
@@ -58,7 +60,7 @@ class LandlordDashboard extends StatelessWidget {
                                 height: 12,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 1.5,
-                                  color: Colors.indigo,
+                                  color: Colors.blueAccent,
                                 ),
                               ),
                             );
@@ -74,7 +76,7 @@ class LandlordDashboard extends StatelessWidget {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: controller.loadDashboardData,
-          color: Colors.indigo.shade700,
+          color: Colors.blueAccent.shade700,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(20.0),
@@ -82,31 +84,38 @@ class LandlordDashboard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Welcome / Header
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
                   children: [
-                    Text(
-                      'Landlord Hub',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
-                        fontWeight: FontWeight.w500,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Landlord Hub',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Obx(() {
+                            final user = authController.currentUser.value;
+                            final displayName =
+                                user?.firstName ?? authController.userName.value;
+                            return Text(
+                              'Welcome, $displayName ',
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            );
+                          }),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Obx(() {
-                      final user = authController.currentUser.value;
-                      final displayName =
-                          user?.firstName ?? authController.userName.value;
-                      return Text(
-                        'Welcome, $displayName ',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      );
-                    }),
+                    _buildNotificationIcon(),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -122,17 +131,17 @@ class LandlordDashboard extends StatelessWidget {
                     margin: const EdgeInsets.only(bottom: 24),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.indigo.shade700.withOpacity(0.08),
+                      color: Colors.blueAccent.shade700.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Colors.indigo.shade700.withOpacity(0.2),
+                        color: Colors.blueAccent.shade700.withOpacity(0.2),
                       ),
                     ),
                     child: Text(
                       message,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.indigo.shade900,
+                        color: Colors.blue.shade900,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -181,7 +190,7 @@ class LandlordDashboard extends StatelessWidget {
                               title: 'Maintenance',
                               value: '${controller.maintenanceRequests.value}',
                               icon: Icons.build,
-                              color: Colors.purple.shade600,
+                              color: Colors.blueAccent,
                               onTap: () =>
                                   Get.to(() => const LandlordMaintenanceView()),
                             ),
@@ -222,7 +231,7 @@ class LandlordDashboard extends StatelessWidget {
                         label: 'Add New Room',
                         subtitle: 'List room for rent',
                         icon: Icons.add_circle_outline,
-                        color: Colors.indigo.shade600,
+                        color: Colors.blue.shade600,
                         onTap: () {
                           controller.selectedIndex.value = 1;
                         },
@@ -298,7 +307,7 @@ class LandlordDashboard extends StatelessWidget {
                         iconColor = Colors.blue.shade600;
                       } else if (activity.type == 'maintenance') {
                         iconData = Icons.build;
-                        iconColor = Colors.purple.shade600;
+                        iconColor = Colors.blueAccent;
                       } else if (activity.type == 'rent') {
                         iconData = Icons.warning_rounded;
                         iconColor = Colors.red.shade700;
@@ -618,7 +627,7 @@ class LandlordDashboard extends StatelessWidget {
     
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.indigo,
+        color: Colors.blueAccent,
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
@@ -630,6 +639,54 @@ class LandlordDashboard extends StatelessWidget {
           fontWeight: FontWeight.bold,
         ),
       ),
+    );
+  }
+
+  Widget _buildNotificationIcon() {
+    final notificationController = Get.find<NotificationController>();
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(
+            Icons.notifications_none_rounded,
+            size: 28,
+            color: Colors.black87,
+          ),
+          onPressed: () async {
+            await Get.toNamed(AppRoutes.notifications);
+            notificationController.fetchNotifications();
+          },
+        ),
+        Obx(() {
+          final count = notificationController.unreadCount;
+          if (count == 0) return const SizedBox.shrink();
+          return Positioned(
+            right: 6,
+            top: 6,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: Colors.redAccent,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              constraints: const BoxConstraints(
+                minWidth: 16,
+                minHeight: 16,
+              ),
+              child: Text(
+                '$count',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }),
+      ],
     );
   }
 }

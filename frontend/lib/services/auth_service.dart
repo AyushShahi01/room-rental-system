@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
-import '../models/auth_model/login_model.dart';
-import '../models/auth_model/register_model.dart';
-import '../models/auth_model/refresh_model.dart';
-import '../models/auth_model/logout_model.dart';
-import '../models/auth_model/user_model.dart';
+
+import '../models/auth_model/commonresponse_auth_model.dart';
 import '../models/auth_model/landlord_dash_model.dart';
+import '../models/auth_model/login_model.dart';
+import '../models/auth_model/logout_model.dart';
+import '../models/auth_model/refresh_model.dart';
+import '../models/auth_model/register_model.dart';
+import '../models/auth_model/user_model.dart';
 import '../utils/dio_connection.dart';
 
 class AuthService {
@@ -72,6 +74,7 @@ class AuthService {
       'auth/refresh/',
       data: {'refresh': refreshToken},
     );
+
     return RefreshModel.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -80,6 +83,7 @@ class AuthService {
       'auth/logout/',
       data: {'refresh': refreshToken},
     );
+
     return LogoutModel.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -90,6 +94,7 @@ class AuthService {
 
   Future<UserModel> updateMe(Map<String, dynamic> data) async {
     final response = await _dio.put('auth/me/', data: data);
+
     return UserModel.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -97,15 +102,13 @@ class AuthService {
     final formData = FormData.fromMap({
       'profile_picture': await MultipartFile.fromFile(filePath),
     });
+
     final response = await _dio.post(
       'auth/me/profile-picture/',
       data: formData,
-      options: Options(
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      ),
+      options: Options(headers: {'Content-Type': 'multipart/form-data'}),
     );
+
     return UserModel.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -116,18 +119,74 @@ class AuthService {
 
   Future<UserModel> updateMeUpdate(Map<String, dynamic> data) async {
     final response = await _dio.put('auth/me/update/', data: data);
+
     return UserModel.fromJson(response.data as Map<String, dynamic>);
   }
-  Future<void> updateDeviceToken({
-  required String fcmToken,
-}) async {
-  await _dio.post(
-    'auth/device-token/',
-    data: {
-      'fcm_token': fcmToken,
-    },
-  );
-}
+
+  Future<void> updateDeviceToken({required String fcmToken}) async {
+    await _dio.post('auth/device-token/', data: {'fcm_token': fcmToken});
+  }
+
+  // ================= OTP & PASSWORD RESET =================
+
+  /// POST /api/auth/forgot-password/
+  Future<CommonResponseAuthModel> requestPasswordReset(String email) async {
+    final response = await _dio.post(
+      'auth/forgot-password/',
+      data: {'email': email.trim()},
+    );
+
+    return CommonResponseAuthModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  /// POST /api/auth/otp/send/
+  Future<CommonResponseAuthModel> sendOtp({required String email}) async {
+    final response = await _dio.post(
+      'auth/otp/send/',
+      data: {'email': email.trim()},
+    );
+
+    return CommonResponseAuthModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  /// POST /api/auth/otp/verify/
+  Future<CommonResponseAuthModel> verifyOtp({
+    required String email,
+    required String otpCode,
+  }) async {
+    final response = await _dio.post(
+      'auth/otp/verify/',
+      data: {'email': email.trim(), 'otp_code': otpCode.trim()},
+    );
+
+    return CommonResponseAuthModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  /// POST /api/auth/reset-password/
+  Future<CommonResponseAuthModel> resetPassword({
+    required String email,
+    required String otpCode,
+    required String newPassword,
+  }) async {
+    final response = await _dio.post(
+      'auth/reset-password/',
+      data: {
+        'email': email.trim(),
+        'otp_code': otpCode.trim(),
+        'new_password': newPassword,
+      },
+    );
+
+    return CommonResponseAuthModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
 
   Future<Map<String, dynamic>> changePassword({
     required String oldPassword,
@@ -142,20 +201,19 @@ class AuthService {
         'new_password_confirm': newPasswordConfirm,
       },
     );
+
     return response.data as Map<String, dynamic>;
   }
 
-  // ─── Admin / Landlord endpoints ───────────────────────────────────────────
+  // ───────────────── Admin / Landlord Endpoints ─────────────────
 
-  /// GET /api/auth/admin/dashboard/ → raw map (total_users, active_users, staff_users)
-  /// Used by the admin console stats panel.
+  /// GET /api/auth/admin/dashboard/
   Future<Map<String, dynamic>> getAdminStats() async {
     final response = await _dio.get('auth/admin/dashboard/');
     return response.data as Map<String, dynamic>;
   }
 
-  /// GET /api/auth/admin/dashboard/ → typed model (message field)
-  /// Used by the landlord dashboard panel.
+  /// GET /api/auth/admin/dashboard/
   Future<LandlordDashModel> getLandlordDashboard() async {
     final response = await _dio.get('auth/admin/dashboard/');
     return LandlordDashModel.fromJson(response.data as Map<String, dynamic>);
@@ -170,6 +228,7 @@ class AuthService {
   /// PATCH /api/auth/admin/users/{id}/ban/
   Future<Map<String, dynamic>> banUser(String userId) async {
     final response = await _dio.patch('auth/admin/users/$userId/ban/');
+
     return response.data as Map<String, dynamic>;
   }
 }

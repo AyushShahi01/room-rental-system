@@ -61,15 +61,18 @@ class BookingModel {
       
       if (roomRaw['images'] != null && roomRaw['images'] is List) {
         for (var img in roomRaw['images']) {
+          String? rawUrl;
           if (img is Map && img['image'] != null) {
-            String url = img['image'].toString();
-            if (!url.startsWith('http')) {
-              url = DioConnection.baseDomain + (url.startsWith('/') ? '' : '/') + url;
-            }
-            parsedImages.add(url);
+            rawUrl = img['image'].toString();
           } else if (img is String) {
-            String url = img;
-            if (!url.startsWith('http')) {
+            rawUrl = img;
+          }
+          if (rawUrl != null) {
+            String url = rawUrl;
+            if (url.startsWith('http://127.0.0.1') || url.startsWith('http://localhost')) {
+              final uri = Uri.parse(url);
+              url = DioConnection.baseDomain + uri.path;
+            } else if (!url.startsWith('http')) {
               url = DioConnection.baseDomain + (url.startsWith('/') ? '' : '/') + url;
             }
             parsedImages.add(url);

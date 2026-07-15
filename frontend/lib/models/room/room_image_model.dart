@@ -39,8 +39,13 @@ class Result {
 
     factory Result.fromJson(Map<String, dynamic> json){ 
         String? imgUrl = json["image"]?.toString();
-        if (imgUrl != null && !imgUrl.startsWith('http')) {
-          imgUrl = DioConnection.baseDomain + (imgUrl.startsWith('/') ? '' : '/') + imgUrl;
+        if (imgUrl != null) {
+          if (imgUrl.startsWith('http://127.0.0.1') || imgUrl.startsWith('http://localhost')) {
+            final uri = Uri.parse(imgUrl);
+            imgUrl = DioConnection.baseDomain + uri.path;
+          } else if (!imgUrl.startsWith('http')) {
+            imgUrl = DioConnection.baseDomain + (imgUrl.startsWith('/') ? '' : '/') + imgUrl;
+          }
         }
         return Result(
             id: json["id"],

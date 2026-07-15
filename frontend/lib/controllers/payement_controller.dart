@@ -8,6 +8,7 @@ import '../models/payement/rent_dashboard_model.dart';
 import '../services/payement_service.dart';
 import 'booking_controller.dart';
 import 'room_controller.dart';
+import 'notification_controller.dart';
 
 class PaymentController extends GetxController {
   final PaymentService _service = PaymentService();
@@ -64,6 +65,9 @@ class PaymentController extends GetxController {
       };
 
       await _service.patchRentRecord(recordId, updateData);
+      if (Get.isRegistered<NotificationController>()) {
+        await Get.find<NotificationController>().refreshState();
+      }
 
       isSuccess.value = true;
       successMessage.value = 'Payment logged successfully. Landlord has been notified.';
@@ -129,6 +133,9 @@ class PaymentController extends GetxController {
     try {
       isLoading.value = true;
       await _service.updateRentRecordStatus(recordId, status);
+      if (Get.isRegistered<NotificationController>()) {
+        await Get.find<NotificationController>().refreshState();
+      }
       Get.snackbar(
         'Success',
         'Rent status updated to $status.',

@@ -29,6 +29,8 @@ class _RoomDetailViewState extends State<RoomDetailView> {
       : Get.put(BookingController());
 
   int _currentImageIndex = 0;
+  String _imageSetKey = '';
+  PageController _pageController = PageController(initialPage: 0);
 
   @override
   void initState() {
@@ -324,13 +326,13 @@ class _RoomDetailViewState extends State<RoomDetailView> {
       height: height,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.indigo.shade50,
+        color: Colors.blue.shade50,
       ),
       child: Center(
         child: Icon(
           Icons.home_work_outlined,
           size: 48,
-          color: Colors.indigo.shade700,
+          color: Colors.blueAccent.shade700,
         ),
       ),
     );
@@ -390,6 +392,23 @@ class _RoomDetailViewState extends State<RoomDetailView> {
           return const Center(child: Text('Room not found'));
         }
 
+        final validImages = List<detail_model.Image>.from(_room.images)
+          ..removeWhere((img) => img.image == null || img.image!.isEmpty)
+          ..sort((a, b) => (a.createdAt ?? DateTime.now()).compareTo(b.createdAt ?? DateTime.now()));
+
+        final imageSetKey = validImages
+            .map((image) => image.id?.toString() ?? image.image ?? '')
+            .join(',');
+        if (_imageSetKey != imageSetKey) {
+          _imageSetKey = imageSetKey;
+          _currentImageIndex = 0;
+          if (_pageController.hasClients) {
+             _pageController.jumpToPage(0);
+          } else {
+             _pageController = PageController(initialPage: 0);
+          }
+        }
+
         final isOwnRoom = _room.landlord?.id == Get.find<AuthController>().currentUser.value?.id;
 
         return SingleChildScrollView(
@@ -402,9 +421,11 @@ class _RoomDetailViewState extends State<RoomDetailView> {
                   SizedBox(
                     height: 300,
                     width: double.infinity,
-                    child: _room.images.isNotEmpty
+                    child: validImages.isNotEmpty
                         ? PageView.builder(
-                            itemCount: _room.images.length,
+                            key: ValueKey(imageSetKey),
+                            controller: _pageController,
+                            itemCount: validImages.length,
                             onPageChanged: (index) {
                               setState(() {
                                 _currentImageIndex = index;
@@ -412,7 +433,7 @@ class _RoomDetailViewState extends State<RoomDetailView> {
                             },
                             itemBuilder: (context, index) {
                               return Image.network(
-                                _room.images[index].image ?? '',
+                                validImages[index].image!,
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, _, _) => _fallbackImage(height: 300),
                               );
@@ -438,14 +459,14 @@ class _RoomDetailViewState extends State<RoomDetailView> {
                       ),
                     ),
                   ),
-                  if (_room.images.length > 1)
+                  if (validImages.length > 1)
                     Positioned(
                       bottom: 32,
                       left: 0,
                       right: 0,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(_room.images.length, (index) {
+                        children: List.generate(validImages.length, (index) {
                           final isSelected = _currentImageIndex == index;
                           return AnimatedContainer(
                             duration: const Duration(milliseconds: 250),

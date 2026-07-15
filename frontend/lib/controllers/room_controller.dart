@@ -180,14 +180,13 @@ class RoomController extends GetxController {
     try {
       await _roomService.uploadRoomImage(id, imageFile);
       Get.snackbar('Success', 'Image uploaded successfully');
-      // Automatically refresh details and lists so image appears immediately
-      if (currentRoomDetail.value?.id == id) {
-        loadRoomDetail(id);
-      } else {
-        loadRoomDetail(id);
-      }
-      loadRooms();
-      loadMyRooms();
+      // Wait for the refreshed data before the calling screen navigates back.
+      // This prevents the image slider from rendering a stale image list.
+      await Future.wait([
+        loadRoomDetail(id),
+        loadRooms(),
+        loadMyRooms(),
+      ]);
     } catch (e) {
       Get.snackbar('Error', 'Upload failed: $e');
       rethrow;

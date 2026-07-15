@@ -77,5 +77,8 @@ class RoomImage(models.Model):
     image = models.ImageField(upload_to='rooms/images/')
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ('-created_at', '-id')
+
     def __str__(self):
         return f'Image {self.id} for room {self.room_id}'

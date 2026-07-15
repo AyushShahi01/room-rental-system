@@ -97,7 +97,7 @@ class _ExploreMapViewState extends State<ExploreMapView> {
                   child: Icon(
                     Icons.location_on_rounded,
                     size: isSelected ? 48 : 36,
-                    color: isSelected ? Colors.red.shade800 : Colors.indigo.shade600,
+                    color: isSelected ? Colors.red.shade800 : Colors.blue.shade600,
                   ),
                 ),
               );

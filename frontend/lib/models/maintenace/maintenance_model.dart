@@ -46,9 +46,14 @@ class MaintenanceModel {
             : (roomRaw is int ? roomRaw : int.tryParse(roomRaw?.toString() ?? ''));
 
         String? image = json["image"]?.toString();
-        if (image != null && image.isNotEmpty && !image.startsWith('http')) {
-            final prefix = image.startsWith('/') ? '' : '/';
-            image = '${DioConnection.baseDomain}$prefix$image';
+        if (image != null && image.isNotEmpty) {
+            if (image.startsWith('http://127.0.0.1') || image.startsWith('http://localhost')) {
+                final uri = Uri.parse(image);
+                image = DioConnection.baseDomain + uri.path;
+            } else if (!image.startsWith('http')) {
+                final prefix = image.startsWith('/') ? '' : '/';
+                image = '${DioConnection.baseDomain}$prefix$image';
+            }
         }
 
         return MaintenanceModel(

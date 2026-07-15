@@ -9,6 +9,7 @@ import '../models/message/conversation_model.dart';
 import '../services/message_service.dart';
 import '../utils/dio_connection.dart';
 import '../utils/token_storage.dart';
+import 'notification_controller.dart';
 
 class MessageController extends GetxController {
   final MessageService _messageService = MessageService();
@@ -129,6 +130,9 @@ class MessageController extends GetxController {
             }
           }
           fetchConversations();
+          if (Get.isRegistered<NotificationController>()) {
+            Get.find<NotificationController>().refreshState();
+          }
         }
       }
     } catch (e) {
@@ -195,6 +199,9 @@ class MessageController extends GetxController {
       };
       try {
         _webSocket!.add(json.encode(payload));
+        if (Get.isRegistered<NotificationController>()) {
+          Get.find<NotificationController>().refreshState();
+        }
         return; // WebSocket broadcast will trigger _onMessageReceived and add it to the list.
       } catch (e) {
         debugPrint('Failed to send via WebSocket, falling back to HTTP: $e');
@@ -212,6 +219,9 @@ class MessageController extends GetxController {
         messages.add(sentMsg);
       }
       fetchConversations();
+      if (Get.isRegistered<NotificationController>()) {
+        await Get.find<NotificationController>().refreshState();
+      }
     } catch (e) {
       debugPrint('Error sending message: $e');
       Get.snackbar(
