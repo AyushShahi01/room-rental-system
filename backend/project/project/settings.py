@@ -110,14 +110,35 @@ CHANNEL_LAYERS = {
 }
 
 # ─── Database ──────────────────────────────────────────────────────────────────
-# Default to Neon Postgres database URL (falls back to local development Neon instance or similar)
-DATABASE_URL = os.environ.get(
-    'DATABASE_URL',
-    'postgresql://neondb_owner:npg_wQil81hkJFBG@ep-damp-king-ani3ksii-pooler.c-6.us-east-1.aws.neon.tech/room-rental?sslmode=require&channel_binding=require',
-)
-DATABASES = {
-    'default': dj_database_url.parse(DATABASE_URL)
-}
+# Pull connection string from environment (or .env file)
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL)
+    }
+else:
+    # Fallback to local PostgreSQL using individual variables if available, otherwise SQLite
+    db_name = os.environ.get('DB_NAME')
+    db_user = os.environ.get('DB_USER')
+    db_password = os.environ.get('DB_PASSWORD')
+    db_host = os.environ.get('DB_HOST', 'localhost')
+    db_port = os.environ.get('DB_PORT', '5432')
+
+    if db_name and db_user:
+        DATABASES = {
+            'default': dj_database_url.parse(
+                f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
+            )
+        }
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+
 
 # ─── CORS Configuration ─────────────────────────────────────────────────────────
 if DEBUG:
