@@ -12,25 +12,38 @@ def _initialize():
     if _initialized:
         return True
 
-    if not settings.FIREBASE_CREDENTIALS_PATH:
-        logger.error(
-            'FCM is not configured: set FIREBASE_CREDENTIALS_PATH to the '
-            'Firebase Admin service-account JSON file.'
-        )
-        return False
-
     try:
         import firebase_admin
         from firebase_admin import credentials
+        import json
+        import os
 
         if not firebase_admin._apps:
-            cred = credentials.Certificate(settings.FIREBASE_CREDENTIALS_PATH)
+            firebase_json = os.environ.get('FIREBASE_CREDENTIALS_JSON')
+            if firebase_json:
+                try:
+                    info = json.loads(firebase_json)
+                    cred = credentials.Certificate(info)
+                except Exception as e:
+                    logger.error(f'Failed to parse FIREBASE_CREDENTIALS_JSON: {e}')
+                    return False
+            elif settings.FIREBASE_CREDENTIALS_PATH:
+                cred = credentials.Certificate(settings.FIREBASE_CREDENTIALS_PATH)
+            else:
+                logger.error(
+                    'FCM is not configured: set FIREBASE_CREDENTIALS_PATH or '
+                    'FIREBASE_CREDENTIALS_JSON environment variable.'
+                )
+                return False
+
             firebase_admin.initialize_app(cred)
         _initialized = True
         return True
     except Exception:
         logger.exception('Firebase initialization failed.')
         return False
+
+
 
 
 def send_push(token, content):

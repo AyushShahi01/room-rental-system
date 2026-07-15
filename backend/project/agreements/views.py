@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from .models import Agreement
 from .serializers import AgreementSerializer
-from users.permissions import IsTenant, IsLandlord
+from users.permissions import IsTenant, IsLandlord, IsEmailVerified
 from notifications.helpers import create_notification
 from .utils import generate_agreement_content
 
@@ -17,8 +17,8 @@ class AgreementListCreateView(generics.ListCreateAPIView):
 
     def get_permissions(self):
         if self.request.method == 'POST':
-            return [IsAuthenticated(), IsLandlord()]
-        return [IsAuthenticated()]
+            return [IsAuthenticated(), IsLandlord(), IsEmailVerified()]
+        return [IsAuthenticated(), IsEmailVerified()]
 
     def get_queryset(self):
         user = self.request.user
@@ -34,7 +34,7 @@ class AgreementListCreateView(generics.ListCreateAPIView):
 
 
 class AgreementDetailView(generics.RetrieveAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmailVerified]
     serializer_class = AgreementSerializer
 
     def get_queryset(self):
@@ -45,7 +45,7 @@ class AgreementDetailView(generics.RetrieveAPIView):
 
 
 class SignAgreementView(APIView):
-    permission_classes = [IsAuthenticated, IsTenant]
+    permission_classes = [IsAuthenticated, IsTenant, IsEmailVerified]
 
     def patch(self, request, pk):
         agreement = get_object_or_404(Agreement, pk=pk, booking__tenant=request.user)
@@ -61,7 +61,7 @@ class SignAgreementView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class BookingAgreementView(generics.RetrieveAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmailVerified]
     serializer_class = AgreementSerializer
 
     def get_object(self):

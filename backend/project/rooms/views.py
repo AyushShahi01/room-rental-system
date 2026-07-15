@@ -16,15 +16,22 @@ from .utils.recommendation import recommend_rooms
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
-from users.permissions import IsLandlord
+from rest_framework.pagination import PageNumberPagination
+from users.permissions import IsLandlord, IsEmailVerified
+
+class RoomPagination(PageNumberPagination):
+    page_size = 5
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class RoomListCreateView(generics.ListCreateAPIView):
     serializer_class = RoomSerializer
+    pagination_class = RoomPagination
 
     def get_permissions(self):
         if self.request.method == 'GET':
             return [AllowAny()]
-        return [IsAuthenticated(), IsLandlord()]
+        return [IsAuthenticated(), IsLandlord(), IsEmailVerified()]
 
     def get_queryset(self):
         user = self.request.user
@@ -94,7 +101,7 @@ class RoomListCreateView(generics.ListCreateAPIView):
         if waste_collection_available:
             queryset = queryset.filter(waste_collection_available=waste_collection_available.lower() == 'true')
 
-        return queryset.distinct()
+        return queryset.distinct().order_by('-created_at')
 
     def perform_create(self, serializer):
         serializer.save(landlord=self.request.user)
@@ -105,7 +112,7 @@ class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_permissions(self):
         if self.request.method == 'GET':
             return [AllowAny()]
-        return [IsAuthenticated(), IsLandlord()]
+        return [IsAuthenticated(), IsLandlord(), IsEmailVerified()]
 
     def get_queryset(self):
         user = self.request.user
@@ -127,15 +134,14 @@ class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
         instance.delete()
 
 class MyRoomsView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated, IsLandlord]
+    permission_classes = [IsAuthenticated, IsLandlord, IsEmailVerified]
     serializer_class = RoomSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return Room.objects.filter(landlord=self.request.user)
 
 class RoomAvailabilityView(APIView):
-    permission_classes = [IsAuthenticated, IsLandlord]
+    permission_classes = [IsAuthenticated, IsLandlord, IsEmailVerified]
 
     def patch(self, request, pk):
         room = get_object_or_404(Room, pk=pk, landlord=request.user)
@@ -155,7 +161,7 @@ class RoomImageListView(generics.ListAPIView):
 
 class RoomImageUploadView(APIView):
     """POST /rooms/<room_id>/images/upload/  — upload up to 10 images (landlord only)."""
-    permission_classes = [IsAuthenticated, IsLandlord]
+    permission_classes = [IsAuthenticated, IsLandlord, IsEmailVerified]
     parser_classes = (MultiPartParser, FormParser)
 
     # Build Swagger properties: image_1 … image_10, all optional binary fields
@@ -219,7 +225,7 @@ class RoomImageUploadView(APIView):
 
 class RoomImageDeleteView(APIView):
     """DELETE /rooms/<room_id>/images/<image_id>/  — remove one image (landlord only)."""
-    permission_classes = [IsAuthenticated, IsLandlord]
+    permission_classes = [IsAuthenticated, IsLandlord, IsEmailVerified]
 
     @extend_schema(responses={204: None})
     def delete(self, request, room_id, image_id):

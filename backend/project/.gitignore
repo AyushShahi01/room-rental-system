@@ -62,3 +62,7 @@ Thumbs.db
 
 # Render
 .render/
+
+# Firebase Credentials
+*firebase-service-account*.json
+

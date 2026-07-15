@@ -47,7 +47,7 @@ class BookingTests(APITestCase):
         )
         self.client.force_authenticate(user=self.landlord)
         url = reverse('booking-approve', kwargs={'pk': booking.pk})
-        response = self.client.patch(url)
+        response = self.client.patch(url, {'rent_start_date': '2026-07-15'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         booking.refresh_from_db()

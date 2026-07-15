@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',  # Required for logout / token blacklisting
     'corsheaders',
     'storages',
+    'anymail',
 
     # Local apps
     'users',
@@ -126,7 +127,15 @@ else:
     CORS_ALLOW_CREDENTIALS = True
 
 # ─── Email Setup ───────────────────────────────────────────────────────────────
-if DEBUG:
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY')
+
+if RESEND_API_KEY:
+    EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
+    ANYMAIL = {
+        'RESEND_API_KEY': RESEND_API_KEY,
+    }
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'onboarding@resend.dev')
+elif DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     DEFAULT_FROM_EMAIL = 'noreply@localhost'
 else:
@@ -277,6 +286,8 @@ ESEWA_API_BASE_URL = os.environ.get('ESEWA_API_BASE_URL', 'https://rc.esewa.com.
 
 # Firebase Cloud Messaging
 FIREBASE_CREDENTIALS_PATH = os.environ.get('FIREBASE_CREDENTIALS_PATH', '')
+if FIREBASE_CREDENTIALS_PATH and not os.path.isabs(FIREBASE_CREDENTIALS_PATH):
+    FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, FIREBASE_CREDENTIALS_PATH)
 
 # ─── OpenAPI Docs (Swagger) ────────────────────────────────────────────────────
 SPECTACULAR_SETTINGS = {
@@ -285,6 +296,27 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
+# ─── Caching Setup ─────────────────────────────────────────────────────────────
+UPSTASH_REDIS_URL = os.environ.get('UPSTASH_REDIS_URL') or os.environ.get('REDIS_URL')
+
+if UPSTASH_REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": UPSTASH_REDIS_URL,
+        }
+    }
+    print("[Cache] Upstash Redis cache active")
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "unique-snowflake",
+        }
+    }
+    print("[Cache] Local memory cache active -- set UPSTASH_REDIS_URL to use Upstash Redis")
+
 
 # ─── Security Hardening (Production Only) ──────────────────────────────────────
 if not DEBUG:

@@ -52,7 +52,7 @@ class RoomTests(APITestCase):
             ward_number=7,
             is_available=True
         )
-        url = reverse('room-image-list-create', kwargs={'room_id': room.id})
+        url = reverse('room-image-upload', kwargs={'room_id': room.id})
 
         gif_bytes = (
             b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00'
@@ -61,10 +61,11 @@ class RoomTests(APITestCase):
         )
         room_image = SimpleUploadedFile('room.gif', gif_bytes, content_type='image/gif')
 
-        response = self.client.post(url, {'image': room_image}, format='multipart')
+        response = self.client.post(url, {'images': [room_image]}, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn('image', response.data)
-        self.assertIsNotNone(response.data['image'])
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 1)
+        self.assertIsNotNone(response.data[0]['image'])
 
 
     def test_city_filter_aliases_state(self):

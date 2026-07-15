@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from users.permissions import IsTenant, IsLandlord
+from users.permissions import IsTenant, IsLandlord, IsEmailVerified
 from notifications.helpers import create_notification
 
 
@@ -24,8 +24,8 @@ class BookingListCreateView(generics.ListCreateAPIView):
 
     def get_permissions(self):
         if self.request.method == 'POST':
-            return [IsAuthenticated(), IsTenant()]
-        return [IsAuthenticated()]
+            return [IsAuthenticated(), IsTenant(), IsEmailVerified()]
+        return [IsAuthenticated(), IsEmailVerified()]
 
     def get_queryset(self):
         user = self.request.user
@@ -72,7 +72,7 @@ class BookingListCreateView(generics.ListCreateAPIView):
             logging.getLogger(__name__).error(f"Failed to broadcast booking message: {e}")
 
 class BookingDetailView(generics.RetrieveAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmailVerified]
     serializer_class = BookingSerializer
 
     def get_queryset(self):
@@ -82,7 +82,7 @@ class BookingDetailView(generics.RetrieveAPIView):
         return Booking.objects.filter(tenant=user)
 
 class BookingApproveView(APIView):
-    permission_classes = [IsAuthenticated, IsLandlord]
+    permission_classes = [IsAuthenticated, IsLandlord, IsEmailVerified]
 
     def patch(self, request, pk):
         booking = _booking_for_user_or_404(request.user, pk)
@@ -156,7 +156,7 @@ class BookingApproveView(APIView):
         return Response({'message': 'Booking approved.'}, status=status.HTTP_200_OK)
 
 class BookingRejectView(APIView):
-    permission_classes = [IsAuthenticated, IsLandlord]
+    permission_classes = [IsAuthenticated, IsLandlord, IsEmailVerified]
 
     def patch(self, request, pk):
         booking = _booking_for_user_or_404(request.user, pk)
@@ -169,7 +169,7 @@ class BookingRejectView(APIView):
         return Response({'message': 'Booking rejected.'}, status=status.HTTP_200_OK)
 
 class BookingCancelView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmailVerified]
 
     def patch(self, request, pk):
         booking = get_object_or_404(Booking, pk=pk)
@@ -203,11 +203,11 @@ class BookingCancelView(APIView):
         return Response({'message': 'Booking cancelled.'}, status=status.HTTP_200_OK)
 
 class MyBookingsView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated, IsTenant]
+    permission_classes = [IsAuthenticated, IsTenant, IsEmailVerified]
     serializer_class = BookingSerializer
     def get_queryset(self): return Booking.objects.filter(tenant=self.request.user)
 
 class IncomingBookingsView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated, IsLandlord]
+    permission_classes = [IsAuthenticated, IsLandlord, IsEmailVerified]
     serializer_class = BookingSerializer
     def get_queryset(self): return Booking.objects.filter(room__landlord=self.request.user)

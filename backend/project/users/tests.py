@@ -28,6 +28,7 @@ class UserAuthTests(APITestCase):
             'role': 'tenant',
         }
 
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
     def test_registration_returns_tokens(self):
         response = self.client.post(self.register_url, self.user_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -38,7 +39,14 @@ class UserAuthTests(APITestCase):
         self.assertEqual(response.data['user']['role'], 'tenant')
         self.assertEqual(response.data['user']['tenant_id'], response.data['user']['id'])
         self.assertIsNone(response.data['user']['landlord_id'])
-        self.assertFalse(User.objects.get(username='testuser').is_email_verified)
+        self.assertFalse(response.data['user']['is_email_verified'])
+
+        
+        user = User.objects.get(username='testuser')
+        self.assertFalse(user.is_email_verified)
+        self.assertTrue(OTP.objects.filter(user=user).exists())
+        self.assertEqual(len(mail.outbox), 1)
+
 
     def test_login_with_username_returns_tokens(self):
         User.objects.create_user(**self.user_data)
@@ -199,6 +207,8 @@ class UserAuthTests(APITestCase):
     @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
     def test_otp_send_and_verify(self):
         user = User.objects.create_user(**self.user_data)
+        user.is_email_verified = False
+        user.save()
         self.client.force_authenticate(user=user)
 
         send_response = self.client.post(reverse('otp-send'), {})
@@ -211,6 +221,8 @@ class UserAuthTests(APITestCase):
         self.assertEqual(verify_response.status_code, status.HTTP_200_OK)
         otp.refresh_from_db()
         self.assertTrue(otp.is_used)
+        user.refresh_from_db()
+        self.assertTrue(user.is_email_verified)
 
     def test_expired_otp_rejected(self):
         user = User.objects.create_user(**self.user_data)
@@ -322,5 +334,20 @@ class UserAuthTests(APITestCase):
         })
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(response.data['error'], 'No account found with this email.')
+
+    def test_unverified_user_blocked_from_protected_endpoints(self):
+        user_data = self.user_data.copy()
+        user_data['username'] = 'testlandlord'
+        user_data['email'] = 'landlord@example.com'
+        user_data['role'] = 'landlord'
+        user = User.objects.create_user(**user_data)
+        user.is_email_verified = False
+        user.save()
+        self.client.force_authenticate(user=user)
+
+        # Attempting to access protected endpoints (e.g. 'my-rooms') should return 403 Forbidden
+        response = self.client.get(reverse('my-rooms'))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data['detail'], 'Email verification is required to access this resource.')
 
 

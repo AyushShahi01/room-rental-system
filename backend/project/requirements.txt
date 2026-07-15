@@ -54,6 +54,7 @@ idna==3.11
 
 # Notifications
 firebase-admin==7.1.0
+django-anymail[resend]==11.1
 
 # Utilities
 pillow==12.1.1

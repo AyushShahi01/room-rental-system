@@ -21,6 +21,7 @@ class CustomUser(AbstractUser):
     ward = models.PositiveIntegerField(blank=True, null=True)
     fcm_token = models.CharField(max_length=255, null=True, blank=True)
     profile_picture = models.ImageField(upload_to='profiles/', null=True, blank=True)
+    is_email_verified = models.BooleanField(default=True)
 
 
 class OTP(models.Model):

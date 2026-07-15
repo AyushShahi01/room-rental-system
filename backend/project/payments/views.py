@@ -2,6 +2,7 @@ from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from users.permissions import IsEmailVerified
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from django.db.models import Sum, Value, DecimalField
@@ -13,7 +14,7 @@ from .serializers import RentRecordSerializer
 
 
 class RentRecordListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmailVerified]
     serializer_class = RentRecordSerializer
 
     def get_queryset(self):
@@ -72,7 +73,7 @@ class RentRecordListCreateView(generics.ListCreateAPIView):
 
 
 class RentRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmailVerified]
     serializer_class = RentRecordSerializer
 
     def get_queryset(self):
@@ -148,7 +149,7 @@ class RentRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class RentDashboardView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmailVerified]
 
     def get(self, request):
         user = request.user

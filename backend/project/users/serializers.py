@@ -27,6 +27,7 @@ class UserSerializer(serializers.ModelSerializer):
             'ward',
             'fcm_token',
             'profile_picture',
+            'is_email_verified',
         ]
         read_only_fields = ['id']
         extra_kwargs = {
@@ -34,6 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
             'email': {'read_only': True},
             'role': {'read_only': True},
             'fcm_token': {'read_only': True},
+            'is_email_verified': {'read_only': True},
         }
 
     def get_tenant_id(self, obj):

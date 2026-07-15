@@ -53,6 +53,13 @@ class RoomLocationListView(APIView):
         tags=["Maps"],
     )
     def get(self, request):
+        from django.core.cache import cache
+        cache_key = "room_locations_list"
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            logger.info("[Maps] Room locations cache hit")
+            return Response(cached_data, status=status.HTTP_200_OK)
+
         rooms = Room.objects.filter(
             latitude__isnull=False,
             longitude__isnull=False,
@@ -60,7 +67,9 @@ class RoomLocationListView(APIView):
         ).select_related('landlord')
 
         serializer = RoomLocationSerializer(rooms, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        data = serializer.data
+        cache.set(cache_key, data, timeout=3600)  # Cache for 1 hour
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class RoomLocationDetailView(APIView):
@@ -136,6 +145,14 @@ class ShortestRouteView(APIView):
         dest_lat = data['destination_lat']
         dest_lng = data['destination_lng']
 
+        # ── Check cache first ──────────────────────────────────────────────────
+        from django.core.cache import cache
+        cache_key = f"route:{round(float(origin_lat), 5)}:{round(float(origin_lng), 5)}:{round(float(dest_lat), 5)}:{round(float(dest_lng), 5)}"
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            logger.info(f"[Maps] Route cache hit: {cache_key}")
+            return Response(cached_data, status=status.HTTP_200_OK)
+
         # ── Check graph is loaded ─────────────────────────────────────────────
         try:
             adj = get_adj()
@@ -169,17 +186,16 @@ class ShortestRouteView(APIView):
                     logger.info(
                         f"[Maps] Route successfully resolved via OSRM: {distance_meters:.1f} m, {len(path_coords)} points"
                     )
-                    return Response(
-                        {
-                            "path": path_coords,
-                            "distance_meters": round(distance_meters, 2),
-                            "node_count": len(path_coords),
-                            "algorithm": "osrm_global_routing",
-                            "origin_node": 0,
-                            "destination_node": 0,
-                        },
-                        status=status.HTTP_200_OK,
-                    )
+                    route_data = {
+                        "path": path_coords,
+                        "distance_meters": round(distance_meters, 2),
+                        "node_count": len(path_coords),
+                        "algorithm": "osrm_global_routing",
+                        "origin_node": 0,
+                        "destination_node": 0,
+                    }
+                    cache.set(cache_key, route_data, timeout=86400)  # Cache for 24 hours
+                    return Response(route_data, status=status.HTTP_200_OK)
         except Exception as e:
             logger.warning(f"[Maps] OSRM routing failed or timed out: {e}. Falling back to local Dijkstra...")
 
@@ -203,17 +219,16 @@ class ShortestRouteView(APIView):
                 {"lat": origin_lat, "lng": origin_lng},
                 {"lat": dest_lat, "lng": dest_lng}
             ]
-            return Response(
-                {
-                    "path": path_coords,
-                    "distance_meters": round(straight_distance, 2),
-                    "node_count": 2,
-                    "algorithm": "straight_line_fallback",
-                    "origin_node": source_node,
-                    "destination_node": target_node,
-                },
-                status=status.HTTP_200_OK,
-            )
+            route_data = {
+                "path": path_coords,
+                "distance_meters": round(straight_distance, 2),
+                "node_count": 2,
+                "algorithm": "straight_line_fallback",
+                "origin_node": source_node,
+                "destination_node": target_node,
+            }
+            cache.set(cache_key, route_data, timeout=86400)  # Cache for 24 hours
+            return Response(route_data, status=status.HTTP_200_OK)
 
         logger.info(
             f"[Maps] Running local Dijkstra: ({origin_lat},{origin_lng}) → ({dest_lat},{dest_lng}) "
@@ -229,17 +244,16 @@ class ShortestRouteView(APIView):
                 {"lat": origin_lat, "lng": origin_lng},
                 {"lat": dest_lat, "lng": dest_lng}
             ]
-            return Response(
-                {
-                    "path": path_coords,
-                    "distance_meters": round(straight_distance, 2),
-                    "node_count": 2,
-                    "algorithm": "straight_line_fallback",
-                    "origin_node": source_node,
-                    "destination_node": target_node,
-                },
-                status=status.HTTP_200_OK,
-            )
+            route_data = {
+                "path": path_coords,
+                "distance_meters": round(straight_distance, 2),
+                "node_count": 2,
+                "algorithm": "straight_line_fallback",
+                "origin_node": source_node,
+                "destination_node": target_node,
+            }
+            cache.set(cache_key, route_data, timeout=86400)  # Cache for 24 hours
+            return Response(route_data, status=status.HTTP_200_OK)
 
         path_nodes, total_distance = result
         path_coords = path_to_coordinates(path_nodes, node_coords)
@@ -255,14 +269,13 @@ class ShortestRouteView(APIView):
             f"[Maps] Route found via local Dijkstra: {len(path_nodes)} nodes (plus start/end pins), {total_distance:.1f} m"
         )
 
-        return Response(
-            {
-                "path": path_coords,
-                "distance_meters": round(total_distance, 2),
-                "node_count": len(path_nodes) + 2,
-                "algorithm": "bidirectional_dijkstra",
-                "origin_node": source_node,
-                "destination_node": target_node,
-            },
-            status=status.HTTP_200_OK,
-        )
+        route_data = {
+            "path": path_coords,
+            "distance_meters": round(total_distance, 2),
+            "node_count": len(path_nodes) + 2,
+            "algorithm": "bidirectional_dijkstra",
+            "origin_node": source_node,
+            "destination_node": target_node,
+        }
+        cache.set(cache_key, route_data, timeout=86400)  # Cache for 24 hours
+        return Response(route_data, status=status.HTTP_200_OK)

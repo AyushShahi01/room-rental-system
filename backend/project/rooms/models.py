@@ -60,6 +60,17 @@ class Room(models.Model):
     def __str__(self):
         return f'{self.title} ({self.landlord})'
 
+    def save(self, *args, **kwargs):
+        from django.core.cache import cache
+        cache.delete("room_locations_list")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        from django.core.cache import cache
+        cache.delete("room_locations_list")
+        super().delete(*args, **kwargs)
+
+
 
 class RoomImage(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='images')

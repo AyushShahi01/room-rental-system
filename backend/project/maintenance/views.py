@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from users.permissions import IsTenant, IsLandlord
+from users.permissions import IsTenant, IsLandlord, IsEmailVerified
 from notifications.helpers import create_notification
 
 class MaintenanceListCreateView(generics.ListCreateAPIView):
@@ -16,8 +16,8 @@ class MaintenanceListCreateView(generics.ListCreateAPIView):
 
     def get_permissions(self):
         if self.request.method == 'POST':
-            return [IsAuthenticated(), IsTenant()]
-        return [IsAuthenticated()]
+            return [IsAuthenticated(), IsTenant(), IsEmailVerified()]
+        return [IsAuthenticated(), IsEmailVerified()]
 
     def get_queryset(self):
         user = self.request.user
@@ -29,7 +29,7 @@ class MaintenanceListCreateView(generics.ListCreateAPIView):
         create_notification(maintenance.room.landlord, f'New maintenance request for {maintenance.room.title}.')
 
 class MaintenanceDetailView(generics.RetrieveAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmailVerified]
     serializer_class = MaintenanceSerializer
 
     def get_queryset(self):
@@ -38,7 +38,7 @@ class MaintenanceDetailView(generics.RetrieveAPIView):
                 MaintenanceRequest.objects.select_related('room', 'tenant').filter(room__landlord=user))
 
 class MaintenanceStatusUpdateView(APIView):
-    permission_classes = [IsAuthenticated, IsLandlord]
+    permission_classes = [IsAuthenticated, IsLandlord, IsEmailVerified]
 
     def patch(self, request, pk):
         maintenance = get_object_or_404(MaintenanceRequest, pk=pk, room__landlord=request.user)
@@ -58,7 +58,7 @@ class MaintenanceStatusUpdateView(APIView):
         return Response({'message': 'Maintenance status updated.'}, status=status.HTTP_200_OK)
 
 class MaintenanceImageUploadView(APIView):
-    permission_classes = [IsAuthenticated, IsTenant]
+    permission_classes = [IsAuthenticated, IsTenant, IsEmailVerified]
     parser_classes = (MultiPartParser, FormParser)
 
     @extend_schema(
@@ -87,13 +87,13 @@ class MaintenanceImageUploadView(APIView):
         return Response(MaintenanceSerializer(maintenance).data, status=status.HTTP_200_OK)
 
 class MyMaintenanceView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated, IsTenant]
+    permission_classes = [IsAuthenticated, IsTenant, IsEmailVerified]
     serializer_class = MaintenanceSerializer
     def get_queryset(self):
         return MaintenanceRequest.objects.select_related('room', 'tenant').filter(tenant=self.request.user)
 
 class RoomMaintenanceView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated, IsLandlord]
+    permission_classes = [IsAuthenticated, IsLandlord, IsEmailVerified]
     serializer_class = MaintenanceSerializer
     def get_queryset(self):
         return MaintenanceRequest.objects.select_related('room', 'tenant').filter(room_id=self.kwargs['room_id'], room__landlord=self.request.user)

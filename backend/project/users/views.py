@@ -48,10 +48,34 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        user.is_email_verified = False
+        user.save(update_fields=['is_email_verified'])
+
+        # Generate and save verification OTP
+        code = f'{random.SystemRandom().randint(0, 999999):06d}'
+        expires_at = timezone.now() + timedelta(minutes=settings.OTP_EXPIRY_MINUTES)
+        OTP.objects.create(user=user, code=code, expires_at=expires_at)
+
+        email_error = False
+        try:
+            send_mail(
+                'Verify your email - Smart Room Renting',
+                f'Your verification code is {code}. It expires in {settings.OTP_EXPIRY_MINUTES} minutes.',
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+        except Exception as e:
+            email_error = True
+
         refresh = RefreshToken.for_user(user)
 
+        message = 'Registration successful. A verification OTP has been sent to your email.'
+        if email_error:
+            message = 'Registration successful, but failed to send verification email. Please request a new OTP.'
+
         response_data = {
-            'message': 'Registration successful.',
+            'message': message,
             'tokens': {
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
@@ -212,13 +236,19 @@ class OTPSendView(APIView):
         expires_at = timezone.now() + timedelta(minutes=settings.OTP_EXPIRY_MINUTES)
         OTP.objects.create(user=request.user, code=code, expires_at=expires_at)
 
-        send_mail(
-            'Your Smart Room Renting OTP',
-            f'Your verification code is {code}. It expires in {settings.OTP_EXPIRY_MINUTES} minutes.',
-            settings.DEFAULT_FROM_EMAIL,
-            [email],
-            fail_silently=False,
-        )
+        try:
+            send_mail(
+                'Your Smart Room Renting OTP',
+                f'Your verification code is {code}. It expires in {settings.OTP_EXPIRY_MINUTES} minutes.',
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+            )
+        except Exception as e:
+            return Response(
+                {'error': 'Failed to send OTP email. Please check your SMTP configuration or try again later.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         return Response({'message': 'OTP sent.'}, status=status.HTTP_200_OK)
 
 
@@ -243,6 +273,10 @@ class OTPVerifyView(APIView):
 
         otp.is_used = True
         otp.save(update_fields=['is_used'])
+
+        request.user.is_email_verified = True
+        request.user.save(update_fields=['is_email_verified'])
+
         return Response({'message': 'OTP verified.'}, status=status.HTTP_200_OK)
 
 class AdminUserListView(APIView):
@@ -314,13 +348,19 @@ class ForgotPasswordView(APIView):
             expires_at = timezone.now() + timedelta(minutes=settings.OTP_EXPIRY_MINUTES)
             OTP.objects.create(user=user, code=code, expires_at=expires_at)
 
-            send_mail(
-                'Your Smart Room Renting Password Reset OTP',
-                f'Your verification code for password reset is {code}. It expires in {settings.OTP_EXPIRY_MINUTES} minutes.',
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
-                fail_silently=False,
-            )
+            try:
+                send_mail(
+                    'Your Smart Room Renting Password Reset OTP',
+                    f'Your verification code for password reset is {code}. It expires in {settings.OTP_EXPIRY_MINUTES} minutes.',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                return Response(
+                    {'error': 'Failed to send password reset email. Please contact support or try again later.'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
 
         return Response(
             {'message': 'If an account exists with this email, a password reset code has been sent.'},

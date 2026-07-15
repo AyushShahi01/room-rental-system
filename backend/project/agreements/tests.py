@@ -37,8 +37,8 @@ class AgreementTests(APITestCase):
         })
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn('Rent Price: NPR 100.00', response.data['content'])
-        self.assertIn('Rent Mode: Fixed', response.data['content'])
+        self.assertIn('Monthly Rent: Rs. 100.00', response.data['content'])
+        self.assertEqual(response.data['rent_mode'], 'fixed')
 
     def test_tenant_cannot_create_agreement(self):
         self.client.force_authenticate(user=self.tenant)

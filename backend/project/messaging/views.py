@@ -4,13 +4,14 @@ from .serializers import MessageSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from users.permissions import IsEmailVerified
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from users.serializers import UserSerializer
 from notifications.helpers import create_notification
 
 class MessageListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmailVerified]
     serializer_class = MessageSerializer
 
     def get_queryset(self):
@@ -26,7 +27,7 @@ class MessageListCreateView(generics.ListCreateAPIView):
         create_notification(message.receiver, f'New message from {message.sender.username}.')
 
 class MessageDetailView(generics.RetrieveAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmailVerified]
     serializer_class = MessageSerializer
 
     def get_queryset(self):
@@ -34,7 +35,7 @@ class MessageDetailView(generics.RetrieveAPIView):
         return Message.objects.filter(Q(sender=user) | Q(receiver=user)).order_by('created_at')
 
 class BookingMessagesView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmailVerified]
     serializer_class = MessageSerializer
 
     def get_queryset(self):
@@ -44,7 +45,7 @@ class BookingMessagesView(generics.ListAPIView):
 
 
 class ConversationListView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmailVerified]
 
     def get(self, request):
         user = request.user
@@ -64,8 +65,9 @@ class ConversationListView(APIView):
 
         return Response({'count': len(conversations), 'results': conversations}, status=status.HTTP_200_OK)
 
+
 class MarkMessageReadView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmailVerified]
 
     def patch(self, request, pk):
         message = get_object_or_404(Message, pk=pk, receiver=request.user)

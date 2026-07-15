@@ -4,10 +4,11 @@ from .serializers import NotificationSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from users.permissions import IsEmailVerified
 from django.shortcuts import get_object_or_404
 
 class NotificationListView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmailVerified]
     serializer_class = NotificationSerializer
 
     def get_queryset(self):
@@ -16,7 +17,7 @@ class NotificationListView(generics.ListAPIView):
         return Notification.objects.filter(user=self.request.user).order_by('-created_at', '-pk')
 
 class NotificationActionView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmailVerified]
 
     def patch(self, request, pk):
         notification = get_object_or_404(Notification, pk=pk, user=request.user)
@@ -28,14 +29,14 @@ class NotificationActionView(APIView):
         return Response({'message': 'Notification marked as read.'}, status=status.HTTP_200_OK)
 
 class ReadAllNotificationsView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmailVerified]
 
     def patch(self, request):
         count = Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
         return Response({'message': f'Marked {count} notifications as read.'}, status=status.HTTP_200_OK)
 
 class DeleteNotificationView(generics.DestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsEmailVerified]
     serializer_class = NotificationSerializer
 
     def get_queryset(self):
