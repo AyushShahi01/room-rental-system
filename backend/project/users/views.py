@@ -225,6 +225,14 @@ def _resolve_otp_email(request, serializer):
 class OTPSendView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=OTPSendSerializer,
+        responses={
+            200: MessageResponseSerializer,
+            400: ErrorResponseSerializer,
+            500: ErrorResponseSerializer,
+        },
+    )
     def post(self, request):
         serializer = OTPSendSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -255,6 +263,13 @@ class OTPSendView(APIView):
 class OTPVerifyView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=OTPVerifySerializer,
+        responses={
+            200: MessageResponseSerializer,
+            400: ErrorResponseSerializer,
+        },
+    )
     def post(self, request):
         serializer = OTPVerifySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -363,7 +378,7 @@ class ForgotPasswordView(APIView):
                 )
 
         return Response(
-            {'message': 'If an account exists with this email, a password reset code has been sent.'},
+            {'message': 'A password reset code has been sent.'},
             status=status.HTTP_200_OK
         )
 
