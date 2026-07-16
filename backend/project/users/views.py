@@ -205,6 +205,12 @@ class ChangePasswordView(APIView):
 class DeviceTokenView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=DeviceTokenSerializer,
+        responses={
+            200: MessageResponseSerializer,
+        },
+    )
     def post(self, request):
         serializer = DeviceTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
