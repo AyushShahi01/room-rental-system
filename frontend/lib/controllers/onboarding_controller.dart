@@ -10,17 +10,17 @@ class OnboardingController extends GetxController {
 
   final List<Map<String, String>> pages = const [
     {
-      "image": "assets/images/onboarding1.png",
+      "image": "assets/images/onboard_screen1.png",
       "title": "Find Rooms Easily",
       "description": "Search rooms and flats from different locations.",
     },
     {
-      "image": "assets/images/onboarding2.png",
+      "image": "assets/images/onboard_screen2.png",
       "title": "Connect with Landlords",
       "description": "Directly contact landlords and property owners.",
     },
     {
-      "image": "assets/images/onboarding3.png",
+      "image": "assets/images/onboard_screen3.png",
       "title": "Start Your Journey",
       "description": "Find your perfect rental home quickly and easily.",
     },
