@@ -162,7 +162,7 @@ if DEBUG:
         DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'onboarding@resend.dev')
     else:
         EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-        DEFAULT_FROM_EMAIL = 'noreply@localhost'
+        DEFAULT_FROM_EMAIL = 'noreply@contact.roomrental.tech'
 else:
     # Production
     if RESEND_API_KEY:
