@@ -100,6 +100,8 @@ class RoomRecommendationRequestSerializer(serializers.Serializer):
         required=False,
         allow_null=True,
     )
+    latitude = serializers.DecimalField(max_digits=9, decimal_places=6, required=False, allow_null=True)
+    longitude = serializers.DecimalField(max_digits=9, decimal_places=6, required=False, allow_null=True)
     limit = serializers.IntegerField(required=False, default=10, min_value=1, max_value=50)
 
 

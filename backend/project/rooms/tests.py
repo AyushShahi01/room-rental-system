@@ -138,7 +138,7 @@ class RoomRecommendationTests(APITestCase):
             food_available=False,
             water_supply_available=False,
             waste_collection_available=False,
-            gender_preference='female',
+            gender_preference='any',
             is_available=True,
         )
 
@@ -187,4 +187,88 @@ class RoomRecommendationTests(APITestCase):
         self.assertGreater(response.data['results'][0]['combined_score'], response.data['results'][1]['combined_score'])
         self.assertEqual(response.data['results'][0]['location_score'], 1.0)
         self.assertEqual(response.data['results'][0]['combined_score'], 1.0)
+
+    def test_recommendations_with_coordinates(self):
+        # Set coordinates on rooms (Kathmandu vs Pokhara)
+        self.best_room.latitude = 27.7172
+        self.best_room.longitude = 85.3240
+        self.best_room.save()
+
+        self.second_room.latitude = 28.2096
+        self.second_room.longitude = 83.9856
+        self.second_room.save()
+
+        payload = {
+            'preferred_price': '500.00',
+            'latitude': 27.7172,
+            'longitude': 85.3240,
+            'furnished_status': True,
+            'has_wifi': True,
+            'limit': 5,
+        }
+
+        response = self.client.post(self.recommendations_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2)
+
+        results = {item['room']['id']: item for item in response.data['results']}
+        best_match_result = results[self.best_room.id]
+        second_match_result = results[self.second_room.id]
+
+        # best_room is exactly at the coordinates -> location_score should be 1.0
+        self.assertEqual(best_match_result['location_score'], 1.0)
+        # second_room is in Pokhara (~140km away) -> location_score should decay to 0.0
+        self.assertEqual(second_match_result['location_score'], 0.0)
+
+    def test_recommendations_price_directional_penalty_and_gender_hard_filter(self):
+        # Create a cheaper room (budget $500, room price $300) -> should have price_score = 1.0 (no penalty)
+        cheaper_room = Room.objects.create(
+            landlord=self.landlord,
+            title='Cheaper Room',
+            description='Below budget',
+            price='300.00',
+            province='Bagmati',
+            state='Kathmandu',
+            ward_number=7,
+            gender_preference='any',
+            is_available=True,
+        )
+
+        # Create a female-only room -> should be hard-excluded because the payload has gender_preference='male'
+        female_room = Room.objects.create(
+            landlord=self.landlord,
+            title='Female Only Room',
+            description='Female only',
+            price='500.00',
+            province='Bagmati',
+            state='Kathmandu',
+            ward_number=7,
+            gender_preference='female',
+            is_available=True,
+        )
+
+        payload = {
+            'preferred_price': '500.00',
+            'province': 'Bagmati',
+            'state': 'Kathmandu',
+            'gender_preference': 'male',
+            'limit': 10,
+        }
+
+        response = self.client.post(self.recommendations_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Female room must be hard-excluded. best_room, second_room, and cheaper_room should remain.
+        # So we expect 3 rooms
+        self.assertEqual(response.data['count'], 3)
+
+        returned_ids = [item['room']['id'] for item in response.data['results']]
+        self.assertNotIn(female_room.id, returned_ids)
+        self.assertIn(cheaper_room.id, returned_ids)
+
+        # Let's verify cheaper_room is ranked higher or equal than an over-budget room
+        # self.second_room has price 850.00 (over budget 500.00)
+        results = {item['room']['id']: item for item in response.data['results']}
+        self.assertGreater(results[cheaper_room.id]['combined_score'], results[self.second_room.id]['combined_score'])
+
 

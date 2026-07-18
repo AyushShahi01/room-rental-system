@@ -261,6 +261,12 @@ class RecommendedRoomsView(APIView):
         limit = preferences.pop('limit', 10)
 
         rooms = Room.objects.filter(is_available=True)
+        gender_pref = preferences.get('gender_preference')
+        if gender_pref == Room.GENDER_PREFERENCE_MALE:
+            rooms = rooms.exclude(gender_preference=Room.GENDER_PREFERENCE_FEMALE)
+        elif gender_pref == Room.GENDER_PREFERENCE_FEMALE:
+            rooms = rooms.exclude(gender_preference=Room.GENDER_PREFERENCE_MALE)
+
         scored_rooms = recommend_rooms(rooms, preferences)
         top_results = scored_rooms[:limit]
 
