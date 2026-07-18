@@ -1,4 +1,4 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, serializers
 from .models import Booking
 from .serializers import BookingSerializer
 from rest_framework.views import APIView
@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from users.permissions import IsTenant, IsLandlord, IsEmailVerified
 from notifications.helpers import create_notification
+from drf_spectacular.utils import extend_schema, inline_serializer
 
 
 def _booking_for_user_or_404(user, pk):
@@ -43,7 +44,7 @@ class BookingListCreateView(generics.ListCreateAPIView):
             f'New booking request from {booking.tenant.username} for {booking.room.title}.',
         )
 
-        # Create an automatic chat message connecting them
+       
         from messaging.models import Message as ChatMessage
         from messaging.serializers import MessageSerializer
         from channels.layers import get_channel_layer
@@ -56,7 +57,6 @@ class BookingListCreateView(generics.ListCreateAPIView):
             booking_id=booking.id
         )
 
-        # Broadcast the message to both user groups via WebSockets
         try:
             channel_layer = get_channel_layer()
             if channel_layer:
@@ -84,6 +84,29 @@ class BookingDetailView(generics.RetrieveAPIView):
 class BookingApproveView(APIView):
     permission_classes = [IsAuthenticated, IsLandlord, IsEmailVerified]
 
+    @extend_schema(
+        summary="Approve booking request",
+        description="Approves a pending booking request and auto-generates the corresponding lease agreement.",
+        request=inline_serializer(
+            name='BookingApproveSerializer',
+            fields={
+                'rent_start_date': serializers.DateField(
+                    required=True,
+                    help_text="The date when the rent starts, format: YYYY-MM-DD"
+                )
+            }
+        ),
+        responses={
+            200: inline_serializer(
+                name='BookingApproveResponseSerializer',
+                fields={'message': serializers.CharField()}
+            ),
+            400: inline_serializer(
+                name='BookingApproveErrorSerializer',
+                fields={'error': serializers.CharField()}
+            )
+        }
+    )
     def patch(self, request, pk):
         booking = _booking_for_user_or_404(request.user, pk)
         if booking.status != Booking.STATUS_PENDING:
@@ -158,6 +181,21 @@ class BookingApproveView(APIView):
 class BookingRejectView(APIView):
     permission_classes = [IsAuthenticated, IsLandlord, IsEmailVerified]
 
+    @extend_schema(
+        summary="Reject booking request",
+        description="Rejects a pending booking request.",
+        request=None,
+        responses={
+            200: inline_serializer(
+                name='BookingRejectResponseSerializer',
+                fields={'message': serializers.CharField()}
+            ),
+            400: inline_serializer(
+                name='BookingRejectErrorSerializer',
+                fields={'error': serializers.CharField()}
+            )
+        }
+    )
     def patch(self, request, pk):
         booking = _booking_for_user_or_404(request.user, pk)
         if booking.status != Booking.STATUS_PENDING:
@@ -171,6 +209,25 @@ class BookingRejectView(APIView):
 class BookingCancelView(APIView):
     permission_classes = [IsAuthenticated, IsEmailVerified]
 
+    @extend_schema(
+        summary="Cancel booking",
+        description="Cancels a pending or approved booking request. Can be performed by either the tenant or the landlord.",
+        request=None,
+        responses={
+            200: inline_serializer(
+                name='BookingCancelResponseSerializer',
+                fields={'message': serializers.CharField()}
+            ),
+            400: inline_serializer(
+                name='BookingCancelErrorSerializer',
+                fields={'error': serializers.CharField()}
+            ),
+            403: inline_serializer(
+                name='BookingCancelPermissionErrorSerializer',
+                fields={'error': serializers.CharField()}
+            )
+        }
+    )
     def patch(self, request, pk):
         booking = get_object_or_404(Booking, pk=pk)
         

@@ -34,6 +34,7 @@ class TenantDashboard extends StatelessWidget {
         ),
         iconTheme: const IconThemeData(color: Colors.black87),
         actions: [
+          _buildNotificationIcon(),
           Obx(() {
             final user = authController.currentUser.value;
             final picUrl = user?.absoluteProfilePictureUrl;
@@ -97,38 +98,31 @@ class TenantDashboard extends StatelessWidget {
                 // 1. App Bar Header
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Find Your Cozy Home',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade600,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Obx(() {
-                              final user = authController.currentUser.value;
-                              final displayName =
-                                  user?.firstName ?? authController.userName.value;
-                              return Text(
-                                'Hello, $displayName 👋',
-                                style: const TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              );
-                            }),
-                          ],
+                      Text(
+                        'Find Your Cozy Home',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      _buildNotificationIcon(),
+                      const SizedBox(height: 4),
+                      Obx(() {
+                        final user = authController.currentUser.value;
+                        final displayName =
+                            user?.firstName ?? authController.userName.value;
+                        return Text(
+                          'Hello, $displayName 👋',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        );
+                      }),
                     ],
                   ),
                 ),

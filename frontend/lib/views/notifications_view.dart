@@ -194,7 +194,7 @@ class _NotificationsViewState extends State<NotificationsView> {
     
     String timeStr = '';
     if (createdAt != null) {
-      timeStr = DateFormat('MMM d, h:mm a').format(createdAt);
+      timeStr = DateFormat('MMM d, h:mm a').format(createdAt.toLocal());
     }
 
     String title = 'Notification';

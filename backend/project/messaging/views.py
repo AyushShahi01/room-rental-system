@@ -1,7 +1,8 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, serializers
 from .models import Message
 from .serializers import MessageSerializer
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from users.permissions import IsEmailVerified
@@ -47,6 +48,27 @@ class BookingMessagesView(generics.ListAPIView):
 class ConversationListView(APIView):
     permission_classes = [IsAuthenticated, IsEmailVerified]
 
+    @extend_schema(
+        summary="List user conversations",
+        description="Lists all active chat conversations for the current user, including the chat partner and the latest message.",
+        responses={
+            200: inline_serializer(
+                name='ConversationListResponseSerializer',
+                fields={
+                    'count': serializers.IntegerField(),
+                    'results': serializers.ListField(
+                        child=inline_serializer(
+                            name='ConversationDetailSerializer',
+                            fields={
+                                'partner': UserSerializer(),
+                                'latest_message': MessageSerializer()
+                            }
+                        )
+                    )
+                }
+            )
+        }
+    )
     def get(self, request):
         user = request.user
         messages = Message.objects.filter(Q(sender=user) | Q(receiver=user)).select_related('sender', 'receiver').order_by('-created_at')
@@ -69,6 +91,17 @@ class ConversationListView(APIView):
 class MarkMessageReadView(APIView):
     permission_classes = [IsAuthenticated, IsEmailVerified]
 
+    @extend_schema(
+        summary="Mark message as read",
+        description="Marks a specific chat message received by the user as read.",
+        request=None,
+        responses={
+            200: inline_serializer(
+                name='MarkMessageReadResponseSerializer',
+                fields={'message': serializers.CharField()}
+            )
+        }
+    )
     def patch(self, request, pk):
         message = get_object_or_404(Message, pk=pk, receiver=request.user)
         if message.is_read:

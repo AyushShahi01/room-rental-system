@@ -27,6 +27,7 @@ class LandlordDashboard extends StatelessWidget {
           style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
         ),
         actions: [
+          _buildNotificationIcon(),
           Obx(() {
             final user = authController.currentUser.value;
             final picUrl = user?.absoluteProfilePictureUrl;
@@ -84,38 +85,31 @@ class LandlordDashboard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Welcome / Header
-                Row(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Landlord Hub',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey.shade600,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Obx(() {
-                            final user = authController.currentUser.value;
-                            final displayName =
-                                user?.firstName ?? authController.userName.value;
-                            return Text(
-                              'Welcome, $displayName ',
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            );
-                          }),
-                        ],
+                    Text(
+                      'Landlord Hub',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    _buildNotificationIcon(),
+                    const SizedBox(height: 4),
+                    Obx(() {
+                      final user = authController.currentUser.value;
+                      final displayName =
+                          user?.firstName ?? authController.userName.value;
+                      return Text(
+                        'Welcome, $displayName ',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      );
+                    }),
                   ],
                 ),
                 const SizedBox(height: 24),

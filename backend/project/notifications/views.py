@@ -1,4 +1,5 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, serializers
+from drf_spectacular.utils import extend_schema, inline_serializer
 from .models import Notification
 from .serializers import NotificationSerializer
 from rest_framework.views import APIView
@@ -19,6 +20,17 @@ class NotificationListView(generics.ListAPIView):
 class NotificationActionView(APIView):
     permission_classes = [IsAuthenticated, IsEmailVerified]
 
+    @extend_schema(
+        summary="Mark notification as read",
+        description="Marks a specific notification for the user as read.",
+        request=None,
+        responses={
+            200: inline_serializer(
+                name='NotificationActionResponseSerializer',
+                fields={'message': serializers.CharField()}
+            )
+        }
+    )
     def patch(self, request, pk):
         notification = get_object_or_404(Notification, pk=pk, user=request.user)
         if notification.is_read:
@@ -31,6 +43,17 @@ class NotificationActionView(APIView):
 class ReadAllNotificationsView(APIView):
     permission_classes = [IsAuthenticated, IsEmailVerified]
 
+    @extend_schema(
+        summary="Mark all notifications as read",
+        description="Marks all unread notifications for the user as read.",
+        request=None,
+        responses={
+            200: inline_serializer(
+                name='ReadAllNotificationsResponseSerializer',
+                fields={'message': serializers.CharField()}
+            )
+        }
+    )
     def patch(self, request):
         count = Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
         return Response({'message': f'Marked {count} notifications as read.'}, status=status.HTTP_200_OK)

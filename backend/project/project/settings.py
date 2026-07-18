@@ -210,8 +210,8 @@ if B2_KEY_ID and B2_APPLICATION_KEY and B2_BUCKET_NAME and B2_ENDPOINT_URL:
 
     AWS_S3_ADDRESSING_STYLE = "path"    # B2 requires path-style addressing
     AWS_S3_FILE_OVERWRITE = False       # don't silently overwrite same-named files
-    AWS_QUERYSTRING_AUTH = False         # generates persistent, unsigned URLs so images never expire
-    AWS_QUERYSTRING_EXPIRE = 3600       # default signed URL lifetime: 1 hour
+    AWS_QUERYSTRING_AUTH = True          # generates secure, temporary signed URLs
+    AWS_QUERYSTRING_EXPIRE = 86400       # default signed URL lifetime: 24 hours
     AWS_S3_SIGNATURE_VERSION = "s3v4"
     AWS_LOCATION = "media"              # all uploads land under media/ in the bucket
 

@@ -5,6 +5,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema
 
 from .models import Agreement
 from .serializers import AgreementSerializer
@@ -47,6 +48,12 @@ class AgreementDetailView(generics.RetrieveAPIView):
 class SignAgreementView(APIView):
     permission_classes = [IsAuthenticated, IsTenant, IsEmailVerified]
 
+    @extend_schema(
+        summary="Sign lease agreement",
+        description="Signs a lease agreement as a tenant. Once signed, a notification is sent to the landlord.",
+        request=None,
+        responses={200: AgreementSerializer}
+    )
     def patch(self, request, pk):
         agreement = get_object_or_404(Agreement, pk=pk, booking__tenant=request.user)
         if agreement.is_signed:

@@ -1,5 +1,5 @@
-from rest_framework import generics, status
-from drf_spectacular.utils import extend_schema
+from rest_framework import generics, status, serializers
+from drf_spectacular.utils import extend_schema, inline_serializer
 from .models import MaintenanceRequest
 from .serializers import MaintenanceSerializer, MaintenanceImageUploadSerializer
 from rest_framework.views import APIView
@@ -40,6 +40,36 @@ class MaintenanceDetailView(generics.RetrieveAPIView):
 class MaintenanceStatusUpdateView(APIView):
     permission_classes = [IsAuthenticated, IsLandlord, IsEmailVerified]
 
+    @extend_schema(
+        request=inline_serializer(
+            name='MaintenanceStatusUpdateSerializer',
+            fields={
+                'status': serializers.ChoiceField(
+                    choices=[
+                        (MaintenanceRequest.STATUS_IN_PROGRESS, 'In Progress'),
+                        (MaintenanceRequest.STATUS_RESOLVED, 'Resolved'),
+                        (MaintenanceRequest.STATUS_REJECTED, 'Rejected'),
+                    ],
+                    required=True,
+                    help_text="The new status of the maintenance request."
+                )
+            }
+        ),
+        responses={
+            200: inline_serializer(
+                name='MaintenanceStatusUpdateResponseSerializer',
+                fields={
+                    'message': serializers.CharField()
+                }
+            ),
+            400: inline_serializer(
+                name='MaintenanceStatusUpdateErrorResponseSerializer',
+                fields={
+                    'error': serializers.CharField()
+                }
+            )
+        }
+    )
     def patch(self, request, pk):
         maintenance = get_object_or_404(MaintenanceRequest, pk=pk, room__landlord=request.user)
         new_status = request.data.get('status')

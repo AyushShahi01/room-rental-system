@@ -1,7 +1,7 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, serializers
 from rest_framework.permissions import AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, inline_serializer
 from .models import Room, RoomImage
 from .serializers import (
     RoomSerializer,
@@ -153,6 +153,20 @@ class MyRoomsView(generics.ListAPIView):
 class RoomAvailabilityView(APIView):
     permission_classes = [IsAuthenticated, IsLandlord, IsEmailVerified]
 
+    @extend_schema(
+        summary="Toggle room availability",
+        description="Toggles the availability status of a room owned by the landlord.",
+        request=None,
+        responses={
+            200: inline_serializer(
+                name='RoomAvailabilityResponseSerializer',
+                fields={
+                    'message': serializers.CharField(),
+                    'is_available': serializers.BooleanField()
+                }
+            )
+        }
+    )
     def patch(self, request, pk):
         room = get_object_or_404(Room, pk=pk, landlord=request.user)
         room.is_available = not room.is_available
