@@ -27,29 +27,10 @@ class SplashView extends StatelessWidget {
                     ),
                   );
                 },
-                child: Container(
+                child: Image.asset(
+                  'assets/images/splash_screen.png',
                   width: 120,
                   height: 120,
-                  decoration: BoxDecoration(
-                    color: AppColor.primaryblue.withValues(alpha: 0.08),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColor.primaryblue.withValues(alpha: 0.25),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColor.primaryblue.withValues(alpha: 0.06),
-                        blurRadius: 20,
-                        spreadRadius: 5,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.home_rounded,
-                    size: 80,
-                    color: AppColor.primaryblue,
-                  ),
                 ),
               ),
 
@@ -65,28 +46,61 @@ class SplashView extends StatelessWidget {
                 },
                 child: Column(
                   children: [
+                    // RichText(
+                    //   textAlign: TextAlign.center,
+                    //   text: const TextSpan(
+                    //     children: [
+                    //       TextSpan(
+                    //         text: "Room Rental ",
+                    //         style: TextStyle(
+                    //           fontSize: 34,
+                    //           fontWeight: FontWeight.bold,
+                    //           color: AppColor.primaryblue,
+                    //           letterSpacing: 0.5,
+                    //         ),
+                    //       ),
+                    //       TextSpan(
+                    //         text: "System",
+                    //         style: TextStyle(
+                    //           fontSize: 34,
+                    //           fontWeight: FontWeight.bold,
+                    //           color: Colors.blue,
+                    //           letterSpacing: 0.5,
+                    //         ),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
                     RichText(
-                      textAlign: TextAlign.center,
-                      text: const TextSpan(
+                      text: TextSpan(
                         children: [
                           TextSpan(
-                            text: "Room Rental ",
+                            text: "Room ",
                             style: TextStyle(
                               fontSize: 34,
                               fontWeight: FontWeight.bold,
-                              color: AppColor.primaryblue,
+                              color: const Color(0xFF0B3D91), // Dark Blue
                               letterSpacing: 0.5,
                             ),
                           ),
                           TextSpan(
-                            text: "System",
+                            text: "Rental ",
                             style: TextStyle(
                               fontSize: 34,
                               fontWeight: FontWeight.bold,
-                              color: Colors.blue,
+                              color: const Color(0xFF27A8F2), // Light Blue
                               letterSpacing: 0.5,
                             ),
                           ),
+                          // TextSpan(
+                          //   text: "System",
+                          //   style: TextStyle(
+                          //     fontSize: 34,
+                          //     fontWeight: FontWeight.bold,
+                          //     color: const Color(0xFF27A8F2), // Light Blue
+                          //     letterSpacing: 0.5,
+                          //   ),
+                          // ),
                         ],
                       ),
                     ),
@@ -96,7 +110,7 @@ class SplashView extends StatelessWidget {
                       "Find your perfect stay",
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.black54,
+                        color: Color.fromARGB(137, 12, 0, 0),
                         fontWeight: FontWeight.w400,
                         letterSpacing: 0.5,
                       ),
