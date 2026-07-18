@@ -168,7 +168,7 @@ else:
     if RESEND_API_KEY:
         EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
         ANYMAIL = {
-            'RESEND_API_KEY': RESEND_API_KEY,
+            'RESEND_API_KEY': re_iXB3dUM4_HG2vjcguaWYjgGoMdByQ6GcW,
         }
         DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'onboarding@resend.dev')
     else:
