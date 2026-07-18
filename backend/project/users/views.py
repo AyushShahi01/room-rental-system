@@ -14,6 +14,9 @@ from django.core.mail import send_mail
 from django.utils import timezone
 from datetime import timedelta
 import random
+import logging
+
+logger = logging.getLogger(__name__)
 
 from .serializers import (
     AuthResponseSerializer,
@@ -66,6 +69,7 @@ class RegisterView(APIView):
                 fail_silently=False,
             )
         except Exception as e:
+            logger.exception("Failed to send verification email during registration: %s", e)
             email_error = True
 
         refresh = RefreshToken.for_user(user)
@@ -259,6 +263,7 @@ class OTPSendView(APIView):
                 fail_silently=False,
             )
         except Exception as e:
+            logger.exception("Failed to send OTP email: %s", e)
             return Response(
                 {'error': 'Failed to send OTP email. Please check your SMTP configuration or try again later.'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -378,13 +383,14 @@ class ForgotPasswordView(APIView):
                     fail_silently=False,
                 )
             except Exception as e:
+                logger.exception("Failed to send password reset email: %s", e)
                 return Response(
                     {'error': 'Failed to send password reset email. Please contact support or try again later.'},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
         return Response(
-            {'message': 'A password reset code has been sent.'},
+            {'message': 'If an account exists with this email, a password reset code has been sent.'},
             status=status.HTTP_200_OK
         )
 
