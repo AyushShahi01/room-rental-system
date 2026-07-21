@@ -13,6 +13,21 @@ import 'package:flutter/material.dart';
 class RoomController extends GetxController {
   final RoomService _roomService = RoomService();
 
+  // Search state
+  final RxString searchQuery = ''.obs;
+  final TextEditingController searchController = TextEditingController();
+
+  void performSearch(String query) {
+    searchQuery.value = query;
+    loadRooms(refresh: true);
+  }
+
+  @override
+  void onClose() {
+    searchController.dispose();
+    super.onClose();
+  }
+
   // Tenant Explore
   var isRoomsLoading = true.obs;
   var rooms = <room_model.Result>[].obs;
@@ -53,7 +68,11 @@ class RoomController extends GetxController {
         debugPrint('Error fetching tenant bookings in RoomController: $e');
       }
 
-      final response = await _roomService.getRooms(filters: {'page': page});
+      final Map<String, dynamic> queryFilters = {'page': page};
+      if (searchQuery.value.isNotEmpty) {
+        queryFilters['search'] = searchQuery.value;
+      }
+      final response = await _roomService.getRooms(filters: queryFilters);
       final fetchedRooms = response.results
           .where((r) => r.isAvailable == true && !bookedRoomIds.contains(r.id))
           .toList();

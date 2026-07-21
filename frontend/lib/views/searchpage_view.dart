@@ -14,7 +14,10 @@ class SearchpageView extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8FA),
       appBar: AppBar(
-        title: const Text('Search Rooms', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Search Rooms',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 0.5,
@@ -40,7 +43,7 @@ class SearchpageView extends StatelessWidget {
                   controller: controller.searchController,
                   onChanged: controller.performSearch,
                   decoration: InputDecoration(
-                    hintText: 'Search city, state or room name...',
+                    hintText: 'Search room by name ',
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: Obx(() {
                       if (controller.searchQuery.value.isNotEmpty) {
@@ -63,9 +66,7 @@ class SearchpageView extends StatelessWidget {
               Expanded(
                 child: Obx(() {
                   if (controller.isSearching.value) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
+                    return const Center(child: CircularProgressIndicator());
                   }
 
                   if (controller.searchQuery.value.isEmpty) {
@@ -73,11 +74,18 @@ class SearchpageView extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.search, size: 64, color: Colors.grey.shade400),
+                          Icon(
+                            Icons.search,
+                            size: 64,
+                            color: Colors.grey.shade400,
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             'Search for rooms to rent',
-                            style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 16,
+                            ),
                           ),
                         ],
                       ),
@@ -89,11 +97,18 @@ class SearchpageView extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.search_off, size: 64, color: Colors.grey.shade400),
+                          Icon(
+                            Icons.search_off,
+                            size: 64,
+                            color: Colors.grey.shade400,
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             'No properties found matching "${controller.searchQuery.value}"',
-                            style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 16,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -108,9 +123,8 @@ class SearchpageView extends StatelessWidget {
                       final room = controller.searchResults[index] as Result;
                       return SearchRoomCard(
                         room: room,
-                        onTap: () => Get.to(
-                          () => RoomDetailView(roomId: room.id ?? 0),
-                        ),
+                        onTap: () =>
+                            Get.to(() => RoomDetailView(roomId: room.id ?? 0)),
                       );
                     },
                   );
@@ -165,13 +179,23 @@ class SearchRoomCard extends StatelessWidget {
                         imageUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (_, _, _) => Container(
-                          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                          child: Icon(Icons.home_work_outlined, color: Colors.grey.shade400),
+                          color: colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.3,
+                          ),
+                          child: Icon(
+                            Icons.home_work_outlined,
+                            color: Colors.grey.shade400,
+                          ),
                         ),
                       )
                     : Container(
-                        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                        child: Icon(Icons.home_work_outlined, color: Colors.grey.shade400),
+                        color: colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.3,
+                        ),
+                        child: Icon(
+                          Icons.home_work_outlined,
+                          color: Colors.grey.shade400,
+                        ),
                       ),
               ),
             ),
@@ -185,19 +209,30 @@ class SearchRoomCard extends StatelessWidget {
                       room.title ?? 'Room',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.location_on_outlined, size: 14, color: Colors.grey.shade600),
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: 14,
+                          color: Colors.grey.shade600,
+                        ),
                         const SizedBox(width: 2),
                         Expanded(
                           child: Text(
-                            '${room.province ?? ''}, ${room.state ?? ''}'.trim(),
+                            '${room.province ?? ''}, ${room.state ?? ''}'
+                                .trim(),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ],
@@ -218,7 +253,10 @@ class SearchRoomCard extends StatelessWidget {
                             room.genderPreference!.isNotEmpty &&
                             room.genderPreference!.toLowerCase() != 'any')
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: colorScheme.primaryContainer,
                               borderRadius: BorderRadius.circular(6),

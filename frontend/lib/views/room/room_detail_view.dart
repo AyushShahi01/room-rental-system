@@ -558,43 +558,87 @@ class _RoomDetailViewState extends State<RoomDetailView> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      // Availability indicator
-                      Obx(() {
-                        final hasBooking = _bookingController.tenantBookings.any(
-                          (b) => b.roomId == widget.roomId && (b.status?.toLowerCase() == 'pending' || b.status?.toLowerCase() == 'approved')
-                        );
-                        final isBooked = _room.isAvailable == false || hasBooking;
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: isBooked ? Colors.red.shade50 : Colors.green.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isBooked ? Colors.red.shade200 : Colors.green.shade200,
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                isBooked ? Icons.block : Icons.check_circle,
-                                size: 16,
-                                color: isBooked ? Colors.red.shade800 : Colors.green.shade800,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                isBooked ? 'Already Booked' : 'Available for Booking',
-                                style: TextStyle(
-                                  color: isBooked ? Colors.red.shade800 : Colors.green.shade800,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
+                      // Availability indicator & Gender Preference badge
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          Obx(() {
+                            final hasBooking = _bookingController.tenantBookings.any(
+                              (b) => b.roomId == widget.roomId && (b.status?.toLowerCase() == 'pending' || b.status?.toLowerCase() == 'approved')
+                            );
+                            final isBooked = _room.isAvailable == false || hasBooking;
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: isBooked ? Colors.red.shade50 : Colors.green.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: isBooked ? Colors.red.shade200 : Colors.green.shade200,
+                                  width: 1,
                                 ),
                               ),
-                            ],
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    isBooked ? Icons.block : Icons.check_circle,
+                                    size: 16,
+                                    color: isBooked ? Colors.red.shade800 : Colors.green.shade800,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    isBooked ? 'Already Booked' : 'Available for Booking',
+                                    style: TextStyle(
+                                      color: isBooked ? Colors.red.shade800 : Colors.green.shade800,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.blue.shade200,
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _room.genderPreference == 'male'
+                                      ? Icons.male_rounded
+                                      : (_room.genderPreference == 'female'
+                                          ? Icons.female_rounded
+                                          : Icons.wc_rounded),
+                                  size: 16,
+                                  color: Colors.blue.shade800,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  _room.genderPreference == 'any'
+                                      ? 'Any Gender'
+                                      : (_room.genderPreference == 'male'
+                                          ? 'Male Only'
+                                          : 'Female Only'),
+                                  style: TextStyle(
+                                    color: Colors.blue.shade800,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        );
-                      }),
+                        ],
+                      ),
                       const SizedBox(height: 24),
 
                       // Room Specs Grid
@@ -621,6 +665,17 @@ class _RoomDetailViewState extends State<RoomDetailView> {
                               icon: Icons.square_foot_rounded,
                               label: 'Area',
                               value: _room.areaSqft != null ? '${_room.areaSqft} sqft' : 'N/A',
+                              colorScheme: colorScheme,
+                            ),
+                            const SizedBox(width: 12),
+                            _specCard(
+                              icon: Icons.wc_rounded,
+                              label: 'Gender Pref.',
+                              value: _room.genderPreference == 'any'
+                                  ? 'Any Gender'
+                                  : (_room.genderPreference == 'male'
+                                      ? 'Male Only'
+                                      : 'Female Only'),
                               colorScheme: colorScheme,
                             ),
                             const SizedBox(width: 12),

@@ -41,6 +41,28 @@ class TenantDashboardController extends GetxController {
   final RxList<dynamic> allProperties = <dynamic>[].obs;
   final RxList<dynamic> featuredProperties = <dynamic>[].obs;
   final RxList<dynamic> nearbyProperties = <dynamic>[].obs;
+  final RxList<dynamic> recommendedRooms = <dynamic>[].obs;
+
+  // Advanced Filter State
+  final RxDouble maxPrice = 100000.0.obs;
+  final RxBool filterWifi = false.obs;
+  final RxBool filterAc = false.obs;
+  final RxBool filterFurnished = false.obs;
+  final RxBool filterParking = false.obs;
+  final RxBool filterBath = false.obs;
+  final RxString filterGender = 'any'.obs;
+
+  void resetFilters() {
+    maxPrice.value = 100000.0;
+    filterWifi.value = false;
+    filterAc.value = false;
+    filterFurnished.value = false;
+    filterParking.value = false;
+    filterBath.value = false;
+    filterGender.value = 'any';
+    selectedFilterTag.value = '';
+  }
+
 
   @override
   void onInit() {
@@ -113,7 +135,7 @@ class TenantDashboardController extends GetxController {
         allProperties.addAll(filteredResults.where((r) => !allProperties.contains(r)));
       }
       
-      // Implement sorting: latest-first order
+      // Implement sorting: latest-first order (Recent Rooms)
       allProperties.sort((a, b) {
         final aDate = a.createdAt ?? DateTime(2000);
         final bDate = b.createdAt ?? DateTime(2000);
@@ -122,6 +144,19 @@ class TenantDashboardController extends GetxController {
 
       if (refresh) {
         featuredProperties.assignAll(allProperties.take(3).toList());
+        
+        // Fetch recommendations from API
+        try {
+          final recs = await _roomService.getRecommendedRoomResults({});
+          final filteredRecs = recs
+              .where((r) => r.isAvailable == true && !bookedRoomIds.contains(r.id))
+              .toList();
+          recommendedRooms.assignAll(filteredRecs);
+        } catch (e) {
+          debugPrint('Error fetching recommendations in loadDashboardData: $e');
+          // Fallback to top available rooms
+          recommendedRooms.assignAll(allProperties.take(5).toList());
+        }
       }
       
       hasNextPage.value = data.next != null;

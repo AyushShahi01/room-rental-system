@@ -29,6 +29,7 @@ class _RouteMapViewState extends State<RouteMapView> {
   // Snapped central Kathmandu coordinate as default fallback starting point
   LatLng _currentLocation = const LatLng(27.7042, 85.3082);
   bool _isLocating = true;
+  bool _isDrivingMode = true;
 
   @override
   void initState() {
@@ -185,101 +186,278 @@ class _RouteMapViewState extends State<RouteMapView> {
             }
             return const SizedBox.shrink();
           }),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 24,
-            child: Obx(() {
-              if (_controller.routePoints.isEmpty && !_controller.isRoutingLoading.value && !_isLocating) {
-                return const SizedBox.shrink();
-              }
-              final distanceKm = _controller.routeDistance.value / 1000.0;
+          Obx(() {
+            if (_controller.routePoints.isEmpty && !_controller.isRoutingLoading.value && !_isLocating) {
+              return const SizedBox.shrink();
+            }
+            final distanceKm = _controller.routeDistance.value / 1000.0;
+            final durationMins = _isDrivingMode
+                ? (distanceKm / 25.0 * 60.0).round()
+                : (distanceKm / 4.5 * 60.0).round();
+            
+            String durationText;
+            if (durationMins < 1) {
+              durationText = '< 1 min';
+            } else if (durationMins >= 60) {
+              final hrs = durationMins ~/ 60;
+              final mins = durationMins % 60;
+              durationText = '${hrs} hr ${mins} mins';
+            } else {
+              durationText = '${durationMins} mins';
+            }
 
-              return Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                elevation: 8,
-                shadowColor: Colors.black.withValues(alpha: 0.15),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Shortest Driving Path',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Powered by Bidirectional Dijkstra',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primaryContainer,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.directions_car_filled_rounded,
-                              color: colorScheme.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Divider(height: 24),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _statRow(
-                              context,
-                              label: 'Distance',
-                              value: '${distanceKm.toStringAsFixed(2)} km',
-                              icon: Icons.alt_route_rounded,
-                            ),
-                          ),
-                          Expanded(
-                            child: _statRow(
-                              context,
-                              label: 'Path Nodes',
-                              value: '${_controller.nodeCount.value}',
-                              icon: Icons.hub_outlined,
-                            ),
-                          ),
-                        ],
+            return DraggableScrollableSheet(
+              initialChildSize: 0.32,
+              minChildSize: 0.16,
+              maxChildSize: 0.55,
+              snap: true,
+              builder: (context, scrollController) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(28),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 16,
+                        offset: const Offset(0, -4),
                       ),
                     ],
                   ),
-                ),
-              );
-            }),
-          ),
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Drag Indicator Handle
+                        Center(
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            width: 48,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(2.5),
+                            ),
+                          ),
+                        ),
+                        // Title row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _isDrivingMode ? 'Shortest Driving Path' : 'Shortest Walking Path',
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Powered by Bidirectional Dijkstra',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: colorScheme.primaryContainer,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                _isDrivingMode
+                                    ? Icons.directions_car_filled_rounded
+                                    : Icons.directions_walk_rounded,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 24),
+                        // Walk/Drive Tabs selector
+                        Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _isDrivingMode = true;
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: _isDrivingMode
+                                        ? colorScheme.primaryContainer
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: _isDrivingMode
+                                          ? colorScheme.primary
+                                          : Colors.grey.shade300,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.directions_car_filled_rounded,
+                                        size: 16,
+                                        color: _isDrivingMode
+                                            ? colorScheme.primary
+                                            : Colors.grey.shade600,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Drive',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: _isDrivingMode
+                                              ? colorScheme.primary
+                                              : Colors.grey.shade600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _isDrivingMode = false;
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: !_isDrivingMode
+                                        ? colorScheme.primaryContainer
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: !_isDrivingMode
+                                          ? colorScheme.primary
+                                          : Colors.grey.shade300,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.directions_walk_rounded,
+                                        size: 16,
+                                        color: !_isDrivingMode
+                                            ? colorScheme.primary
+                                            : Colors.grey.shade600,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Walk',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: !_isDrivingMode
+                                              ? colorScheme.primary
+                                              : Colors.grey.shade600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        // Stats summary
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _statRow(
+                                context,
+                                label: 'Distance',
+                                value: '${distanceKm.toStringAsFixed(2)} km',
+                                icon: Icons.alt_route_rounded,
+                              ),
+                            ),
+                            Expanded(
+                              child: _statRow(
+                                context,
+                                label: 'Est. Time',
+                                value: durationText,
+                                icon: Icons.access_time_rounded,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 32),
+                        // Expandable step details
+                        Text(
+                          'Route Directions',
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const SizedBox(height: 12),
+                        Column(
+                          children: [
+                            _directionStep(
+                              icon: Icons.my_location_rounded,
+                              iconColor: Colors.blueAccent.shade700,
+                              title: 'Starting point',
+                              subtitle: 'GPS Location or tapped coordinate',
+                            ),
+                            _directionDivider(),
+                            _directionStep(
+                              icon: _isDrivingMode
+                                  ? Icons.directions_car_filled_rounded
+                                  : Icons.directions_walk_rounded,
+                              iconColor: colorScheme.primary,
+                              title: _isDrivingMode
+                                  ? 'Drive along route'
+                                  : 'Walk along path',
+                              subtitle: 'Distance: ${distanceKm.toStringAsFixed(2)} km (${_controller.nodeCount.value} road nodes)',
+                            ),
+                            _directionDivider(),
+                            _directionStep(
+                              icon: Icons.home_work_rounded,
+                              iconColor: Colors.red.shade700,
+                              title: widget.roomTitle,
+                              subtitle: 'Destination arrived',
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          }),
           Positioned(
             top: 16,
             left: 16,
             right: 16,
             child: Card(
-              color: Colors.white.withValues(alpha: 0.92),
+              color: Colors.white.withOpacity(0.92),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
               elevation: 4,
-              shadowColor: Colors.black.withValues(alpha: 0.1),
+              shadowColor: Colors.black.withOpacity(0.1),
               child: const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
@@ -336,6 +514,56 @@ class _RouteMapViewState extends State<RouteMapView> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _directionStep({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 18, color: iconColor),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _directionDivider() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(left: 15),
+        height: 16,
+        width: 2,
+        color: Colors.grey.shade300,
+      ),
     );
   }
 }

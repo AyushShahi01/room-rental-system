@@ -3,8 +3,10 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+from project.views import home_view
 
 urlpatterns = [
+    path("", home_view, name="home"),
     path("superadmin/", admin.site.urls),
     
     # Swagger / OpenAPI URLs

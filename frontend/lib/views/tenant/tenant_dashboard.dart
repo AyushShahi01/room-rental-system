@@ -157,7 +157,7 @@ class TenantDashboard extends StatelessWidget {
                         Get.to(() => const SearchpageView());
                       },
                       decoration: InputDecoration(
-                        hintText: 'Search city, state or room name...',
+                        hintText: 'Search by name only',
                         hintStyle: TextStyle(
                           color: Colors.grey.shade400,
                           fontSize: 14,
@@ -168,11 +168,11 @@ class TenantDashboard extends StatelessWidget {
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            Icons.map_outlined,
+                            Icons.tune_rounded,
                             color: Colors.blueAccent.shade700,
                           ),
-                          onPressed: () => Get.to(() => const ExploreMapView()),
-                          tooltip: 'Explore on Map',
+                          onPressed: () => _showFilterBottomSheet(context, controller),
+                          tooltip: 'Filter Rooms',
                         ),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
@@ -235,6 +235,26 @@ class TenantDashboard extends StatelessWidget {
                       return true;
                     }).toList();
                   }
+
+                  // Apply advanced filters
+                  rooms = rooms.where((room) {
+                    final double price = double.tryParse(room.price ?? '0') ?? 0.0;
+                    if (price > controller.maxPrice.value) return false;
+                    
+                    if (controller.filterWifi.value && room.hasWifi != true) return false;
+                    if (controller.filterAc.value && room.hasAc != true) return false;
+                    if (controller.filterFurnished.value && room.furnishedStatus != true) return false;
+                    if (controller.filterParking.value && room.parkingAvailable != true) return false;
+                    if (controller.filterBath.value && room.hasAttachedBathroom != true) return false;
+                    
+                    if (controller.filterGender.value != 'any') {
+                      if (room.genderPreference?.toLowerCase() != 'any' && 
+                          room.genderPreference?.toLowerCase() != controller.filterGender.value.toLowerCase()) {
+                        return false;
+                      }
+                    }
+                    return true;
+                  }).toList();
                   if (rooms.isEmpty) {
                     return Padding(
                       padding: const EdgeInsets.all(24.0),
@@ -247,204 +267,285 @@ class TenantDashboard extends StatelessWidget {
                     );
                   }
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Quick Actions
-                        Text(
-                          'Quick Actions',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Quick Actions
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: InkWell(
-                                onTap: () =>
-                                    Get.to(() => const TenantMaintenanceView()),
-                                borderRadius: BorderRadius.circular(14),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blueAccent.shade700,
-                                    borderRadius: BorderRadius.circular(14),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.blue.withOpacity(0.3),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      const Icon(
-                                        Icons.build,
-                                        color: Colors.white,
-                                        size: 28,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      const Text(
-                                        'Maintenance',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                            Text(
+                              'Quick Actions',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: InkWell(
-                                onTap: () => controller.selectedIndex.value =
-                                    2, // Go to bookings
-                                borderRadius: BorderRadius.circular(14),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () =>
+                                        Get.to(() => const TenantMaintenanceView()),
                                     borderRadius: BorderRadius.circular(14),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.04),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
                                       ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Icon(
-                                        Icons.calendar_today,
+                                      decoration: BoxDecoration(
                                         color: Colors.blueAccent.shade700,
-                                        size: 28,
+                                        borderRadius: BorderRadius.circular(14),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.blue.withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'My Bookings',
-                                        style: TextStyle(
-                                          color: Colors.blueAccent.shade700,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12,
-                                        ),
+                                      child: Column(
+                                        children: [
+                                          const Icon(
+                                            Icons.build,
+                                            color: Colors.white,
+                                            size: 28,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          const Text(
+                                            'Maintenance',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: InkWell(
-                                onTap: () =>
-                                    Get.to(() => const TenantRentLedgerView()),
-                                borderRadius: BorderRadius.circular(14),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.teal.shade700,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () => controller.selectedIndex.value =
+                                        2, // Go to bookings
                                     borderRadius: BorderRadius.circular(14),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.teal.withOpacity(0.3),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
                                       ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      const Icon(
-                                        Icons.receipt_long,
+                                      decoration: BoxDecoration(
                                         color: Colors.white,
-                                        size: 28,
+                                        borderRadius: BorderRadius.circular(14),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.04),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(height: 8),
-                                      const Text(
-                                        'Rent Ledger',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12,
-                                        ),
+                                      child: Column(
+                                        children: [
+                                          Icon(
+                                            Icons.calendar_today,
+                                            color: Colors.blueAccent.shade700,
+                                            size: 28,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'My Bookings',
+                                            style: TextStyle(
+                                              color: Colors.blueAccent.shade700,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ),
-                              ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () =>
+                                        Get.to(() => const TenantRentLedgerView()),
+                                    borderRadius: BorderRadius.circular(14),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.teal.shade700,
+                                        borderRadius: BorderRadius.circular(14),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.teal.withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          const Icon(
+                                            Icons.receipt_long,
+                                            color: Colors.white,
+                                            size: 28,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          const Text(
+                                            'Rent Ledger',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        const SizedBox(height: 24),
+                      ),
+                      
+                      const SizedBox(height: 24),
 
-                        Text(
-                          'Available Rooms',
+                      // Recommendations Section (Horizontal)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: Text(
+                          'Recommendations',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.black87,
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        if (rooms.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 24),
-                            child: Center(
-                              child: Text(
-                                'No rooms match your filter.',
-                                style: TextStyle(color: Colors.grey.shade500),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 220,
+                        child: Obx(() {
+                          var recs = controller.recommendedRooms.cast<room_model.Result>().toList();
+                          
+                          // Apply advanced filters to recommendations
+                          recs = recs.where((room) {
+                            final double price = double.tryParse(room.price ?? '0') ?? 0.0;
+                            if (price > controller.maxPrice.value) return false;
+                            
+                            if (controller.filterWifi.value && room.hasWifi != true) return false;
+                            if (controller.filterAc.value && room.hasAc != true) return false;
+                            if (controller.filterFurnished.value && room.furnishedStatus != true) return false;
+                            if (controller.filterParking.value && room.parkingAvailable != true) return false;
+                            if (controller.filterBath.value && room.hasAttachedBathroom != true) return false;
+                            
+                            if (controller.filterGender.value != 'any') {
+                              if (room.genderPreference?.toLowerCase() != 'any' && 
+                                  room.genderPreference?.toLowerCase() != controller.filterGender.value.toLowerCase()) {
+                                return false;
+                              }
+                            }
+                            return true;
+                          }).toList();
+
+                          if (recs.isEmpty) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                              child: Center(
+                                child: Text(
+                                  'No recommendations match your filter.',
+                                  style: TextStyle(color: Colors.grey.shade500),
+                                ),
                               ),
-                            ),
-                          )
-                        else
-                          ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: rooms.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(height: 12),
+                            );
+                          }
+                          return ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            itemCount: recs.length,
                             itemBuilder: (context, index) {
-                              final room = rooms[index];
-                              return _RoomCard(room: room, context: context);
+                              final room = recs[index];
+                              return _RecommendedRoomCard(room: room);
                             },
+                          );
+                        }),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Recent Rooms Section (Vertical)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: Text(
+                          'Recent Rooms',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
                           ),
-                        if (controller.hasNextPage.value)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 20),
-                            child: Center(
-                              child: controller.isLoadMoreLoading.value
-                                  ? const CircularProgressIndicator()
-                                  : ElevatedButton(
-                                      onPressed: controller.loadMoreRooms,
-                                      style: ElevatedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 32, vertical: 12),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (rooms.isEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 24),
+                                child: Center(
+                                  child: Text(
+                                    'No recent rooms match your filter.',
+                                    style: TextStyle(color: Colors.grey.shade500),
+                                  ),
+                                ),
+                              )
+                            else
+                              ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: rooms.length,
+                                separatorBuilder: (_, _) =>
+                                    const SizedBox(height: 12),
+                                itemBuilder: (context, index) {
+                                  final room = rooms[index];
+                                  return _RoomCard(room: room, context: context);
+                                },
+                              ),
+                            if (controller.hasNextPage.value)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 20),
+                                child: Center(
+                                  child: controller.isLoadMoreLoading.value
+                                      ? const CircularProgressIndicator()
+                                      : ElevatedButton(
+                                          onPressed: controller.loadMoreRooms,
+                                          style: ElevatedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 32, vertical: 12),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                          child: const Text('Load More'),
                                         ),
-                                      ),
-                                      child: const Text('Load More'),
-                                    ),
-                            ),
-                          ),
-                      ],
-                    ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                   );
                 }),
                 const SizedBox(height: 40),
@@ -807,6 +908,243 @@ class TenantDashboard extends StatelessWidget {
       ],
     );
   }
+
+  void _showFilterBottomSheet(BuildContext context, TenantDashboardController controller) {
+    Get.bottomSheet(
+      Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Filters',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      controller.resetFilters();
+                    },
+                    child: const Text('Reset All'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Max Price
+              const Text(
+                'Max Budget (per month)',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Obx(() => Column(
+                children: [
+                  Slider(
+                    value: controller.maxPrice.value,
+                    min: 1000.0,
+                    max: 100000.0,
+                    divisions: 99,
+                    activeColor: Colors.blueAccent.shade700,
+                    inactiveColor: Colors.blue.shade50,
+                    label: 'Rs. ${controller.maxPrice.value.round()}',
+                    onChanged: (val) {
+                      controller.maxPrice.value = val;
+                    },
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Rs. 1,000', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                      Text(
+                        'Rs. ${controller.maxPrice.value.round()}',
+                        style: TextStyle(
+                          color: Colors.blueAccent.shade700,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text('Rs. 100,000', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                    ],
+                  ),
+                ],
+              )),
+              const SizedBox(height: 24),
+
+              // Amenities
+              const Text(
+                'Amenities',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Obx(() => Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildFilterChip(
+                    label: 'Wi-Fi',
+                    isSelected: controller.filterWifi.value,
+                    onSelected: (val) => controller.filterWifi.value = val,
+                  ),
+                  _buildFilterChip(
+                    label: 'Air Conditioning',
+                    isSelected: controller.filterAc.value,
+                    onSelected: (val) => controller.filterAc.value = val,
+                  ),
+                  _buildFilterChip(
+                    label: 'Furnished',
+                    isSelected: controller.filterFurnished.value,
+                    onSelected: (val) => controller.filterFurnished.value = val,
+                  ),
+                  _buildFilterChip(
+                    label: 'Parking Space',
+                    isSelected: controller.filterParking.value,
+                    onSelected: (val) => controller.filterParking.value = val,
+                  ),
+                  _buildFilterChip(
+                    label: 'Attached Bathroom',
+                    isSelected: controller.filterBath.value,
+                    onSelected: (val) => controller.filterBath.value = val,
+                  ),
+                ],
+              )),
+              const SizedBox(height: 24),
+
+              // Gender Preference
+              const Text(
+                'Gender Preference',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Obx(() => Row(
+                children: [
+                  _buildGenderButton(
+                    label: 'Any',
+                    value: 'any',
+                    groupValue: controller.filterGender.value,
+                    onTap: () => controller.filterGender.value = 'any',
+                  ),
+                  const SizedBox(width: 8),
+                  _buildGenderButton(
+                    label: 'Male',
+                    value: 'male',
+                    groupValue: controller.filterGender.value,
+                    onTap: () => controller.filterGender.value = 'male',
+                  ),
+                  const SizedBox(width: 8),
+                  _buildGenderButton(
+                    label: 'Female',
+                    value: 'female',
+                    groupValue: controller.filterGender.value,
+                    onTap: () => controller.filterGender.value = 'female',
+                  ),
+                ],
+              )),
+              const SizedBox(height: 24),
+
+              // Apply button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Get.back();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Apply Filters',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required bool isSelected,
+    required ValueChanged<bool> onSelected,
+  }) {
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: onSelected,
+      selectedColor: Colors.blueAccent.shade100.withOpacity(0.3),
+      checkmarkColor: Colors.blueAccent.shade700,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.blueAccent.shade700 : Colors.black87,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: isSelected ? Colors.blueAccent : Colors.grey.shade300,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGenderButton({
+    required String label,
+    required String value,
+    required String groupValue,
+    required VoidCallback onTap,
+  }) {
+    final isSelected = value == groupValue;
+    return Expanded(
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: isSelected ? Colors.blueAccent.shade700 : Colors.white,
+          foregroundColor: isSelected ? Colors.white : Colors.black87,
+          side: BorderSide(
+            color: isSelected ? Colors.transparent : Colors.grey.shade300,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: Text(label),
+      ),
+    );
+  }
 }
 
 class _RoomCard extends StatelessWidget {
@@ -910,6 +1248,133 @@ class _RoomCard extends StatelessWidget {
                     ),
                   ],
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String? _extractImageUrl(List<dynamic>? images) {
+    if (images == null || images.isEmpty) return null;
+    if (images.first is room_model.RoomImage) {
+      final roomImage = images.first as room_model.RoomImage;
+      return roomImage.image;
+    }
+    return null;
+  }
+}
+
+class _RecommendedRoomCard extends StatelessWidget {
+  const _RecommendedRoomCard({required this.room});
+
+  final room_model.Result room;
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = _extractImageUrl(room.images);
+
+    return InkWell(
+      onTap: () => Get.to(() => RoomDetailView(roomId: room.id ?? 0)),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: 220,
+        margin: const EdgeInsets.only(right: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
+              child: SizedBox(
+                height: 120,
+                width: double.infinity,
+                child: imageUrl != null &&
+                        imageUrl.isNotEmpty &&
+                        imageUrl.startsWith('http')
+                    ? Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: Colors.blue.shade50,
+                          child: Icon(
+                            Icons.home_work_outlined,
+                            color: Colors.blueAccent.shade700,
+                            size: 32,
+                          ),
+                        ),
+                      )
+                    : Container(
+                        color: Colors.blue.shade50,
+                        child: Icon(
+                          Icons.home_work_outlined,
+                          color: Colors.blueAccent.shade700,
+                          size: 32,
+                        ),
+                      ),
+              ),
+            ),
+            // Details
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    room.title ?? 'Recommended Room',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 14,
+                        color: Colors.grey.shade500,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${room.province ?? ''}, ${room.state ?? ''}'.trim(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Rs. ${room.price ?? '0'}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.blueAccent.shade700,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

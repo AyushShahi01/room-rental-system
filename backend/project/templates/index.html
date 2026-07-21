@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Roomly | Your Trusted Companion for Finding the Room You Desire</title>
+    <meta name="description" content="Roomly is your reliable room rental companion. Discover verified listings, smart recommendations, digital lease agreements, rent logs, map directions, and maintenance management.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-page: #f8fafc;
+            --bg-surface: #ffffff;
+            --text-dark: #0f172a;
+            --text-body: #475569;
+            --text-muted: #94a3b8;
+            --accent-primary: #2563eb;
+            --accent-primary-hover: #1d4ed8;
+            --accent-pill: #0f172a;
+            --accent-orange: #ff6b35;
+            --accent-green: #10b981;
+            --accent-highlight: #f97316;
+            --border-light: #e2e8f0;
+            --shadow-subtle: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+            --shadow-float: 0 20px 40px -15px rgba(15, 23, 42, 0.12);
+            --shadow-phone: 0 25px 60px -15px rgba(37, 99, 235, 0.22);
+            --radius-pill: 9999px;
+            --radius-card: 20px;
+            --radius-phone: 42px;
+            --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            --font-display: 'Outfit', system-ui, -apple-system, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(circle at 80% 10%, rgba(37, 99, 235, 0.05) 0%, transparent 45%),
+                radial-gradient(circle at 10% 70%, rgba(249, 115, 22, 0.05) 0%, transparent 45%);
+        }
+
+        /* Header Navbar */
+        .header {
+            max-width: 1240px;
+            margin: 1.25rem auto 0 auto;
+            padding: 0 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
+            color: var(--text-dark);
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: clamp(1.4rem, 4vw, 1.65rem);
+            letter-spacing: -0.03em;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+            flex-shrink: 0;
+        }
+
+        .brand-icon svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 2.2rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-body);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--accent-primary);
+        }
+
+        .btn {
+            font-family: var(--font-main);
+            font-size: 0.9rem;
+            font-weight: 700;
+            padding: 0.7rem 1.5rem;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .btn-dark {
+            background-color: var(--accent-pill);
+            color: #ffffff;
+            border: 1px solid var(--accent-pill);
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
+        }
+
+        .btn-dark:hover {
+            background-color: #1e293b;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+        }
+
+        /* Store Download Buttons */
+        .btn-store {
+            background: #0f172a;
+            color: #ffffff;
+            border-radius: 16px;
+            padding: 0.8rem 1.35rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
+            border: 1px solid #1e293b;
+            min-width: 175px;
+            justify-content: center;
+        }
+
+        .btn-store:hover {
+            background: #1e293b;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
+        }
+
+        .btn-store-icon svg {
+            width: 26px;
+            height: 26px;
+            fill: currentColor;
+        }
+
+        .btn-store-text {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .btn-store-sub {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .btn-store-main {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.1;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            max-width: 1240px;
+            margin: 2.5rem auto 4rem auto;
+            padding: 0 1.25rem;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            align-items: center;
+            gap: 3.5rem;
+        }
+
+        .app-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            border-radius: var(--radius-pill);
+            background: rgba(37, 99, 235, 0.08);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            color: var(--accent-primary);
+            font-size: clamp(0.75rem, 2.5vw, 0.85rem);
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+        }
+
+        .app-badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green);
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(2.2rem, 5.5vw, 3.6rem);
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+            color: var(--text-dark);
+            margin-bottom: 1.25rem;
+        }
+
+        .highlight-container {
+            position: relative;
+            display: inline-block;
+            color: var(--accent-primary);
+        }
+
+        .scribble-underline {
+            position: absolute;
+            bottom: -6px;
+            left: 0;
+            width: 100%;
+            height: 14px;
+            overflow: visible;
+            pointer-events: none;
+        }
+
+        .scribble-underline path {
+            stroke: var(--accent-highlight);
+            stroke-width: 5;
+            stroke-linecap: round;
+            fill: none;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+            color: var(--text-body);
+            max-width: 540px;
+            margin-bottom: 2rem;
+            font-weight: 400;
+            line-height: 1.65;
+        }
+
+        .download-buttons {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.75rem;
+        }
+
+        .qr-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 1rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            font-size: 0.8rem;
+            color: var(--text-body);
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .qr-icon {
+            width: 32px;
+            height: 32px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dark);
+            flex-shrink: 0;
+        }
+
+        /* Smartphone Frame & Floating Badges */
+        .hero-visual {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .visual-backdrop {
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, rgba(249, 115, 22, 0.08) 70%, transparent 100%);
+            filter: blur(45px);
+            z-index: 0;
+        }
+
+        .phone-mockup {
+            width: 295px;
+            height: 600px;
+            max-width: 100%;
+            background: #000000;
+            border-radius: var(--radius-phone);
+            padding: 9px;
+            box-shadow: var(--shadow-phone);
+            position: relative;
+            z-index: 2;
+            border: 4px solid #1e293b;
+            transition: transform 0.4s ease;
+        }
+
+        .phone-mockup:hover {
+            transform: translateY(-6px);
+        }
+
+        .phone-notch {
+            width: 100px;
+            height: 18px;
+            background: #000;
+            position: absolute;
+            top: 9px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            z-index: 10;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #f1f5f9;
+            border-radius: 34px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Floating App Badges */
+        .floating-badge {
+            position: absolute;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            padding: 0.65rem 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            box-shadow: var(--shadow-float);
+            z-index: 3;
+            animation: floatBadge 4s ease-in-out infinite alternate;
+        }
+
+        .floating-badge-left {
+            top: 12%;
+            left: -20px;
+        }
+
+        .floating-badge-right {
+            bottom: 18%;
+            right: -20px;
+            animation-delay: 2s;
+        }
+
+        @keyframes floatBadge {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-8px); }
+        }
+
+        .badge-icon-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .floating-badge h6 {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 2px;
+        }
+
+        .floating-badge p {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* App Screen Contents */
+        .app-header {
+            padding: 2rem 0.85rem 0.75rem 0.85rem;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .app-user {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .app-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .app-title {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        .app-title span {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            display: block;
+        }
+
+        .app-body {
+            padding: 0.75rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .app-search {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            margin-bottom: 0.75rem;
+        }
+
+        .app-section-title {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .app-cards {
+            display: flex;
+            gap: 0.6rem;
+            overflow-x: auto;
+            margin-bottom: 0.85rem;
+        }
+
+        .app-card {
+            min-width: 140px;
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .app-card-img {
+            width: 100%;
+            height: 85px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .app-card-name {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 4px 0 2px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .app-card-price {
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: var(--accent-primary);
+        }
+
+        .app-list-item {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 0.45rem 0.65rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            margin-bottom: 0.5rem;
+        }
+
+        .app-list-img {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .app-list-info h5 { font-size: 0.68rem; font-weight: 700; color: var(--text-dark); }
+        .app-list-info p { font-size: 0.58rem; color: var(--text-muted); }
+
+        .app-badge-btn {
+            margin-left: auto;
+            background: var(--accent-green);
+            color: #fff;
+            font-size: 0.58rem;
+            font-weight: 700;
+            padding: 0.2rem 0.45rem;
+            border-radius: 6px;
+            border: none;
+        }
+
+        .app-nav {
+            background: #ffffff;
+            padding: 0.5rem;
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .app-nav-item {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+        }
+
+        .app-nav-item.active {
+            color: var(--accent-orange);
+            background: rgba(249, 115, 22, 0.12);
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+        }
+
+        /* Features Section (The 5 Core Features) */
+        .features-section {
+            max-width: 1240px;
+            margin: 4rem auto 5rem auto;
+            padding: 0 1.25rem;
+        }
+
+        .section-tag {
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.4rem;
+        }
+
+        .section-heading {
+            text-align: center;
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 4.5vw, 2.6rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 3.5rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.75rem;
+        }
+
+        .feature-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-card);
+            padding: 2rem;
+            box-shadow: var(--shadow-subtle);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-float);
+            border-color: rgba(37, 99, 235, 0.25);
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: rgba(37, 99, 235, 0.08);
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .feature-icon svg { width: 28px; height: 28px; }
+
+        .feature-card h4 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card p {
+            font-size: 0.925rem;
+            color: var(--text-body);
+        }
+
+        /* How It Works Section */
+        .how-section {
+            background: #ffffff;
+            border-top: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border-light);
+            padding: 4.5rem 1.25rem;
+        }
+
+        .how-container {
+            max-width: 1240px;
+            margin: 0 auto;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.75rem;
+            margin-top: 3rem;
+        }
+
+        .step-card {
+            text-align: center;
+            padding: 1.25rem;
+        }
+
+        .step-number {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--accent-pill);
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.2rem auto;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.15);
+        }
+
+        .step-card h4 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+        }
+
+        .step-card p {
+            font-size: 0.9rem;
+            color: var(--text-body);
+        }
+
+        /* Download Callout Banner */
+        .download-cta-section {
+            max-width: 1240px;
+            margin: 4.5rem auto;
+            padding: 0 1.25rem;
+        }
+
+        .cta-banner {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-radius: 30px;
+            padding: 4rem 1.5rem;
+            text-align: center;
+            color: #ffffff;
+            box-shadow: var(--shadow-float);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-banner h2 {
+            font-family: var(--font-display);
+            font-size: clamp(2.1rem, 4.5vw, 2.85rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.85rem;
+        }
+
+        .cta-banner p {
+            font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+            color: #94a3b8;
+            max-width: 600px;
+            margin: 0 auto 2.25rem auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* Footer */
+        .footer {
+            background: #0f172a;
+            color: #94a3b8;
+            padding: 3.5rem 1.25rem 2rem 1.25rem;
+        }
+
+        .footer-container {
+            max-width: 1240px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .footer-brand {
+            color: #ffffff;
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 800;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.25rem;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.88rem;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover { color: #ffffff; }
+
+        .footer-copy {
+            text-align: center;
+            margin-top: 1.75rem;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        /* Responsive Breakpoints Optimization */
+        @media (max-width: 868px) {
+            .hero-section {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 2.5rem;
+                margin-top: 1.5rem;
+            }
+
+            .hero-subtitle {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .download-buttons {
+                justify-content: center;
+            }
+
+            .floating-badge {
+                display: none;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                margin-top: 0.85rem;
+            }
+
+            .btn-store {
+                width: 100%;
+            }
+
+            .download-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .phone-mockup {
+                width: 275px;
+                height: 550px;
+            }
+
+            .cta-banner {
+                padding: 2.75rem 1.25rem;
+                border-radius: 22px;
+            }
+
+            .qr-badge {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Navigation Header -->
+    <header class="header">
+        <a href="/" class="brand">
+            <div class="brand-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+            </div>
+            Roomly.
+        </a>
+
+        <ul class="nav-menu">
+            <li><a href="#" class="nav-link">About App</a></li>
+            <li><a href="#features" class="nav-link">Features</a></li>
+            <li><a href="#how" class="nav-link">How It Works</a></li>
+            <li><a href="#download" class="nav-link">Download</a></li>
+        </ul>
+
+        <div>
+            <a href="#download" class="btn btn-dark">Download App</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="app-badge">
+                <span class="app-badge-dot"></span>
+                Verified & Trusted Room Rental App
+            </div>
+
+            <h1 class="hero-title">
+                Your Trusted Companion For Finding 
+                <span class="highlight-container">
+                    The Room You Desire
+                    <svg class="scribble-underline" viewBox="0 0 200 20" preserveAspectRatio="none">
+                        <path d="M 5 12 Q 50 3, 100 12 T 195 12" />
+                    </svg>
+                </span>
+            </h1>
+
+            <p class="hero-subtitle">
+                Discover verified room listings, transparent pricing, and effortless rental management. Roomly is designed to be your reliable companion every step of the way—from searching to moving in.
+            </p>
+
+            <!-- Store & APK Download Buttons -->
+            <div class="download-buttons">
+                <!-- Android APK Download Button -->
+                <a href="/media/app-release.apk" download class="btn-store">
+                    <div class="btn-store-icon">
+                        <svg viewBox="0 0 24 24"><path d="M17.523 15.3414c-.5511 0-.9993-.4482-.9993-.9993s.4482-.9993.9993-.9993c.5512 0 .9993.4482.9993.9993s-.4481.9993-.9993.9993zm-11.046 0c-.5511 0-.9993-.4482-.9993-.9993s.4482-.9993.9993-.9993c.5512 0 .9993.4482.9993.9993s-.4482.9993-.9993.9993zm11.4045-6.4955l1.9863-3.4404c.1278-.2213.052-.5047-.1693-.6325-.2213-.1278-.5047-.052-.6325.1693l-2.0229 3.5037c-1.4648-.6692-3.1118-1.0425-4.8431-1.0425-1.7313 0-3.3783.3733-4.8431 1.0425l-2.0229-3.5037c-.1278-.2213-.4112-.2971-.6325-.1693-.2213.1278-.2971.4112-.1693.6325l1.9863 3.4404c-3.1492 1.7145-5.3262 4.9082-5.717 8.6534h22.774c-.3908-3.7452-2.5678-6.9389-5.717-8.6534z"/></svg>
+                    </div>
+                    <div class="btn-store-text">
+                        <span class="btn-store-sub">Download APK</span>
+                        <span class="btn-store-main">Android (.APK)</span>
+                    </div>
+                </a>
+
+                <!-- iOS App Store Button -->
+                <a href="#download" class="btn-store">
+                    <div class="btn-store-icon">
+                        <svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.32c.67-.82 1.13-1.96.99-3.11-1 .04-2.19.67-2.9 1.49-.64.73-1.19 1.9-1.04 3.03 1.12.09 2.28-.59 2.95-1.41z"/></svg>
+                    </div>
+                    <div class="btn-store-text">
+                        <span class="btn-store-sub">Available on</span>
+                        <span class="btn-store-main">App Store</span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- QR Code Scan Note -->
+            <div class="qr-badge">
+                <div class="qr-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                </div>
+                <span>Tap or scan to install directly on your smartphone</span>
+            </div>
+        </div>
+
+        <!-- Smartphone Frame & Floating Badges -->
+        <div class="hero-visual">
+            <div class="visual-backdrop"></div>
+            
+            <!-- Floating Badge 1 -->
+            <div class="floating-badge floating-badge-left">
+                <div class="badge-icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                </div>
+                <div>
+                    <h6>Maintenance Resolved 🛠️</h6>
+                    <p>Repair Ticket Completed</p>
+                </div>
+            </div>
+
+            <!-- Floating Badge 2 -->
+            <div class="floating-badge floating-badge-right">
+                <div class="badge-icon-circle" style="background: rgba(37, 99, 235, 0.12); color: var(--accent-primary);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                </div>
+                <div>
+                    <h6>Rent Log Updated 💳</h6>
+                    <p>Digital Receipt Issued</p>
+                </div>
+            </div>
+
+            <!-- Smartphone Frame -->
+            <div class="phone-mockup">
+                <div class="phone-notch"></div>
+                
+                <div class="phone-screen">
+                    <!-- App Screen Header -->
+                    <div class="app-header">
+                        <div class="app-user">
+                            <img src="/media/landing/studio.png" class="app-avatar" alt="User Avatar">
+                            <div class="app-title">
+                                Hello, Alex 👋
+                                <span>Recommended for you</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- App Screen Body -->
+                    <div class="app-body">
+                        <div class="app-search">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            Search location, budget, or amenities...
+                        </div>
+
+                        <div class="app-section-title">
+                            Smart Recommendations
+                        </div>
+
+                        <div class="app-cards">
+                            <div class="app-card">
+                                <img src="/media/landing/studio.png" class="app-card-img" alt="Studio Room">
+                                <div class="app-card-name">Sunny Studio Suite</div>
+                                <div class="app-card-price">$450 / mo</div>
+                            </div>
+                            <div class="app-card">
+                                <img src="/media/landing/living.png" class="app-card-img" alt="Luxury Flat">
+                                <div class="app-card-name">Modern Luxury Flat</div>
+                                <div class="app-card-price">$680 / mo</div>
+                            </div>
+                        </div>
+
+                        <div class="app-section-title">
+                            Active Maintenance Ticket
+                        </div>
+
+                        <div class="app-list-item">
+                            <img src="/media/landing/studio.png" class="app-list-img" alt="Room Maintenance">
+                            <div class="app-list-info">
+                                <h5>Plumbing Inspection</h5>
+                                <p>Reported Today • Assigned</p>
+                            </div>
+                            <button class="app-badge-btn">In Progress</button>
+                        </div>
+                    </div>
+
+                    <!-- App Screen Bottom Bar -->
+                    <div class="app-nav">
+                        <div class="app-nav-item active">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                        </div>
+                        <div class="app-nav-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        </div>
+                        <div class="app-nav-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- App Core Features Grid (The 5 Key Features) -->
+    <section class="features-section" id="features">
+        <div class="section-tag">Powerful & Reliable Features</div>
+        <h2 class="section-heading">Everything You Need For Perfect Living</h2>
+
+        <div class="features-grid">
+            <!-- Feature 1: Smart Recommendations -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <h4>Smart Recommendations</h4>
+                <p>Personalized room suggestions tailored specifically to your budget, desired location, lifestyle, and preferred amenities.</p>
+            </div>
+
+            <!-- Feature 2: Maintenance Requests -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                </div>
+                <h4>Maintenance Requests</h4>
+                <p>Easily report property issues, attach photos, track ticket progress, and receive quick repair updates from your landlord.</p>
+            </div>
+
+            <!-- Feature 3: Rent Log & Payment History -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M7 15h.01"/><path d="M11 15h2"/></svg>
+                </div>
+                <h4>Rent Log & History</h4>
+                <p>Maintain a complete transparent digital ledger of monthly rent invoices, payment receipts, and upcoming due dates.</p>
+            </div>
+
+            <!-- Feature 4: Digital Rental Agreements -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></svg>
+                </div>
+                <h4>Digital Agreements</h4>
+                <p>Review, sign, and store legally binding lease contracts directly on your smartphone with instant PDF export.</p>
+            </div>
+
+            <!-- Feature 5: Map Directions & Navigation -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                </div>
+                <h4>Map Navigation & Directions</h4>
+                <p>Interactive map search with turn-by-turn directions to seamlessly inspect rooms and explore neighborhood surroundings.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works (4-Step Seamless Journey) -->
+    <section class="how-section" id="how">
+        <div class="how-container">
+            <div class="section-tag">Seamless 4-Step Journey</div>
+            <h2 class="section-heading">How Roomly Works For You</h2>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h4>Download & Get Started</h4>
+                    <p>Install the Roomly app on your Android or iOS device and create your profile in under 60 seconds.</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h4>Smart Search & Map Directions</h4>
+                    <p>Explore personalized recommendations and follow turn-by-turn map directions for room inspections.</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h4>Direct Chat & Digital Lease</h4>
+                    <p>Message property owners directly, finalize rental terms, and sign a legally binding digital agreement.</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h4>Rent Logs & Maintenance</h4>
+                    <p>Track monthly rent payments with digital receipts and submit maintenance tickets with live status updates.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bottom Download CTA Banner -->
+    <section class="download-cta-section" id="download">
+        <div class="cta-banner">
+            <h2>Ready to Find The Room You Desire?</h2>
+            <p>Download the Roomly Mobile App today and experience a trusted companion for all your room rental needs.</p>
+
+            <div class="cta-buttons">
+                <!-- Android APK CTA -->
+                <a href="/media/app-release.apk" download class="btn-store" style="background: #ffffff; color: #0f172a;">
+                    <div class="btn-store-icon" style="color: #0f172a;">
+                        <svg viewBox="0 0 24 24"><path d="M17.523 15.3414c-.5511 0-.9993-.4482-.9993-.9993s.4482-.9993.9993-.9993c.5512 0 .9993.4482.9993.9993s-.4481.9993-.9993.9993zm-11.046 0c-.5511 0-.9993-.4482-.9993-.9993s.4482-.9993.9993-.9993c.5512 0 .9993.4482.9993.9993s-.4482.9993-.9993.9993zm11.4045-6.4955l1.9863-3.4404c.1278-.2213.052-.5047-.1693-.6325-.2213-.1278-.5047-.052-.6325.1693l-2.0229 3.5037c-1.4648-.6692-3.1118-1.0425-4.8431-1.0425-1.7313 0-3.3783.3733-4.8431 1.0425l-2.0229-3.5037c-.1278-.2213-.4112-.2971-.6325-.1693-.2213.1278-.2971.4112-.1693.6325l1.9863 3.4404c-3.1492 1.7145-5.3262 4.9082-5.717 8.6534h22.774c-.3908-3.7452-2.5678-6.9389-5.717-8.6534z"/></svg>
+                    </div>
+                    <div class="btn-store-text">
+                        <span class="btn-store-sub" style="color: #64748b;">Download APK</span>
+                        <span class="btn-store-main" style="color: #0f172a;">Android (.APK)</span>
+                    </div>
+                </a>
+
+                <!-- iOS App Store CTA -->
+                <a href="#download" class="btn-store" style="background: #ffffff; color: #0f172a;">
+                    <div class="btn-store-icon" style="color: #0f172a;">
+                        <svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.32c.67-.82 1.13-1.96.99-3.11-1 .04-2.19.67-2.9 1.49-.64.73-1.19 1.9-1.04 3.03 1.12.09 2.28-.59 2.95-1.41z"/></svg>
+                    </div>
+                    <div class="btn-store-text">
+                        <span class="btn-store-sub" style="color: #64748b;">Available on</span>
+                        <span class="btn-store-main" style="color: #0f172a;">App Store</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">Roomly Mobile App</div>
+            <ul class="footer-links">
+                <li><a href="#">About App</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how">How It Works</a></li>
+                <li><a href="#download">Download APK</a></li>
+            </ul>
+        </div>
+        <div class="footer-copy">
+            &copy; 2026 Roomly Mobile Application. Your Trusted Room Rental Companion.
+        </div>
+    </footer>
+
+</body>
+</html>

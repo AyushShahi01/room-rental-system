@@ -23,6 +23,7 @@ class _ExploreMapViewState extends State<ExploreMapView> {
   static final LatLng _kathmanduCenter = LatLng(27.7042, 85.3082);
   LatLng? _currentUserLocation;
   bool _isLocating = false;
+  bool _isDrivingMode = true;
 
   @override
   void initState() {
@@ -170,104 +171,307 @@ class _ExploreMapViewState extends State<ExploreMapView> {
             }
             return const SizedBox.shrink();
           }),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 24,
-            child: Obx(() {
-              final selected = _controller.selectedRoom.value;
-              if (selected == null) return const SizedBox.shrink();
+          Obx(() {
+            final selected = _controller.selectedRoom.value;
+            if (selected == null) return const SizedBox.shrink();
 
-              return Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                elevation: 8,
-                shadowColor: Colors.black.withValues(alpha: 0.12),
-                child: Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  selected.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${selected.province}, ${selected.state} (Ward ${selected.wardNumber})',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
+            final distanceKm = _controller.routeDistance.value / 1000.0;
+            final durationMins = _isDrivingMode
+                ? (distanceKm / 25.0 * 60.0).round()
+                : (distanceKm / 4.5 * 60.0).round();
+            
+            String durationText = '';
+            if (_controller.routePoints.isNotEmpty) {
+              if (durationMins < 1) {
+                durationText = '< 1 min';
+              } else if (durationMins >= 60) {
+                final hrs = durationMins ~/ 60;
+                final mins = durationMins % 60;
+                durationText = '${hrs} hr ${mins} mins';
+              } else {
+                durationText = '${durationMins} mins';
+              }
+            }
+
+            return DraggableScrollableSheet(
+              initialChildSize: 0.34,
+              minChildSize: 0.18,
+              maxChildSize: 0.58,
+              snap: true,
+              builder: (context, scrollController) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(28),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 16,
+                        offset: const Offset(0, -4),
+                      ),
+                    ],
+                  ),
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Drag Indicator Handle
+                        Center(
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            width: 48,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(2.5),
                             ),
                           ),
-                          Text(
-                            'NPR ${selected.price}',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.primary,
-                                ),
-                          ),
-                        ],
-                      ),
-                      // Progress bar showing when the route is loading
-                      if (_controller.isRoutingLoading.value)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8.0),
-                          child: LinearProgressIndicator(),
                         ),
-                      // Show driving distance directly inside details card
-                      if (_controller.routePoints.isNotEmpty && !_controller.isRoutingLoading.value)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                          child: Row(
+                        // Room info header
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    selected.title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${selected.province}, ${selected.state} (Ward ${selected.wardNumber})',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'NPR ${selected.price}',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.primary,
+                                  ),
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 24),
+                        // Progress bar showing when the route is loading
+                        if (_controller.isRoutingLoading.value)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8.0),
+                            child: LinearProgressIndicator(),
+                          ),
+                        if (_controller.routePoints.isNotEmpty && !_controller.isRoutingLoading.value) ...[
+                          // Walk/Drive Tabs selector
+                          Row(
                             children: [
-                              const Icon(Icons.directions_car_filled_rounded, size: 18, color: Colors.blueAccent),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Distance: ${(_controller.routeDistance.value / 1000.0).toStringAsFixed(2)} km',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: Colors.blueAccent,
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      _isDrivingMode = true;
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: _isDrivingMode
+                                          ? colorScheme.primaryContainer
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: _isDrivingMode
+                                            ? colorScheme.primary
+                                            : Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.directions_car_filled_rounded,
+                                          size: 16,
+                                          color: _isDrivingMode
+                                              ? colorScheme.primary
+                                              : Colors.grey.shade600,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          'Drive',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: _isDrivingMode
+                                                ? colorScheme.primary
+                                                : Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      _isDrivingMode = false;
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: !_isDrivingMode
+                                          ? colorScheme.primaryContainer
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: !_isDrivingMode
+                                            ? colorScheme.primary
+                                            : Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.directions_walk_rounded,
+                                          size: 16,
+                                          color: !_isDrivingMode
+                                              ? colorScheme.primary
+                                              : Colors.grey.shade600,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          'Walk',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: !_isDrivingMode
+                                                ? colorScheme.primary
+                                                : Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: FilledButton.icon(
-                              onPressed: () => Get.to(() => RoomDetailView(roomId: selected.id)),
-                              icon: const Icon(Icons.info_outline_rounded),
-                              label: const Text('View Room Details'),
-                            ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      _isDrivingMode
+                                          ? Icons.directions_car_filled_rounded
+                                          : Icons.directions_walk_rounded,
+                                      size: 18,
+                                      color: Colors.blueAccent,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Distance: ${distanceKm.toStringAsFixed(2)} km',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                        color: Colors.blueAccent,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.access_time_rounded, size: 18, color: Colors.blueAccent),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Est. Time: $durationText',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                        color: Colors.blueAccent,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
+                          const Divider(height: 32),
+                          // Expanded timeline info
+                          Text(
+                            'Route Details',
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          const SizedBox(height: 12),
+                          Column(
+                            children: [
+                              _directionStep(
+                                icon: Icons.my_location_rounded,
+                                iconColor: Colors.blueAccent.shade700,
+                                title: 'Your Position',
+                                subtitle: 'Current snapped coordinates',
+                              ),
+                              _directionDivider(),
+                              _directionStep(
+                                icon: _isDrivingMode
+                                    ? Icons.directions_car_filled_rounded
+                                    : Icons.directions_walk_rounded,
+                                iconColor: colorScheme.primary,
+                                title: _isDrivingMode ? 'Driving route' : 'Walking route',
+                                subtitle: '${_controller.nodeCount.value} node segments calculated via Dijkstra',
+                              ),
+                              _directionDivider(),
+                              _directionStep(
+                                icon: Icons.home_work_rounded,
+                                iconColor: Colors.red.shade700,
+                                title: selected.title,
+                                subtitle: 'Destination room coordinates',
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
                         ],
-                      ),
-                    ],
+                        Row(
+                          children: [
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: () => Get.to(() => RoomDetailView(roomId: selected.id)),
+                                icon: const Icon(Icons.info_outline_rounded),
+                                label: const Text('View Room Details'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              );
-            }),
-          ),
+                );
+              },
+            );
+          }),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -306,6 +510,56 @@ class _ExploreMapViewState extends State<ExploreMapView> {
                 ),
               )
             : const Icon(Icons.my_location_rounded),
+      ),
+    );
+  }
+
+  Widget _directionStep({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 18, color: iconColor),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _directionDivider() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(left: 15),
+        height: 16,
+        width: 2,
+        color: Colors.grey.shade300,
       ),
     );
   }

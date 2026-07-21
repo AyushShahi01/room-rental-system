@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:get/get.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../controllers/room_controller.dart';
 import '../../models/room/room_model.dart';
@@ -56,13 +58,7 @@ class _TenantRoomsViewState extends State<TenantRoomsView> {
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
         elevation: 0.5,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.map_outlined),
-            tooltip: 'View on Map',
-            onPressed: () => Get.to(() => const ExploreMapView()),
-          ),
-        ],
+        actions: const [],
       ),
       body: RefreshIndicator(
         onRefresh: _roomController.loadRooms,
@@ -79,6 +75,99 @@ class _TenantRoomsViewState extends State<TenantRoomsView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+
+
+                // Minimap Section
+                Text(
+                  'Quick Map View',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    height: 180,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Stack(
+                      children: [
+                        FlutterMap(
+                          options: MapOptions(
+                            initialCenter: const LatLng(27.7042, 85.3082), // Kathmandu center
+                            initialZoom: 11.5,
+                            interactionOptions: const InteractionOptions(
+                              flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                            ),
+                          ),
+                          children: [
+                            TileLayer(
+                              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                              userAgentPackageName: 'com.roomrental.app',
+                            ),
+                            MarkerLayer(
+                              markers: _rooms.where((r) =>
+                                r.latitude != null &&
+                                r.longitude != null &&
+                                double.tryParse(r.latitude.toString()) != 0.0 &&
+                                double.tryParse(r.longitude.toString()) != 0.0
+                              ).map((room) {
+                                final lat = double.tryParse(room.latitude.toString()) ?? 27.7042;
+                                final lng = double.tryParse(room.longitude.toString()) ?? 85.3082;
+                                return Marker(
+                                  point: LatLng(lat, lng),
+                                  width: 32,
+                                  height: 32,
+                                  child: GestureDetector(
+                                    onTap: () => Get.to(() => RoomDetailView(roomId: room.id ?? 0)),
+                                    child: const Icon(
+                                      Icons.location_on_rounded,
+                                      size: 26,
+                                      color: Colors.redAccent,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                        // Expand Map overlay button
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: InkWell(
+                            onTap: () => Get.to(() => const ExploreMapView()),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                Icons.fullscreen_rounded,
+                                size: 20,
+                                color: Colors.blueAccent.shade700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
                 if (_recommended.isNotEmpty) ...[
                   Text(
                     'Recommended',
@@ -88,7 +177,7 @@ class _TenantRoomsViewState extends State<TenantRoomsView> {
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
-                    height: 300,
+                    height: 220,
                     width: double.infinity,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
@@ -185,17 +274,18 @@ class _RoomCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(18),
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
           color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.grey.shade200),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -206,35 +296,33 @@ class _RoomCard extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(22),
+                    top: Radius.circular(18),
                   ),
                   child: SizedBox(
-                    height: 160,
+                    height: 130,
                     width: double.infinity,
                     child: imageUrl != null && imageUrl.isNotEmpty
                         ? Image.network(
                             imageUrl,
                             fit: BoxFit.cover,
                             errorBuilder: (_, _, _) => Container(
-                              color: colorScheme.surfaceContainerHighest
-                                  .withValues(alpha: 0.3),
+                              color: Colors.blue.shade50,
                               child: Center(
                                 child: Icon(
                                   Icons.home_work_outlined,
-                                  size: 40,
-                                  color: Colors.grey.shade400,
+                                  size: 32,
+                                  color: Colors.blueAccent.shade700,
                                 ),
                               ),
                             ),
                           )
                         : Container(
-                            color: colorScheme.surfaceContainerHighest
-                                .withValues(alpha: 0.3),
+                            color: Colors.blue.shade50,
                             child: Center(
                               child: Icon(
                                 Icons.home_work_outlined,
-                                size: 40,
-                                color: Colors.grey.shade400,
+                                size: 32,
+                                color: Colors.blueAccent.shade700,
                               ),
                             ),
                           ),
@@ -246,22 +334,22 @@ class _RoomCard extends StatelessWidget {
                     room.genderPreference!.toLowerCase() != 'any' &&
                     room.genderPreference!.toLowerCase() != 'co-ed')
                   Positioned(
-                    top: 12,
-                    left: 12,
+                    top: 10,
+                    left: 10,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
+                        horizontal: 8,
+                        vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.65),
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.black.withOpacity(0.65),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         '${room.genderPreference!.toUpperCase()} ONLY',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
+                          fontSize: 9,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.5,
                         ),
@@ -270,8 +358,8 @@ class _RoomCard extends StatelessWidget {
                   ),
                 // Amenity icons
                 Positioned(
-                  bottom: 12,
-                  right: 12,
+                  bottom: 10,
+                  right: 10,
                   child: Row(
                     children: [
                       if (room.hasWifi == true) _buildAmenityIcon(Icons.wifi),
@@ -288,7 +376,7 @@ class _RoomCard extends StatelessWidget {
               ],
             ),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -298,18 +386,16 @@ class _RoomCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 15,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
                       Icon(
                         Icons.location_on_outlined,
-                        size: 16,
-                        color: colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.7,
-                        ),
+                        size: 14,
+                        color: colorScheme.onSurfaceVariant.withOpacity(0.7),
                       ),
                       const SizedBox(width: 4),
                       Expanded(
@@ -317,13 +403,13 @@ class _RoomCard extends StatelessWidget {
                           '${room.province ?? ''}, ${room.state ?? ''}'.trim(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: colorScheme.onSurfaceVariant),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colorScheme.onSurfaceVariant, fontSize: 12),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -331,23 +417,23 @@ class _RoomCard extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.payments_outlined,
-                            size: 18,
+                            size: 16,
                             color: colorScheme.primary,
                           ),
                           const SizedBox(width: 2),
                           Text(
                             'Rs. ${room.price ?? '0'}',
-                            style: Theme.of(context).textTheme.titleMedium
+                            style: Theme.of(context).textTheme.titleSmall
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: colorScheme.primary,
-                                  fontSize: 16,
+                                  fontSize: 14,
                                 ),
                           ),
                           Text(
                             '/month',
                             style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: colorScheme.onSurfaceVariant),
+                                ?.copyWith(color: colorScheme.onSurfaceVariant, fontSize: 11),
                           ),
                         ],
                       ),
@@ -358,6 +444,7 @@ class _RoomCard extends StatelessWidget {
                               ?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
                                 fontWeight: FontWeight.w500,
+                                fontSize: 11,
                               ),
                         ),
                     ],
@@ -410,18 +497,19 @@ class _RecommendationCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(18),
       child: Container(
-        width: 260,
-        margin: const EdgeInsets.only(right: 12),
+        width: 210,
+        margin: const EdgeInsets.only(right: 10),
         decoration: BoxDecoration(
           color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.grey.shade200),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -432,35 +520,33 @@ class _RecommendationCard extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(22),
+                    top: Radius.circular(18),
                   ),
                   child: SizedBox(
-                    height: 140,
+                    height: 115,
                     width: double.infinity,
                     child: imageUrl != null && imageUrl.isNotEmpty
                         ? Image.network(
                             imageUrl,
                             fit: BoxFit.cover,
                             errorBuilder: (_, _, _) => Container(
-                              color: colorScheme.surfaceContainerHighest
-                                  .withValues(alpha: 0.3),
+                              color: Colors.blue.shade50,
                               child: Center(
                                 child: Icon(
                                   Icons.home_work_outlined,
-                                  size: 40,
-                                  color: Colors.grey.shade400,
+                                  size: 32,
+                                  color: Colors.blueAccent.shade700,
                                 ),
                               ),
                             ),
                           )
                         : Container(
-                            color: colorScheme.surfaceContainerHighest
-                                .withValues(alpha: 0.3),
+                            color: Colors.blue.shade50,
                             child: Center(
                               child: Icon(
                                 Icons.home_work_outlined,
-                                size: 40,
-                                color: Colors.grey.shade400,
+                                size: 32,
+                                color: Colors.blueAccent.shade700,
                               ),
                             ),
                           ),
@@ -472,22 +558,22 @@ class _RecommendationCard extends StatelessWidget {
                     room.genderPreference!.toLowerCase() != 'any' &&
                     room.genderPreference!.toLowerCase() != 'co-ed')
                   Positioned(
-                    top: 12,
-                    left: 12,
+                    top: 10,
+                    left: 10,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
+                        horizontal: 8,
+                        vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.65),
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.black.withOpacity(0.65),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         '${room.genderPreference!.toUpperCase()} ONLY',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
+                          fontSize: 9,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.5,
                         ),
@@ -496,8 +582,8 @@ class _RecommendationCard extends StatelessWidget {
                   ),
                 // Amenity icons
                 Positioned(
-                  bottom: 12,
-                  right: 12,
+                  bottom: 10,
+                  right: 10,
                   child: Row(
                     children: [
                       if (room.hasWifi == true) _buildAmenityIcon(Icons.wifi),
@@ -514,7 +600,7 @@ class _RecommendationCard extends StatelessWidget {
               ],
             ),
             Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -524,17 +610,16 @@ class _RecommendationCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
                       Icon(
                         Icons.location_on_outlined,
-                        size: 16,
-                        color: colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.7,
-                        ),
+                        size: 14,
+                        color: colorScheme.onSurfaceVariant.withOpacity(0.7),
                       ),
                       const SizedBox(width: 4),
                       Expanded(
@@ -542,13 +627,13 @@ class _RecommendationCard extends StatelessWidget {
                           '${room.province ?? ''}, ${room.state ?? ''}'.trim(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: colorScheme.onSurfaceVariant),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colorScheme.onSurfaceVariant, fontSize: 11),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -556,16 +641,17 @@ class _RecommendationCard extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.payments_outlined,
-                            size: 18,
+                            size: 16,
                             color: colorScheme.primary,
                           ),
                           const SizedBox(width: 2),
                           Text(
                             'Rs. ${room.price ?? '0'}',
-                            style: Theme.of(context).textTheme.titleMedium
+                            style: Theme.of(context).textTheme.titleSmall
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: colorScheme.primary,
+                                  fontSize: 13,
                                 ),
                           ),
                         ],

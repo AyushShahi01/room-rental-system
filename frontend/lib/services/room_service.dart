@@ -83,4 +83,24 @@ class RoomService {
     );
     return RoomRecommendationModel.fromJson(response.data as Map<String, dynamic>);
   }
+
+  Future<List<room_model.Result>> getRecommendedRoomResults(
+    Map<String, dynamic> preferences,
+  ) async {
+    final response = await _dio.post(
+      'rooms/recommendations/',
+      data: preferences,
+    );
+    final List<dynamic> results = response.data['results'] ?? [];
+    return results
+        .map((item) {
+          if (item['room'] != null) {
+            return room_model.Result.fromJson(item['room'] as Map<String, dynamic>);
+          }
+          return null;
+        })
+        .whereType<room_model.Result>()
+        .toList();
+  }
 }
+
