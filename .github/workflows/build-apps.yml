@@ -67,7 +67,10 @@ jobs:
       - name: Install Dependencies
         run: |
           flutter pub get
-          cd ios && pod install
+      
+      - name: Install iOS Pods
+        run: pod install
+        working-directory: frontend/ios
 
       # Builds the iOS project without code signing. Excellent for testing that code compiles.
       # If you set up iOS certificates/provisioning, you can remove --no-codesign.
