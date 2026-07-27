@@ -1,0 +1,87 @@
+name: Build Mobile Apps
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual trigger from the GitHub Actions tab
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.2'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Android APK
+        run: flutter build apk --release
+
+      - name: Upload Android APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: frontend/build/app/outputs/flutter-apk/app-release.apk
+
+  build-ios:
+    name: Build iOS App
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.2'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: |
+          flutter pub get
+          cd ios && pod install
+
+      # Builds the iOS project without code signing. Excellent for testing that code compiles.
+      # If you set up iOS certificates/provisioning, you can remove --no-codesign.
+      - name: Build iOS App (No Code Signing)
+        run: flutter build ios --release --no-codesign
+
+      # Compresses the resulting Runner.app directory into a zip archive
+      - name: Compress iOS App Bundle
+        run: |
+          cd build/ios/iphoneos
+          zip -r Runner.app.zip Runner.app
+
+      - name: Upload iOS App Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-ios
+          path: frontend/build/ios/iphoneos/Runner.app.zip
