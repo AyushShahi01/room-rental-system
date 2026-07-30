@@ -21,7 +21,7 @@
     },
     {
       "name": "async",
-      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/async-2.13.0",
+      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/async-2.13.1",
       "packageUri": "lib/",
       "languageVersion": "3.4"
     },
@@ -69,9 +69,9 @@
     },
     {
       "name": "cross_file",
-      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/cross_file-0.3.5+2",
+      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/cross_file-0.3.5+4",
       "packageUri": "lib/",
-      "languageVersion": "3.8"
+      "languageVersion": "3.10"
     },
     {
       "name": "crypto",
@@ -81,9 +81,9 @@
     },
     {
       "name": "cupertino_icons",
-      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/cupertino_icons-1.0.8",
+      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/cupertino_icons-1.0.9",
       "packageUri": "lib/",
-      "languageVersion": "3.1"
+      "languageVersion": "3.9"
     },
     {
       "name": "dart_earcut",
@@ -99,13 +99,13 @@
     },
     {
       "name": "dio",
-      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/dio-5.9.2",
+      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/dio-5.11.0",
       "packageUri": "lib/",
       "languageVersion": "2.18"
     },
     {
       "name": "dio_web_adapter",
-      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/dio_web_adapter-2.1.2",
+      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/dio_web_adapter-2.2.1",
       "packageUri": "lib/",
       "languageVersion": "3.3"
     },
@@ -351,15 +351,15 @@
     },
     {
       "name": "image_picker",
-      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/image_picker-1.2.2",
+      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/image_picker-1.2.3",
       "packageUri": "lib/",
-      "languageVersion": "3.9"
+      "languageVersion": "3.10"
     },
     {
       "name": "image_picker_android",
-      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/image_picker_android-0.8.13+17",
+      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/image_picker_android-0.8.13+19",
       "packageUri": "lib/",
-      "languageVersion": "3.9"
+      "languageVersion": "3.12"
     },
     {
       "name": "image_picker_for_web",
@@ -405,13 +405,19 @@
     },
     {
       "name": "jni",
-      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/jni-1.0.0",
+      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/jni-1.0.1",
       "packageUri": "lib/",
       "languageVersion": "3.3"
     },
     {
       "name": "jni_flutter",
       "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/jni_flutter-1.0.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "jni_util",
+      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/jni_util-1.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.3"
     },
@@ -501,19 +507,19 @@
     },
     {
       "name": "objective_c",
-      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/objective_c-9.4.1",
+      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/objective_c-9.5.0",
       "packageUri": "lib/",
       "languageVersion": "3.10"
     },
     {
       "name": "package_config",
-      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/package_config-2.2.0",
+      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/package_config-3.0.0",
       "packageUri": "lib/",
-      "languageVersion": "3.4"
+      "languageVersion": "3.11"
     },
     {
       "name": "package_info_plus",
-      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-10.2.0",
+      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-10.2.1",
       "packageUri": "lib/",
       "languageVersion": "3.10"
     },
@@ -591,7 +597,7 @@
     },
     {
       "name": "posix",
-      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/posix-6.5.0",
+      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/posix-6.5.2",
       "packageUri": "lib/",
       "languageVersion": "3.0"
     },
@@ -675,7 +681,7 @@
     },
     {
       "name": "uuid",
-      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/uuid-4.5.3",
+      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/uuid-4.6.0",
       "packageUri": "lib/",
       "languageVersion": "3.0"
     },
@@ -687,7 +693,7 @@
     },
     {
       "name": "vm_service",
-      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/vm_service-15.0.2",
+      "rootUri": "file:///C:/Users/ayush/AppData/Local/Pub/Cache/hosted/pub.dev/vm_service-15.2.0",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
